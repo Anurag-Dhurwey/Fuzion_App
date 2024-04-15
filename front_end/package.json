@@ -1,0 +1,51 @@
+{
+  "name": "fabric-app",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^17.1.0",
+    "@angular/common": "^17.1.0",
+    "@angular/compiler": "^17.1.0",
+    "@angular/core": "^17.1.0",
+    "@angular/fire": "^17.0.1",
+    "@angular/forms": "^17.1.0",
+    "@angular/platform-browser": "^17.1.0",
+    "@angular/platform-browser-dynamic": "^17.1.0",
+    "@angular/router": "^17.1.0",
+    "@ngrx/effects": "^17.1.0",
+    "@ngrx/router-store": "^17.1.0",
+    "@ngrx/store": "^17.1.0",
+    "@ngx-env/builder": "^17.3.0",
+    "fabric": "5.3.0-browser",
+    "firebase": "^10.8.0",
+    "jspdf": "^2.5.1",
+    "rxjs": "~7.8.0",
+    "socket.io-client": "^4.7.4",
+    "tslib": "^2.3.0",
+    "uuid": "^9.0.1",
+    "zone.js": "~0.14.3"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^17.1.2",
+    "@angular/cli": "^17.1.2",
+    "@angular/compiler-cli": "^17.1.0",
+    "@ngrx/schematics": "^17.1.0",
+    "@types/fabric": "^5.3.7",
+    "@types/jasmine": "~5.1.0",
+    "@types/uuid": "^9.0.8",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.3.2"
+  }
+}

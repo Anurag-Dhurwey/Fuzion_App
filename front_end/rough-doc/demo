@@ -1,0 +1,16 @@
+Position:
+        top  left 
+Size:
+        widht height
+Scale:
+        X Y
+Rotation:
+        originX originY
+        angle
+Flip:
+        X Y
+Others:        
+        Background fill 
+        opacity
+Storke: 
+        color width                

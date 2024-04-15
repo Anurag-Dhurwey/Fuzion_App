@@ -1,0 +1,92 @@
+<style>
+  .propertyCard {
+    padding-bottom: 15px;
+    width: 100%;
+    height: fit-content;
+    border-bottom: 2px solid black;
+  }
+  .propertyCard > div {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .propertyCard > div > span {
+    width: 49%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* .propertyCard button {
+    font-size: larger;
+    background: none;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  } */
+
+  .propertyCard span label {
+    font-size: small;
+  }
+
+  .propertyCard span input {
+    width: 50px;
+    text-align: center;
+    background: none;
+    outline: none;
+    border: none;
+    font-size: small;
+    font-weight: bold;
+  }
+
+  .color_box {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 2px;
+    background: silver !important;
+    padding: 2px;
+    overflow: hidden;
+  }
+  #add-remove{
+    outline: none;
+    border: none;
+    background: none;
+    font-size: large;
+    cursor: pointer;
+  }
+</style>
+
+@for (common of commonData; track $index) {
+<div class="propertyCard">
+  <h6 style="margin: 4px 0px">{{ common.title }}</h6>
+  <div>
+    @if(canvasService.selectedObj.length===1){ @for (key of common.keys; track $index) {
+    <span>
+      <label [for]="key.key">
+        {{ key.lable }}
+      </label>
+     <!-- @if(canvasService.selectedObj[0][key.key]){ -->
+      <input
+      [max]="key.max"
+      [min]="key.min"
+      [step]="key.step"
+      [class]="key.inputBox_type == 'color' ? 'color_box' : ''"
+      [type]="key.inputBox_type"
+      [name]="key.key"
+      [id]="key.key"
+      (change)="onChange($event)"
+      [value]="canvasService.selectedObj[0][key.key]"
+      [checked]="canvasService.selectedObj[0][key.key]"
+    />
+     <!-- }@else {
+      <button id="add-remove" class="material-symbols-outlined">add</button>
+     } -->
+    </span>
+    } }
+  </div>
+</div>
+}

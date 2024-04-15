@@ -1,0 +1,564 @@
+intersection=========>
+
+[
+  'top',
+  'left',
+  'width'
+  'height',
+  'scaleX',
+  'scaleY',
+  'angle',
+  'originX',
+  'originY',
+  'flipX',
+  'flipY',
+  'backgroundColor',
+  'fill',
+  'fillRule',
+  'globalCompositeOperation',
+  'opacity',
+  'paintFirst',
+  'shadow',
+  'skewX',
+  'skewY',
+  'stroke',
+  'strokeDashArray',
+  'strokeDashOffset',
+  'strokeLineCap',
+  'strokeLineJoin',
+  'strokeMiterLimit',
+  'strokeUniform',
+  'strokeWidth',
+  'type',
+  'version',
+  'visible',
+]
+
+
+
+
+
+
+
+
+
+line  ======================>
+
+,top: 148
+,left: 678
+,x1: 83.5
+,x2: -83.5
+,y1: -51
+,y2: 51
+,width: 167
+,height: 102
+,angle: 0
+,backgroundColor: ""
+,stroke: "gray"
+,fill: "rgb(0,0,0)"
+,fillRule: "nonzero"
+,flipX: false
+,flipY: false
+,opacity: 1
+,visible: true
+,originX: "left"
+,originY: "top"
+,scaleX: 1.71
+,scaleY: 1
+,shadow: null
+,skewX: 0
+,skewY: 0
+,strokeDashArray: null
+,strokeDashOffset: 0
+,strokeLineCap: "butt"
+,strokeLineJoin: "miter"
+,strokeMiterLimit: 4
+,
+,
+,strokeUniform: false
+,strokeWidth: 5
+,
+,type: "line"
+,paintFirst: "fill"
+,version: "5.3.0"
+,globalCompositeOperation: "source-over"
+,
+
+
+
+
+circle =========================>
+
+angle: 0
+,,
+backgroundColor: ""
+,,
+endAngle: 360
+,,
+fill: ""
+,,
+fillRule: "nonzero"
+,,
+flipX: false
+,,
+flipY: false
+,,
+globalCompositeOperation: "source-over"
+,,
+height: 182
+,,
+left: 532
+,,
+opacity: 1
+,,
+originX: "center"
+,,
+originY: "center"
+,,
+paintFirst: "fill"
+,,
+radius: 91
+,,
+scaleX: 1
+,,
+scaleY: 1
+,,
+shadow: null
+,,
+skewX: 0
+,,
+skewY: 0
+,,
+startAngle: 0
+,,
+stroke: "gray"
+,,
+strokeDashArray: null
+,,
+strokeDashOffset: 0
+,,
+strokeLineCap: "butt"
+,,
+strokeLineJoin: "miter"
+,,
+strokeMiterLimit: 4
+,,
+strokeUniform: false
+,,
+strokeWidth: 1
+,,
+top: 163.75
+,,
+type: "circle"
+,,
+version: "5.3.0"
+,,
+visible: true
+,,
+width: 182
+
+
+
+
+rectangle====================>
+
+
+
+angle: 0
+,
+backgroundColor: ""
+,
+fill: "red"
+,
+fillRule: "nonzero"
+,
+flipX: false
+,
+flipY: false
+,
+globalCompositeOperation: "source-over"
+,
+height: 138.78
+,
+left: 499
+,
+opacity: 1
+,
+originX: "left"
+,
+originY: "top"
+,
+paintFirst: "fill"
+,
+rx: 0
+,
+ry: 0
+,
+scaleX: 1
+,
+scaleY: 1
+,
+shadow: null
+,
+skewX: 0
+,
+skewY: 0
+,
+stroke: null
+,
+strokeDashArray: null
+,
+strokeDashOffset: 0
+,
+strokeLineCap: "butt"
+,
+strokeLineJoin: "miter"
+,
+strokeMiterLimit: 4
+,
+strokeUniform: false
+,
+strokeWidth: 1
+,
+top: 121.81
+,
+type: "rect"
+,
+version: "5.3.0"
+,
+visible: true
+,
+width: 186
+
+
+
+
+
+
+
+
+pencil (freehand) ===========================>
+
+
+
+angle: 0
+,
+backgroundColor: ""
+,
+fill: null
+,
+fillRule: "nonzero"
+,
+flipX: false
+,
+flipY: false
+,
+globalCompositeOperation: "source-over"
+,
+height: 135.79
+,
+left: 505.7
+,
+opacity: 1
+,
+originX: "left"
+,
+originY: "top"
+,
+paintFirst: "fill"
+,
+path:[[],[]]
+,
+scaleX: 1
+,
+scaleY: 1
+,
+shadow: null
+,
+skewX: 0
+,
+skewY: 0
+,
+stroke: "rgb(0, 0, 0)"
+,
+strokeDashArray: null
+,
+strokeDashOffset: 0
+,
+strokeLineCap: "round"
+,
+strokeLineJoin: "round"
+,
+strokeMiterLimit: 10
+,
+strokeUniform: false
+,
+strokeWidth: 1
+,
+top: 124.31
+,
+type: "path"
+,
+version: "5.3.0"
+,
+visible: true
+,
+width: 434.8
+
+
+
+
+
+path ==========================>
+
+
+
+angle: 0
+,
+backgroundColor: ""
+,
+fill: ""
+,
+fillRule: "nonzero"
+,
+flipX: false
+,
+flipY: false
+,
+globalCompositeOperation: "source-over"
+,
+height: 127.2
+,
+left: 688.54
+,
+opacity: 1
+,
+originX: "left"
+,
+originY: "top"
+,
+paintFirst: "fill"
+,
+path: [[],[],[]]
+,
+scaleX: 1
+,
+scaleY: 1
+,
+shadow: null
+,
+skewX: 0
+,
+skewY: 0
+,
+stroke: "rgb(255,0,0)"
+,
+strokeDashArray: null
+,
+strokeDashOffset: 0
+,
+strokeLineCap: "butt"
+,
+strokeLineJoin: "miter"
+,
+strokeMiterLimit: 4
+,
+strokeUniform: false
+,
+strokeWidth: 5
+,
+top: 146.27
+,
+type: "path"
+,
+version: "5.3.0"
+,
+visible: true
+,
+width: 348.68
+
+
+
+
+
+
+
+image=========================>
+
+
+
+angle: 357.94
+,
+backgroundColor: ""
+,
+cropX: 0
+,
+cropY: 0
+,
+crossOrigin: null
+,
+fill: "rgb(0,0,0)"
+,
+fillRule: "nonzero"
+,
+filters: []
+,
+flipX: false
+,
+flipY: false
+,
+globalCompositeOperation: "source-over"
+,
+height: 591
+,
+left: 875.85
+,
+opacity: 1
+,
+originX: "left"
+,
+originY: "top"
+,
+paintFirst: "fill"
+,
+scaleX: 0.38
+,
+scaleY: 0.38
+,
+shadow: null
+,
+skewX: 0
+,
+skewY: 0
+,
+src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeMAAAJPCAYAAABPQbwwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAP+lSURBVHhe7P1plx5Jkp0JGgCH71giAoh9yb2KrBr2FNlf+I2s+WP8Z3PIc7p7zpnmsJmVVbkxMzL2DavD4bsDc597VczsfeGOiKwsNjYVh8DUdBEVVbNXroqqmtmFx6KhU6dOnTp16vTM6GI7durUqVOnTp2eEXUw7tSpU6dOnZ4xdTDu1KlTp06dnjF1MO7UqVOnTp2eMXUw7tSpU6dOnZ4xdTDu1KlTp06dnjF1MO7UqVOnTp2eMXUw7tSpU6dOnZ4xdTDu1KlTp06dnjF1MO7UqVOnTp2eMXUw7tSpU6dOnZ4xdTDu1KlTp06dnjF1MO7UqVOnTp2eMXUw7tSpU6dOnZ4xdTDu1KlTp06dnjF1MO7UqVOnTp2eMXUw7tSpU6dOnZ4xdTDu1KlTp06dnjF1MO7UqVOnTp2eMXUw7tSpU6dOnZ4xdTDu1KlTp06dnjF1MO7UqVOnTp2eMXUw7tSpU6dOnZ4xdTDu1KlTp06dnjF1MO7UqVOnTp2eMXUw7tSpU6dOnZ4xdTDu1KlTp06dnjF1MO7UqVOnTp2eMXUw7tSpU6dOnZ4xdTDu1KlTp06dnjFdeCxq4U6dOj1HtPzTvHDhQgt16tTpZaPuGXfq9AJQB+JOnV5u6p5xp06dOnXq9Iype8adOnXq1KnTM6YOxp06derUqdMzpj5N3anTC0Jn/VT7WnKnTi8Hdc+4U6fnnADhAuIKnwXMnTp1enGpg3GnTs8pLYNuhTk+evSoA3KnTi8R9WnqTp1+AJ39I6nY86eK5ynznxrTy3U+n2pe/jlyDpPn+Ph42NnZGQ4PD4e1tbVhc2NjWLm0Mly8eHHkCxcj69HpI1d+QXFV3oR8qtC5o2…"
+,
+stroke: null
+,
+strokeDashArray: null
+,
+strokeDashOffset: 0
+,
+strokeLineCap: "butt"
+,
+strokeLineJoin: "miter"
+,
+strokeMiterLimit: 4
+,
+strokeUniform: false
+,
+strokeWidth: 0
+,
+top: 136.26
+,
+type: "image"
+,
+version: "5.3.0"
+,
+visible: true
+,
+width: 483
+
+
+
+
+text====================>
+
+
+angle: 0
+,
+backgroundColor: ""
+,
+charSpacing: 0
+,
+direction: "ltr"
+,
+fill: "gray"
+,
+fillRule: "nonzero"
+,
+flipX: false
+,
+flipY: false
+,
+fontFamily: "Times New Roman"
+,
+fontSize: 40
+,
+fontStyle: "normal"
+,
+fontWeight: "normal"
+,
+globalCompositeOperation: "source-over"
+,
+height: 45.2
+,
+left: 706
+,
+lineHeight: 1.16
+,
+linethrough: false
+,
+opacity: 1
+,
+originX: "left"
+,
+originY: "top"
+,
+overline: false
+,
+paintFirst: "fill"
+,
+path: null
+,
+pathAlign: "baseline"
+,
+pathSide: "left"
+,
+pathStartOffset: 0
+,
+scaleX: 1
+,
+scaleY: 1
+,
+shadow: null
+,
+skewX: 0
+,
+skewY: 0
+,
+stroke: "gray"
+,
+strokeDashArray: null
+,
+strokeDashOffset: 0
+,
+strokeLineCap: "butt"
+,
+strokeLineJoin: "miter"
+,
+strokeMiterLimit: 4
+,
+strokeUniform: false
+,
+strokeWidth: 1
+,
+styles: Array []
+,
+text: "anurag"
+,
+textAlign: "left"
+,
+textBackgroundColor: ""
+,
+top: 246
+,
+type: "i-text"
+,
+underline: false
+,
+version: "5.3.0"
+,
+visible: true
+,
+width: 108.83

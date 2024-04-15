@@ -1,0 +1,35 @@
+<style>
+  .modal {
+    position: absolute;
+    background-color: dimgray;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    row-gap: 5px;
+    padding: 5px 30px;
+  }
+  .modal > button {
+    border-radius: 5px;
+    padding: 0px 10px;
+  }
+</style>
+
+@if (position) {
+<div
+  class="modal"
+  [style]="{ top: position.y + 'px', left: position.x + 'px' }"
+>
+  <button type="button" (click)="onGroup.emit()">Group</button>
+  <button type="button">Hide</button>
+  <button type="button">Lock</button>
+  <button
+    type="button"
+    (click)="onDeleteClick()"
+  >
+    Delete
+  </button>
+  <button type="button">Close</button>
+</div>
+}

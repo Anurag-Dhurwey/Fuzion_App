@@ -1,0 +1,115 @@
+<style>
+  main {
+    position: relative;
+    top: 0%;
+    left: 0%;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .loader {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    width: 100%;
+    z-index: 100;
+    color: white;
+    background-color: rgba(1, 116, 142, 0.616);
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  app-tool-bar,
+  app-layer-panel,
+  app-property-panel {
+    z-index: 10;
+    position: fixed;
+    background-color: gray;
+  }
+  app-tool-bar {
+    margin-top: 5px;
+    width: fit-content;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 25px;
+    padding: 5px 20px;
+    border-radius: 10px;
+  }
+  app-layer-panel {
+    left: 0px;
+    height: 100vh;
+    width: 15vw;
+    min-width: 100px;
+    min-height: 500px;
+    border-radius: 0px 10px 10px 0px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    row-gap: 2px;
+    overflow-y: scroll;
+  }
+
+  app-property-panel {
+    min-width: 100px;
+    min-height: 500px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 15vw;
+    height: 100vh;
+    right: 0;
+    top: 0;
+  }
+  #inputTextArea {
+    position: absolute;
+    z-index: 2;
+  }
+  main > canvas {
+    position: absolute;
+    top: 0%;
+    left: 0%;
+  }
+  main > #mouse {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    background-color: aqua;
+    z-index: 10;
+  }
+</style>
+
+<main class="main">
+  <app-tool-bar (setCurrentAction)="setCurrentAction($event)" />
+  @if(app$?.isExportComponentVisible){
+  <app-export />
+  }
+  <app-layer-panel
+    [layers]="canvasService.objects"
+    [group_id]="null"
+    [projectId]="canvasService.projectId"
+  />
+  <app-property-panel />
+  @if(canvasService.projectId&&authService.auth.currentUser&&
+  !socketService.socket?.connected){
+  <div class="loader">
+    <h3>Connecting to server</h3>
+  </div>
+  }
+
+  <canvas id="canvas"></canvas>
+  @for (item of socketService.presense; track $index) {
+  <div
+    [style]="{ top: item.mouse.y + 'px', left: item.mouse.x + 'px' }"
+    id="mouse"
+  ></div>
+  }
+</main>

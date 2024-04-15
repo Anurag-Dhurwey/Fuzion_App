@@ -1,0 +1,80 @@
+<style>
+  .downloadfile_modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 11;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(1, 116, 142, 0.616);
+  }
+
+  .downloadFile {
+    z-index: 10;
+    background-color: lightgray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 10px;
+    flex-wrap: wrap;
+    border-radius: 10px;
+    position: relative;
+  }
+  .downloadFile input {
+    padding: 5px 10px;
+  }
+  .downloadFile button {
+    padding: 5px 10px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .downloadFile #filetype {
+    width: 100px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+
+  .closeBtn {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .closeBtn > .closeIcon {
+    font-size: larger;
+  }
+  #inputBtn {
+    display: none;
+  }
+</style>
+<div class="downloadfile_modal">
+  <div
+    class="downloadFile"
+    [style]="{ width: windowWidth / 2 + 'px', height: windowHeight / 2 + 'px' }"
+  >
+    <input
+      type="text"
+      id="file_name"
+      placeholder="file name"
+      [formControl]="file_name"
+    />
+    <select name="" id="filetype" [formControl]="file_type">
+      <option value="png">PNG</option>
+      <option value="jpeg">JPG</option>
+      <option value="pdf">PDF</option>
+      <option value="JSON">JSON</option>
+    </select>
+    <button (click)="exportFile()">Export</button>
+    <button (click)="close(false)">cancle</button>
+    <button class="material-symbols-outlined closeBtn" (click)="close(false)">
+      <!-- <IoClose className={styles.closeIcon} /> -->
+      close
+    </button>
+  </div>
+</div>

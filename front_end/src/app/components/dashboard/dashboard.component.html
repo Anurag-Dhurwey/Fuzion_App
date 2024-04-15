@@ -1,0 +1,204 @@
+<style>
+  .dashboard {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  .dashboard .menu {
+    width: 100vw;
+    height: 10vh;
+    min-width: 150px;
+    min-height: 50px;
+    position: relative;
+  }
+  .menubar {
+    background-color: dimgray;
+    width: 100%;
+    height: 100%;
+    position: sticky;
+  }
+  .menubar button {
+    background: none;
+    outline: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .account_menu {
+    display: none;
+    cursor: default;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    padding: 10px 5px;
+    font-size: small;
+    background-color: gray;
+    border-radius: 6px;
+    justify-content: center;
+    align-items: flex-start;
+    flex-direction: column;
+    row-gap: 10px;
+  }
+  .menubar .profile_icon:hover .account_menu {
+    display: flex;
+  }
+
+  .account_menu > button {
+    border-bottom: 2px solid black;
+    cursor: pointer;
+  }
+
+  .menubar .top {
+    height: 50px !important;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: rgb(62, 122, 120);
+    border-radius: 0px 0px 10px 10px;
+  }
+  .menubar .top #icon {
+    font-size: 25px !important;
+  }
+  .dashboard .directry {
+    width: 100vw;
+    height: 45vh;
+    min-height: 100px;
+    background-color: gray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .dashboard .recents {
+    width: 100vw;
+    height: 45vh;
+    min-height: 100px;
+    background-color: lightskyblue;
+  }
+  .card {
+    width: 250px;
+    height: 150px;
+    border-radius: 10px;
+    font-size: small;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+  @media (min-width: 1000px) {
+    .dashboard {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: row;
+    }
+
+    .dashboard .menu {
+      width: 20vw;
+      min-height: 100vh;
+    }
+    .dashboard .directry {
+      width: 80vw;
+      height: 50vh;
+    }
+    .dashboard .recents {
+      width: 80vw;
+      height: 50vh;
+    }
+    .menubar .top {
+      height: 75px !important;
+    }
+    .menubar .top #icon {
+      font-size: 50px !important;
+    }
+  }
+</style>
+
+<main class="dashboard">
+  <section class="menu">
+    <div class="menubar">
+      <div class="top">
+        <button
+          id="icon"
+          class="material-symbols-outlined"
+          (click)="createProject()"
+        >
+          add
+        </button>
+        <span class="profile_icon" style="position: relative">
+          <button id="icon" class="material-symbols-outlined">
+            account_circle
+          </button>
+          <span class="account_menu">
+            <button>Profle</button>
+            <button routerLink="/welcome">Welcome</button>
+            <button (click)="signOut()">Signout</button>
+          </span>
+        </span>
+      </div>
+      <div class="bottom"></div>
+    </div>
+  </section>
+  <section>
+    <div class="directry">
+      @if(authService.auth.currentUser?.email==='anuragdhurwey046@gmail.com'){
+      <div
+        style="
+          width: 100%;
+          height: 30px;
+          background-color: yellowgreen;
+          align-self: flex-start;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          column-gap: 10px;
+        "
+      >
+        <button
+          [style]="{
+            cursor: 'pointer',
+            backgroundColor: projectType == 'promotional' ? 'gray' : ''
+          }"
+          (click)="onClickPromotionalTab();projectType = 'promotional'"
+        >
+          Promotional
+        </button>
+        <button
+          [style]="{
+            cursor: 'pointer',
+            backgroundColor: projectType == 'my' ? 'gray' : ''
+          }"
+          (click)="projectType = 'my'"
+        >
+          My
+        </button>
+      </div>
+      } @for (project of projectType=='my'?app$?.projects:demo_projects; track $index) {
+      <!-- <div
+        [routerLink]="'/canvas/' + project.id"
+        class="card"
+        [style]="{ backgroundColor: 'dimgray' }"
+      >
+        <p>{{ project.id }}</p>
+      </div> -->
+      <app-preview-card
+      class="card"
+      style="overflow: hidden;"
+      [routerLink]="'/canvas/' + project.id"
+      [style]="{ backgroundColor: 'dimgray' }"
+      [objects]="project"
+      [id]="project.id"
+      [dimension]="{ width: 250, height: 150 }"
+    />
+      } @empty {
+      <div class="card" [style]="{ backgroundColor: 'dimgray' }">
+        <p>empty</p>
+      </div>
+      }
+    </div>
+    <div class="recents"></div>
+  </section>
+</main>

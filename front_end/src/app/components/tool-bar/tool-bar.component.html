@@ -1,0 +1,183 @@
+<style>
+  div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 7px;
+  }
+  button {
+    font-size: larger;
+    padding: 3px 6px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  div > #importBtn {
+    transform: rotate(180deg);
+  }
+  #setting {
+    position: relative;
+  }
+  #settingPanel {
+    padding: 0px 5px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 250ox;
+    min-height: 400px;
+    min-width: 200px;
+    background-color: gray;
+    border-radius: 10px;
+  }
+  #settingPanel > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    column-gap: 0px;
+    width: 100%;
+    border-bottom: 2px solid black;
+    padding: 10px 0px;
+  }
+  #settingPanel > div > span {
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #settingPanel > div > span > input {
+    width: 25px;
+    height: 25px;
+    border: 1px;
+    border-radius: 5px;
+    background: transparent;
+  }
+  .menu {
+    cursor: default;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 250ox;
+    min-height: 400px;
+    min-width: 200px;
+    padding: 10px 5px;
+    font-size: small;
+    background-color: gray;
+    border-radius: 10px;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    row-gap: 10px;
+  }
+  .menu > button {
+    width: 100%;
+  }
+</style>
+
+<div class="menuIcon">
+  <button
+    (click)="isMenuVisible = !isMenuVisible"
+    class="material-symbols-outlined"
+  >
+    menu
+  </button>
+  <div class="menu" [style]="{ display: isMenuVisible ? 'flex' : 'none' }">
+    <button>new project</button>
+    <button>reset</button>
+    <button routerLink="/dashboard" routerLinkActive="active">Dashboard</button>
+    <button
+      class="material-symbols-outlined"
+      (click)="isMenuVisible = !isMenuVisible"
+    >
+      close
+    </button>
+  </div>
+</div>
+<div>
+  @for (role of roles; track $index) {
+  <button
+    class="material-symbols-outlined"
+    [style.background-color]="app$?.role == role.role ? '#73c7af' : ''"
+    (click)="onClickActionButton(role.role)"
+  >
+    {{ role.icon }}
+  </button>
+  }
+</div>
+
+<!-- this input will be trigger when user click on image role button  -->
+<input
+  type="file"
+  id="img-input"
+  #fileInput
+  style="display: none"
+  accept="image/*"
+  (change)="onImageInput(fileInput.files)"
+/>
+
+<div>
+  <input
+    style="display: none"
+    type="file"
+    accept=".json"
+    #importInput
+    (change)="import(importInput.files)"
+  />
+  <button
+    id="importBtn"
+    class="material-symbols-outlined"
+    (click)="importInput.click()"
+    (click)="setCurrentAction.emit('select')"
+  >
+    ios_share
+  </button>
+  <button
+    class="material-symbols-outlined"
+    (click)="export()"
+    (click)="setCurrentAction.emit('select')"
+  >
+    ios_share
+  </button>
+</div>
+<div id="setting">
+  <button
+    class="material-symbols-outlined"
+    (click)="isSettingVisible = !isSettingVisible"
+  >
+    settings_b_roll
+  </button>
+  <div
+    id="settingPanel"
+    [style]="{ display: isSettingVisible ? 'block' : 'none' }"
+  >
+    <!-- <div>
+      <span style="width: 15%">
+      </span
+      >
+      <span style="width: 85%; justify-content: center">Configration</span>
+    </div> -->
+    <div>
+      <span>
+        <label for="background-color">Background</label>
+      </span>
+      <span>
+        <input
+          (input)="setCanvasBackground($any($event.target).value)"
+          type="color"
+          name=""
+          id="background-color"
+        />
+      </span>
+    </div>
+    <button
+      style="font-size: small; width: 100%; margin: 5px 0px;"
+      (click)="isSettingVisible = !isSettingVisible"
+      class="material-symbols-outlined"
+    >
+      close
+    </button>
+  </div>
+</div>
+
