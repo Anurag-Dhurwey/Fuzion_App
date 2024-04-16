@@ -26,6 +26,7 @@ export class WelcomeComponent implements OnInit {
   app$: appState | undefined;
   private store = inject(Store);
   demo_projects: project[] = [];
+
   constructor(
     public authService: AuthService,
     private router: Router,
@@ -44,6 +45,7 @@ export class WelcomeComponent implements OnInit {
     } catch (error) {
       console.error(error);
     }
+
   }
 
   async signOut() {

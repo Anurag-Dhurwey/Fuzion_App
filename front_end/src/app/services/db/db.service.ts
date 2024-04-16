@@ -21,7 +21,7 @@ import {
   getDoc,
 } from 'firebase/firestore';
 // import { getAnalytics } from 'firebase/analytics';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../../environments/environment.development';
 import { SocketService } from '../socket/socket.service';
 import { Projects } from '../../../types/app.types';
 import { v4 } from 'uuid';

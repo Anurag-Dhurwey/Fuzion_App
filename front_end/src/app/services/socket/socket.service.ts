@@ -9,12 +9,12 @@ import { Presense, SocketEmitEvents, SocketOnEvents } from '../../../types/app.t
 export class SocketService {
   socket: Socket | undefined;
   presense: Presense[] = [];
-  socket_url=import.meta.env['NG_APP_socket_url']
   constructor() {}
 
   connect() {
     if (!this.socket?.connected) {
-      this.socket = io(`${this.socket_url}`)
+      // this.socket = io('http://localhost:3000');
+      this.socket = io('https://fabric-app-server.onrender.com');
     }
   }
 
