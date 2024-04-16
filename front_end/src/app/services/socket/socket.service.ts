@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { Presense, SocketEmitEvents, SocketOnEvents } from '../../../types/app.types';
-
+import { environment } from '../../../../environment';
 @Injectable({
   providedIn: 'root',
 })
@@ -12,9 +12,10 @@ export class SocketService {
   constructor() {}
 
   connect() {
-    if (!this.socket?.connected) {
-      // this.socket = io('http://localhost:3000');
-      this.socket = io('https://fabric-app-server.onrender.com');
+    if (!this.socket?.connected&&environment.socket_url) {
+      this.socket = io(environment.socket_url);
+    }else if(!environment.socket_url){
+      console.error('environment.socket_url is undefind')
     }
   }
 

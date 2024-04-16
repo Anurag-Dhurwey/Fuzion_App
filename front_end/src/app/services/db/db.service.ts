@@ -21,7 +21,8 @@ import {
   getDoc,
 } from 'firebase/firestore';
 // import { getAnalytics } from 'firebase/analytics';
-import { environment } from '../../../../environments/environment.development';
+import { environment } from '../../../../environment';
+// front_end/environment.ts
 import { SocketService } from '../socket/socket.service';
 import { Projects } from '../../../types/app.types';
 import { v4 } from 'uuid';
@@ -35,6 +36,7 @@ export class DbService {
   auth;
   storage;
   constructor(private socketService: SocketService) {
+    console.log(environment)
     this.app = initializeApp(environment.firebaseConfig);
     this.store = getFirestore(this.app);
     this.auth = getAuth(this.app);
