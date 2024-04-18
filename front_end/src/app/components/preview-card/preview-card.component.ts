@@ -27,7 +27,8 @@ export class PreviewCardComponent implements OnInit {
     this.canvas = new fabric.Canvas(board, {
       backgroundColor: 'dimgray',
       selection: false,
-      skipTargetFind:true
+      skipTargetFind:true,
+      defaultCursor:'pointer'
     });
 
     if (this.objects?.objects && typeof this.objects.objects === 'string') {

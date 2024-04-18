@@ -5,10 +5,12 @@ import { SignInComponent } from './components/auth/sign-in/sign-in.component';
 import { SignUpComponent } from './components/auth/sign-up/sign-up.component';
 import { authGuard } from './guard/auth.guard';
 import { WelcomeComponent } from './components/welcome/welcome.component';
+import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 export const routes: Routes = [
   { path: 'sign-in', component: SignInComponent ,canActivate:[authGuard]},
   { path: 'sign-up', component: SignUpComponent,canActivate:[authGuard] },
+  { path: 'user-profile', component: UserProfileComponent,canActivate:[authGuard] },
   { path: 'dashboard', component: DashboardComponent,canActivate:[authGuard] },
   { path: 'canvas/:id', component: CanvasComponent},
   { path: 'canvas', component: CanvasComponent},

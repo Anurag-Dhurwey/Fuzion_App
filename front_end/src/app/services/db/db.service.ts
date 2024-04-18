@@ -36,7 +36,6 @@ export class DbService {
   auth;
   storage;
   constructor(private socketService: SocketService) {
-    console.log(environment)
     this.app = initializeApp(environment.firebaseConfig);
     this.store = getFirestore(this.app);
     this.auth = getAuth(this.app);

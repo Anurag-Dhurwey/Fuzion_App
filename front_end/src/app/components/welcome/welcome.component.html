@@ -13,7 +13,7 @@
     position: relative;
   }
   .menubar {
-    background-color: dimgray;
+    background: linear-gradient(45deg,#367ab9 0%, #749595 100%);
     width: 100%;
     height: 100%;
     position: sticky;
@@ -24,7 +24,7 @@
     font-size: larger;
   }
 
-  .account_menu {
+  /* .account_menu {
     display: none;
     cursor: default;
     position: absolute;
@@ -46,7 +46,7 @@
   .account_menu > button {
     border-bottom: 2px solid black;
     cursor: pointer;
-  }
+  } */
 
   .menubar .top {
     height: 50px !important;
@@ -54,15 +54,18 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
-    background-color: rgb(62, 122, 120);
+    background: linear-gradient(45deg, #4fa1c9 0%, #3e870d 100%);
     border-radius: 0px 0px 10px 10px;
   }
   .menubar .top #icon {
     font-size: 25px !important;
+    background: none;
+  outline: none;
+  border: none;
   }
   .dashboard .directry {
     width: 100vw;
-    height: 45vh;
+    height:45vh;
     min-height: 100px;
     background-color: gray;
     display: flex;
@@ -150,43 +153,52 @@
         <button
           id="icon"
           class="material-symbols-outlined"
-          (click)="createProject()"
+          routerLink="/dashboard"
         >
-          add
+          dashboard
         </button>
-        <span class="profile_icon" style="position: relative">
-          <button id="icon" class="material-symbols-outlined">
+        <!-- <span class="profile_icon" style="position: relative"> -->
+          <button id="icon" class="material-symbols-outlined"  routerLink="/user-profile">
             account_circle
           </button>
-          <span class="account_menu">
+          <!-- <span class="account_menu">
             <button>Profle</button>
             <button (click)="signOut()">Signout</button>
-          </span>
-        </span>
+          </span> -->
+        <!-- </span> -->
         }@else {
 
         <button
           routerLink="/canvas"
-          style="font-weight: bold; width: 100%; height: 100%"
+          style="font-weight: bold; width: 100%; border: none; outline: none; height: 100%;   background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%);"
         >
           Try without Sign-In
         </button>
         <!-- <button routerLink="/sign-in">Sign-In</button> -->
         }
       </div>
-      <div class="bottom"></div>
+      <div class="bottom" ></div>
     </div>
   </section>
   <section>
-    <div class="recents" style="display: flex; flex-direction: column">
+    <div
+      class="recents"
+      style="
+        display: flex;
+        flex-direction: column;
+
+        row-gap: 20px;
+        background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%);
+      "
+    >
       <h3 style="margin: 0%; padding: 10px 0px; text-align: center">
         Welcome! Unleash your creativity with our powerful design tool.
       </h3>
-      <p style="text-align: center; font-weight: bold; padding: 0px 30px">
+      <!-- <p style="text-align: center; font-weight: bold; padding: 0px 30px">
         This app empowers you to bring your ideas to life with an intuitive
         interface and robust features, similar to popular design platforms like
         Figma and Canva.
-      </p>
+      </p> -->
       <!-- <ul class="ul">
         <li>
           <span>Shape creation:</span> Effortlessly create various shapes,
@@ -202,15 +214,31 @@
         </li>
       </ul> -->
       <div class="start-explore">
-        <h4>Start exploring and turn your vision into reality!</h4>
-        <button routerLink="/canvas">Get Started Now</button>
+        <!-- <h4>Start exploring and turn your vision into reality!</h4> -->
+        <button
+          style="
+            padding: 10px 20px;
+            outline: none;
+            border: none;
+            border-radius: 10px;
+            font-size: large;
+            cursor: pointer;
+            background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%);
+          "
+          routerLink="/canvas"
+        >
+          Get Started Now
+        </button>
       </div>
     </div>
-    <div class="directry">
+    <div
+      class="directry"
+      style="background: linear-gradient(45deg, #c94f74 0%, #3e870d 100%)"
+    >
       @for (project of demo_projects; track $index) {
       <app-preview-card
         class="card"
-        style="overflow: hidden;"
+        style="overflow: hidden"
         [style]="{ backgroundColor: 'gray' }"
         [objects]="project"
         [id]="project.id"

@@ -110,6 +110,8 @@ export class CanvasComponent implements OnInit {
     this.canvasService.canvas = new fabric.Canvas(board, {
       backgroundColor: this.app$?.canvasConfig.backgroungColor,
       stopContextMenu: true,
+      // defaultCursor:'pointer',
+      // hoverCursor:'pointer'
       // targetFindTolerance:5,
       // perPixelTargetFind:true
     });

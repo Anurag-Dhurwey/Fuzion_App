@@ -13,10 +13,14 @@
     position: relative;
   }
   .menubar {
-    background-color: dimgray;
+    background: linear-gradient(45deg,#367ab9 0%, #749595 100%);
     width: 100%;
     height: 100%;
     position: sticky;
+    display: flex;
+    flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
   }
   .menubar button {
     background: none;
@@ -25,7 +29,7 @@
     cursor: pointer;
   }
 
-  .account_menu {
+  /* .account_menu {
     display: none;
     cursor: default;
     position: absolute;
@@ -39,15 +43,15 @@
     align-items: flex-start;
     flex-direction: column;
     row-gap: 10px;
-  }
-  .menubar .profile_icon:hover .account_menu {
+  } */
+  /* .menubar .profile_icon:hover .account_menu {
     display: flex;
-  }
+  } */
 
-  .account_menu > button {
+  /* .account_menu > button {
     border-bottom: 2px solid black;
     cursor: pointer;
-  }
+  } */
 
   .menubar .top {
     height: 50px !important;
@@ -58,26 +62,28 @@
     background-color: rgb(62, 122, 120);
     border-radius: 0px 0px 10px 10px;
   }
-  .menubar .top #icon {
+   #icon {
     font-size: 25px !important;
   }
   .dashboard .directry {
     width: 100vw;
-    height: 45vh;
+    height: 100vh;
     min-height: 100px;
     background-color: gray;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
     gap: 5px;
+    overflow-y: auto;
+    padding-bottom: 5px;
   }
-  .dashboard .recents {
+  /* .dashboard .recents {
     width: 100vw;
     height: 45vh;
     min-height: 100px;
     background-color: lightskyblue;
-  }
+  } */
   .card {
     width: 250px;
     height: 150px;
@@ -102,16 +108,16 @@
     }
     .dashboard .directry {
       width: 80vw;
-      height: 50vh;
+      height: calc(100vh - 5px);
     }
-    .dashboard .recents {
+    /* .dashboard .recents {
       width: 80vw;
-      height: 50vh;
-    }
+      height: 40vh;
+    } */
     .menubar .top {
       height: 75px !important;
     }
-    .menubar .top #icon {
+     #icon {
       font-size: 50px !important;
     }
   }
@@ -120,36 +126,56 @@
 <main class="dashboard">
   <section class="menu">
     <div class="menubar">
-      <div class="top">
+      <div class="top" style="background: linear-gradient(45deg, #4fa1c9 0%, #3e870d 100%);">
         <button
           id="icon"
           class="material-symbols-outlined"
-          (click)="createProject()"
-        >
-          add
+          routerLink="/welcome"
+          >
+          <!-- (click)="createProject()" -->
+          home
         </button>
         <span class="profile_icon" style="position: relative">
-          <button id="icon" class="material-symbols-outlined">
+          <button id="icon" class="material-symbols-outlined"  routerLink="/user-profile">
             account_circle
           </button>
-          <span class="account_menu">
+          <!-- <span class="account_menu">
             <button>Profle</button>
             <button routerLink="/welcome">Welcome</button>
             <button (click)="signOut()">Signout</button>
-          </span>
+          </span> -->
         </span>
       </div>
+      
+      <button
+      (click)="createProject()"
+      id="icon"
+      class="material-symbols-outlined"
+      style="margin: 10px;
+      background: gray;
+      border-radius: 18px; width: 80%; border: none; outline: none; height: 50px; background: linear-gradient(0deg, #3584e4 0%, #aac7ba 100%); "
+    >
+     add
+    </button>
       <div class="bottom"></div>
     </div>
   </section>
   <section>
-    <div class="directry">
+    <div
+      class="directry"
+      style="
+        overflow-y: auto;
+        padding-bottom: 5px;
+        background: linear-gradient(45deg, #c94f74 0%, #3e870d 100%);
+      "
+    >
       @if(authService.auth.currentUser?.email==='anuragdhurwey046@gmail.com'){
       <div
         style="
           width: 100%;
-          height: 30px;
-          background-color: yellowgreen;
+          height: 50px;
+          background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%);
+
           align-self: flex-start;
           display: flex;
           justify-content: center;
@@ -158,15 +184,33 @@
         "
       >
         <button
+          style="
+            padding: 5px 10px;
+            outline: none;
+            border: none;
+            border-radius: 5px;
+            font-size: large;
+            cursor: pointer;
+            background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%);
+          "
           [style]="{
             cursor: 'pointer',
             backgroundColor: projectType == 'promotional' ? 'gray' : ''
           }"
-          (click)="onClickPromotionalTab();projectType = 'promotional'"
+          (click)="onClickPromotionalTab(); projectType = 'promotional'"
         >
           Promotional
         </button>
         <button
+          style="
+            padding: 5px 10px;
+            outline: none;
+            border: none;
+            border-radius: 5px;
+            font-size: large;
+            cursor: pointer;
+            background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%);
+          "
           [style]="{
             cursor: 'pointer',
             backgroundColor: projectType == 'my' ? 'gray' : ''
@@ -176,7 +220,8 @@
           My
         </button>
       </div>
-      } @for (project of projectType=='my'?app$?.projects:demo_projects; track $index) {
+      } @for (project of projectType=='my'?app$?.projects:demo_projects; track
+      $index) {
       <!-- <div
         [routerLink]="'/canvas/' + project.id"
         class="card"
@@ -185,20 +230,18 @@
         <p>{{ project.id }}</p>
       </div> -->
       <app-preview-card
-      class="card"
-      style="overflow: hidden;"
-      [routerLink]="'/canvas/' + project.id"
-      [style]="{ backgroundColor: 'dimgray' }"
-      [objects]="project"
-      [id]="project.id"
-      [dimension]="{ width: 250, height: 150 }"
-    />
+        class="card"
+        style="overflow: hidden"
+        [routerLink]="'/canvas/' + project.id"
+        [style]="{ backgroundColor: 'dimgray' }"
+        [objects]="project"
+        [id]="project.id"
+        [dimension]="{ width: 250, height: 150 }"
+      />
       } @empty {
-      <div class="card" [style]="{ backgroundColor: 'dimgray' }">
-        <p>empty</p>
-      </div>
+      <p style="align-self: flex-start; font-size: x-large;">empty</p>
       }
     </div>
-    <div class="recents"></div>
+    <!-- <div class="recents"></div> -->
   </section>
 </main>
