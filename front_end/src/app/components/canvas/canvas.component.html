@@ -88,7 +88,7 @@
 </style>
 
 <main class="main">
-  <app-tool-bar (setCurrentAction)="setCurrentAction($event)" />
+  <app-tool-bar (setCurrentRole)="setCurrentRole($event)" />
   @if(app$?.isExportComponentVisible){
   <app-export />
   }

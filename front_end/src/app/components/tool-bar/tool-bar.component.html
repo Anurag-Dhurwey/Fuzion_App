@@ -100,7 +100,7 @@
   <button
     class="material-symbols-outlined"
     [style.background-color]="app$?.role == role.role ? '#73c7af' : ''"
-    (click)="onClickActionButton(role.role)"
+    (click)="onClickRoleButton(role.role)"
   >
     {{ role.icon }}
   </button>
@@ -129,14 +129,14 @@
     id="importBtn"
     class="material-symbols-outlined"
     (click)="importInput.click()"
-    (click)="setCurrentAction.emit('select')"
+    (click)="setCurrentRole.emit('select')"
   >
     ios_share
   </button>
   <button
     class="material-symbols-outlined"
     (click)="export()"
-    (click)="setCurrentAction.emit('select')"
+    (click)="setCurrentRole.emit('select')"
   >
     ios_share
   </button>

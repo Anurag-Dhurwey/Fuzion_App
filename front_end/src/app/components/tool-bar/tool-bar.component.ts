@@ -39,7 +39,7 @@ import { SocketService } from '../../services/socket/socket.service';
   styleUrl: './tool-bar.component.css',
 })
 export class ToolBarComponent {
-  @Output() setCurrentAction = new EventEmitter<Roles>();
+  @Output() setCurrentRole = new EventEmitter<Roles>();
 
   private store = inject(Store);
   app$: appState | undefined;
@@ -99,11 +99,12 @@ export class ToolBarComponent {
     }
   }
 
-  onClickActionButton(role: Roles) {
-    this.setCurrentAction.emit(role);
+  onClickRoleButton(role: Roles) {
+    this.setCurrentRole.emit(role);
     if (role === 'image') {
       this.fileInput?.nativeElement.click();
     }
+   
   }
   export() {
     this.store.dispatch(
