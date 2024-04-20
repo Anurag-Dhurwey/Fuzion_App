@@ -2,6 +2,7 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  HostListener,
   Input,
   Output,
   ViewChild,
@@ -50,6 +51,15 @@ export class ToolBarComponent {
   @ViewChild('importInput') importInput:
     | ElementRef<HTMLInputElement>
     | undefined;
+
+
+    @HostListener('window:keyup', ['$event'])
+    keyUp(event: KeyboardEvent) {
+      if(event.key=='i'){
+        this.fileInput?.nativeElement.click();
+      }
+    }
+   
 
   constructor(
     private canvasService: CanvasService,

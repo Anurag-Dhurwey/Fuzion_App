@@ -11,6 +11,13 @@ import { CanvasService } from '../../services/canvas/canvas.service';
 })
 export class PropertyPanelComponent {
   constructor(public canvasService: CanvasService) {}
+
+  onDeleteClick() {
+    this.canvasService.filterObjectsByIds([
+      ...this.canvasService.selectedObj.map((obj) => obj._id),
+    ]);
+  }
+
   ngAfterViewInit() {
     this.canvasService.canvas?.on('selection:created', (event) => {
       if (!event.selected) return;

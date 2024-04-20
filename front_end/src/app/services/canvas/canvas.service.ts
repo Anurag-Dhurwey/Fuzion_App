@@ -39,19 +39,19 @@ export class CanvasService {
     });
   }
 
-removeEmptyGroups(objects:Object[]){
-  return  objects.flatMap(obj=>{
-    if(obj.type==='group' ){
-     if(obj._objects.length){
-      obj._objects=this.removeEmptyGroups(obj._objects)
-      return [obj]
-     }else{
-      return [] as Object[]
-     }
-    }
-    return [obj]
-  })
-}
+  removeEmptyGroups(objects: Object[]) {
+    return objects.flatMap((obj) => {
+      if (obj.type === 'group') {
+        if (obj._objects.length) {
+          obj._objects = this.removeEmptyGroups(obj._objects);
+          return [obj];
+        } else {
+          return [] as Object[];
+        }
+      }
+      return [obj];
+    });
+  }
 
   countChildsLength(id: string) {
     function traverse(obj: Object): number | undefined {
@@ -93,7 +93,7 @@ removeEmptyGroups(objects:Object[]){
     return traverse(this.selectedObj);
   }
 
-  get oneArrayOfSelectedObj() {
+  getOneDarray(obj: Object[]) {
     function traverse(obj: Object[]): Object[] {
       return obj.flatMap((ob: Object) => {
         if (ob.type === 'group') {
@@ -104,7 +104,15 @@ removeEmptyGroups(objects:Object[]){
       });
     }
 
-    return traverse(this.selectedObj);
+    return traverse(obj);
+  }
+
+  get oneDarrayOfObjects() {
+    return this.getOneDarray(this.objects);
+  }
+
+  get oneDarrayOfSelectedObj() {
+    return this.getOneDarray(this.selectedObj);
   }
 
   static extractIds(objects: Object[]) {
@@ -121,29 +129,29 @@ removeEmptyGroups(objects:Object[]){
     return traverse(objects);
   }
 
-  isSelected(id: string):boolean {
-    function isExist(obj: Object): boolean  {
-      if(obj._id===id){
-        return true
+  isSelected(id: string): boolean {
+    function isExist(obj: Object): boolean {
+      if (obj._id === id) {
+        return true;
       }
-      if(obj.type==='group'){
+      if (obj.type === 'group') {
         for (const subObj of obj._objects) {
-          const res= isExist(subObj)
-          if(res){
-            return true
+          const res = isExist(subObj);
+          if (res) {
+            return true;
           }
         }
       }
-      return false
+      return false;
     }
 
     for (const obj of this.selectedObj) {
-      const res= isExist(obj)
-      if(res){
-        return true
+      const res = isExist(obj);
+      if (res) {
+        return true;
       }
     }
-    return false
+    return false;
   }
 
   seriesIndex(id: string, text?: string) {

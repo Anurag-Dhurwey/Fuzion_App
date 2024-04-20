@@ -66,13 +66,13 @@ export class LayerService {
       this.canvasService.canvas?.discardActiveObject();
       this.canvasService.selectedObj = [object];
     }
-    if (this.canvasService.oneArrayOfSelectedObj.length === 1) {
-      const select = this.canvasService.oneArrayOfSelectedObj[0];
+    if (this.canvasService.oneDarrayOfSelectedObj.length === 1) {
+      const select = this.canvasService.oneDarrayOfSelectedObj[0];
       this.canvasService.canvas?.setActiveObject(select);
       // this.canvasService.canvas?.requestRenderAll();
-    } else if (this.canvasService.oneArrayOfSelectedObj.length > 1) {
+    } else if (this.canvasService.oneDarrayOfSelectedObj.length > 1) {
       const select = new fabric.ActiveSelection(
-        this.canvasService.oneArrayOfSelectedObj,
+        this.canvasService.oneDarrayOfSelectedObj,
         {
           canvas: this.canvasService.canvas,
         }
@@ -85,6 +85,23 @@ export class LayerService {
     this.canvasService.canvas?.requestRenderAll();
     console.log(this.canvasService.selectedObj);
   }
+
+
+  setAllObjsToActiveSelection(){
+    this.canvasService.canvas?.discardActiveObject();
+    this.canvasService.selectedObj = [...this.canvasService.oneDarrayOfObjects];
+    if(this.canvasService.oneDarrayOfSelectedObj.length){
+      const select = new fabric.ActiveSelection(
+        this.canvasService.oneDarrayOfSelectedObj,
+        {
+          canvas: this.canvasService.canvas,
+        }
+      );
+      this.canvasService.canvas?.setActiveObject(select);
+      this.canvasService.canvas?.requestRenderAll();
+    }
+  }
+
   onLeftClick(e: MouseEvent, data: Object,groupId:null|string) {
     if(e.ctrlKey&& this.canvasService.isSelected(groupId||'')){
       console.log(groupId)

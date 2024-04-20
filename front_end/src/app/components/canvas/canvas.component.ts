@@ -16,6 +16,7 @@ import { PropertyPanelComponent } from '../property-panel/property-panel.compone
 import { ExportComponent } from '../export/export.component';
 import { AuthService } from '../../services/auth/auth.service';
 import { DbService } from '../../services/db/db.service';
+import { LayerService } from '../../services/layer/layer.service';
 
 @Component({
   selector: 'app-canvas',
@@ -48,6 +49,7 @@ export class CanvasComponent implements OnInit {
   constructor(
     public socketService: SocketService,
     public canvasService: CanvasService,
+    private layerService: LayerService,
     private dbService: DbService,
     public authService: AuthService,
     private route: ActivatedRoute
@@ -57,16 +59,33 @@ export class CanvasComponent implements OnInit {
 
   @HostListener('window:keydown', ['$event'])
   keyDown(event: KeyboardEvent) {
-    if (event.key === ' ' && this.app$?.role != 'text') {
-      this.canvasService.canvas!.defaultCursor = 'grabbing';
-      this.canvasService.canvas!.setCursor('grabbing');
+    if (event.altKey && this.app$?.role != 'text') {
+      this.canvasService.canvas!.defaultCursor = 'grab';
+      this.canvasService.canvas!.setCursor('grab');
+      this.canvasService.canvas!.skipTargetFind = true;
     }
   }
   @HostListener('window:keyup', ['$event'])
   keyUp(event: KeyboardEvent) {
-    if (event.key === ' ' && this.app$?.role != 'text') {
+    if (!event.altKey && this.app$?.role != 'text') {
       this.canvasService.canvas!.defaultCursor = 'default';
       this.canvasService.canvas!.setCursor('default');
+      this.canvasService.canvas!.skipTargetFind = false;
+    }
+    if (event.key == 'c') {
+      this.setCurrentRole('circle');
+    } else if (event.key == 'r') {
+      this.setCurrentRole('rectangle');
+    } else if (event.key == 'l') {
+      this.setCurrentRole('line');
+    } else if (event.key == 't') {
+      this.setCurrentRole('text');
+    } else if (event.key == 'p') {
+      this.setCurrentRole('pencil');
+    } else if (event.key == 's') {
+      this.setCurrentRole('pen');
+    } else if (event.key == 'a') {
+      this.layerService.setAllObjsToActiveSelection();
     }
   }
 
@@ -76,7 +95,6 @@ export class CanvasComponent implements OnInit {
       this.dbService
         .getProjectsByIds(this.canvasService.projectId)
         .then((data: any[]) => {
-          console.log(data);
           if (!data.length) return;
           this.canvasService.enliveObjcts(
             JSON.parse(data[0].objects || '[]'),
@@ -178,7 +196,9 @@ export class CanvasComponent implements OnInit {
       this.lastPosX = event.e.clientX;
       this.lastPosY = event.e.clientY;
       this.isDragging = true;
-      this.canvasService.canvas!.selection = false;
+      this.canvasService.canvas.selection = false;
+      this.canvasService.canvas.defaultCursor = 'grabbing';
+      this.canvasService.canvas.setCursor('grabbing');
       return;
     }
 
@@ -410,7 +430,9 @@ export class CanvasComponent implements OnInit {
     if (this.isDragging) {
       this.isDragging = false;
       this.canvasService.canvas.selection = true;
-      // this.canvasService.canvas!.setCursor('grab');
+      this.canvasService.canvas!.defaultCursor = 'grab';
+      this.canvasService.canvas!.setCursor('grab');
+      // this.canvasService.canvas.renderAll()
     }
   }
 
