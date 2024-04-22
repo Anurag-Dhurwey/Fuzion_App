@@ -5,7 +5,7 @@ import { ToolBarComponent } from '../tool-bar/tool-bar.component';
 import { Store } from '@ngrx/store';
 import { appSelector } from '../../store/selectors/app.selector';
 import { appState } from '../../store/reducers/state.reducer';
-import { setRole } from '../../store/actions/state.action';
+import { setProjects, setRole } from '../../store/actions/state.action';
 import { Roles, Object, Presense } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
@@ -46,6 +46,7 @@ export class CanvasComponent implements OnInit {
   isDragging: boolean = false;
   lastPosX: undefined | number;
   lastPosY: undefined | number;
+  pathname=window.location.pathname
   constructor(
     public socketService: SocketService,
     public canvasService: CanvasService,
@@ -67,7 +68,8 @@ export class CanvasComponent implements OnInit {
   }
   @HostListener('window:keyup', ['$event'])
   keyUp(event: KeyboardEvent) {
-    if (!event.altKey && this.app$?.role != 'text') {
+    if (this.app$?.role == 'text') return;
+    if (!event.altKey) {
       this.canvasService.canvas!.defaultCursor = 'default';
       this.canvasService.canvas!.setCursor('default');
       this.canvasService.canvas!.skipTargetFind = false;
@@ -107,10 +109,17 @@ export class CanvasComponent implements OnInit {
           this.canvasService.currentDrawingObject = undefined;
 
           if (
-            this.authService.auth.currentUser?.uid === data[0].user ||
-            data[0].members.includes(this.authService.auth.currentUser!.uid)
+            (this.authService.auth.currentUser?.uid === data[0].user ||
+              data[0].members.includes(
+                this.authService.auth.currentUser!.uid
+              )) &&
+            this.canvasService.projectId
+            && !this.pathname.includes('demo')
           ) {
-            this.socketService.connect();
+            this.socketService.connect(
+              this.canvasService.projectId,
+              this.authService.auth.currentUser?.email
+            );
             this.socketService.on('mouse:move', (data: Presense[]) => {
               this.socketService.presense = data.filter(
                 (pre) => pre.id !== this.socketService.socket?.id
@@ -543,6 +552,29 @@ export class CanvasComponent implements OnInit {
   }
 
   ngOnDestroy() {
+    // const project={id:}
+    if (
+      this.canvasService.background &&
+      this.canvasService.adminId &&
+      this.canvasService.projectId &&
+      this.canvasService.objects.length &&
+      this.canvasService.version
+    ) {
+      this.store.dispatch(
+        setProjects({
+          project: {
+            id: this.canvasService.projectId,
+            user: this.canvasService.adminId,
+            objects: JSON.stringify(
+              this.canvasService.canvas?.toJSON(['_id', 'name']).objects || []
+            ),
+            version: this.canvasService.version,
+            background: this.canvasService.background,
+          },
+          method: 'replace',
+        })
+      );
+    }
     if (this.canvasService.projectId) {
       this.socketService.emit('room:leave', this.canvasService.projectId);
     }

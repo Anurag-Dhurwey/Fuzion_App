@@ -12,7 +12,6 @@ import { Store } from '@ngrx/store';
 import { appSelector } from '../../store/selectors/app.selector';
 import { project } from '../../../types/app.types';
 import { CanvasService } from '../../services/canvas/canvas.service';
-import { fabric } from 'fabric';
 import { PreviewCardComponent } from '../preview-card/preview-card.component';
 
 @Component({

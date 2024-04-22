@@ -4,7 +4,8 @@ import { Server } from "socket.io";
 import cors from "cors";
 import { client } from "./redis.config";
 import { routes } from "./routes/routes";
-import { db } from "./firebase.config";
+import { admin, db } from "./firebase.config";
+import { socket_middleware } from "./middleware/socket_middleware";
 require("dotenv").config();
 
 const app = express();
@@ -25,6 +26,9 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
   // res.send('working server')
 });
+
+
+io.use(socket_middleware);
 
 type UserMap = Record<string, string[]>;
 let onlineUsers: UserMap = {};

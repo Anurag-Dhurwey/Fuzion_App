@@ -11,9 +11,9 @@ export class SocketService {
   presense: Presense[] = [];
   constructor() {}
 
-  connect() {
+  connect(id:string,email?:string|null) {
     if (!this.socket?.connected&&environment.socket_url) {
-      this.socket = io(environment.socket_url);
+      this.socket = io(environment.socket_url,{query:{id,email}});
     }else if(!environment.socket_url){
       console.error('environment.socket_url is undefind')
     }

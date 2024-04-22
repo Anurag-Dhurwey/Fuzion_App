@@ -14,6 +14,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent,canActivate:[authGuard] },
   { path: 'canvas/:id', component: CanvasComponent},
   { path: 'canvas', component: CanvasComponent},
+  { path: 'canvas/demo/:id', component: CanvasComponent},
   { path: 'welcome', component: WelcomeComponent},
   { path: '', redirectTo: 'welcome', pathMatch: 'full' },
 ];

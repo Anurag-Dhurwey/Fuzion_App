@@ -41,6 +41,20 @@ export const appReducer = createReducer(
       return { ...state, projects: props.project };
     } else if (props.method === 'push' && !Array.isArray(props.project)) {
       return { ...state, projects: [...state.projects, props.project] };
+    } else if (props.method === 'replace') {
+      if (!Array.isArray(props.project)) {
+        props.project = [props.project];
+      }
+      state.projects = state.projects.map((pro) => {
+        const mached = (props.project as Projects[]).find(
+          (item) => item.id == pro.id
+        );
+        if (mached) {
+          return mached;
+        }
+        return pro;
+      });
+      return state;
     } else {
       return state;
     }

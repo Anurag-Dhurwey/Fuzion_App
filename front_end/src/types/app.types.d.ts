@@ -47,7 +47,7 @@ export type CommonProperty = {
 export type Projects = {
   id: string;
   background: string;
-  objects: Object[];
+  objects: string;
   user: string;
   version: string;
 };
