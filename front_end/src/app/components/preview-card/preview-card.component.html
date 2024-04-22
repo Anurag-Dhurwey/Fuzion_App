@@ -1,2 +1,23 @@
-<canvas [id]="id"></canvas>
+<div
+  style="
+    width: fit-content;
+    height: fit-content;
+    overflow-y: auto;
+    position: relative;
+  "
+>
+  <div
+    style="
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      z-index: 2;
+      background: transparent;
+    "
+  ></div>
+  <canvas style="z-index: 0" [id]="id"></canvas>
+</div>
+
 <!-- <button style="z-index: 10;" (click)="test()">test</button> -->

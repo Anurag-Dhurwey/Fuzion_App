@@ -24,29 +24,6 @@
     font-size: larger;
   }
 
-  /* .account_menu {
-    display: none;
-    cursor: default;
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    padding: 10px 5px;
-    font-size: small;
-    background-color: gray;
-    border-radius: 6px;
-    justify-content: center;
-    align-items: flex-start;
-    flex-direction: column;
-    row-gap: 10px;
-  }
-  .menubar .profile_icon:hover .account_menu {
-    display: flex;
-  }
-
-  .account_menu > button {
-    border-bottom: 2px solid black;
-    cursor: pointer;
-  } */
 
   .menubar .top {
     height: 50px !important;
@@ -64,8 +41,10 @@
   border: none;
   }
   .dashboard .directry {
+    padding: 10px 0px;
     width: 100vw;
-    height:45vh;
+    overflow-y: auto;
+    height:calc(45vh - 20px);
     min-height: 100px;
     background-color: gray;
     display: flex;
@@ -225,7 +204,7 @@
             cursor: pointer;
             background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%);
           "
-          routerLink="/canvas"
+          [routerLink]="authService.auth.currentUser?'/dashboard':'/sign-in'"
         >
           Get Started Now
         </button>
@@ -238,7 +217,7 @@
       @for (project of demo_projects; track $index) {
       <app-preview-card
         class="card"
-        style="overflow: hidden"
+        style="overflow: auto"
         [style]="{ backgroundColor: 'gray' }"
         [objects]="project"
         [id]="project.id"

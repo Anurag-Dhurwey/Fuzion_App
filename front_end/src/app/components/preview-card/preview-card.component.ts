@@ -28,7 +28,8 @@ export class PreviewCardComponent implements OnInit {
       backgroundColor: 'dimgray',
       selection: false,
       skipTargetFind:true,
-      defaultCursor:'pointer'
+      defaultCursor:'pointer',
+      allowTouchScrolling:false
     });
 
     if (this.objects?.objects && typeof this.objects.objects === 'string') {
