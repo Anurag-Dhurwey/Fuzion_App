@@ -87,21 +87,27 @@
     background-color: aqua;
     z-index: 10;
   }
+  @media (max-width: 1000px) {
+    app-tool-bar {
+      display: none;
+    }
+  }
 </style>
 
 <main class="main">
-  <app-tool-bar (setCurrentRole)="setCurrentRole($event)" />
   @if(app$?.isExportComponentVisible){
   <app-export />
-  }
+  } @if(!isMobile()){
+  <app-tool-bar (setCurrentRole)="setCurrentRole($event)" />
   <app-layer-panel
     [layers]="canvasService.objects"
     [group_id]="null"
     [projectId]="canvasService.projectId"
   />
   <app-property-panel />
-  @if(canvasService.projectId&&authService.auth.currentUser&&
-  !socketService.socket?.connected && !pathname.includes('demo')){
+  } @if(canvasService.projectId&&authService.auth.currentUser&&
+  !socketService.socket?.connected &&
+  !window.location.pathname.includes('demo')&&!isMobile()){
   <div class="loader">
     <h3>Connecting to server</h3>
   </div>

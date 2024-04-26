@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { fabric } from 'fabric';
 import { SocketService } from '../socket/socket.service';
 import { Observable, Subscriber } from 'rxjs';
-import { Group, Object } from '../../../types/app.types';
+import { Group, Object, Project } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { IGroupOptions } from 'fabric/fabric-impl';
 import { AuthService } from '../auth/auth.service';
@@ -28,7 +28,7 @@ export class CanvasService {
   selectedObj: Object[] = [];
   constructor(
     private socketService: SocketService,
-    private authService: AuthService
+    // private authService: AuthService
   ) {
     new Observable((observer) => {
       this.objectsObserver = observer;
@@ -184,10 +184,22 @@ export class CanvasService {
     return undefined;
   }
 
-  enliveObjcts(objects: any[], replace: boolean = false): void {
+  enliveObjcts(project: Project, replace: boolean = false): void {
     fabric.util.enlivenObjects(
-      objects,
+      JSON.parse(project.objects || '[]'),
       (createdObjs: Object[]) => {
+        console.log(this.canvas?.height ,window.innerHeight,project.height)
+        console.log(this.canvas?.width ,window.innerWidth,project.width)
+        createdObjs?.forEach((obj: Object) => {
+          const scalY =this.canvas?.height!/ project.height;
+          const scalX =this.canvas?.width! / project.width;
+          obj.scaleToHeight(300 * scalY);
+          obj.scaleToWidth(300* scalX);
+          obj.left = obj.left! * scalX;
+          obj.top = obj.top! * scalY;
+          this.canvas?.add(obj);
+          this.canvas?.renderAll();
+        });
         if (replace) {
           this.objects = createdObjs;
           this.reRender();

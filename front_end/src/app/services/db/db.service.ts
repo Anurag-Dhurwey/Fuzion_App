@@ -24,8 +24,9 @@ import {
 import { environment } from '../../../../environment';
 // front_end/environment.ts
 import { SocketService } from '../socket/socket.service';
-import { Projects } from '../../../types/app.types';
+import { Project } from '../../../types/app.types';
 import { v4 } from 'uuid';
+import { CanvasService } from '../canvas/canvas.service';
 
 @Injectable({
   providedIn: 'root',
@@ -35,7 +36,10 @@ export class DbService {
   store;
   auth;
   storage;
-  constructor(private socketService: SocketService) {
+  constructor(
+    private socketService: SocketService,
+    private canvasService: CanvasService
+  ) {
     this.app = initializeApp(environment.firebaseConfig);
     this.store = getFirestore(this.app);
     this.auth = getAuth(this.app);
@@ -51,6 +55,8 @@ export class DbService {
         objects: '[]',
         user: this.auth.currentUser?.uid,
         members: [],
+        width: window.innerWidth,
+        height: window.innerHeight,
       });
 
       this.socketService.emit('room:join', docRef.id);
@@ -63,7 +69,7 @@ export class DbService {
 
   async getProjects() {
     if (!this.auth.currentUser) return;
-    const projects: Projects[] = [];
+    const projects: Project[] = [];
     const q = query(
       collection(this.store, 'projects'),
       where('user', '==', this.auth.currentUser.uid)
@@ -72,7 +78,7 @@ export class DbService {
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      projects.push({ ...data, id: doc.id } as Projects);
+      projects.push({ ...data, id: doc.id } as Project);
     });
     return projects;
   }

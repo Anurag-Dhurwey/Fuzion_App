@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { Projects, Roles } from '../../../types/app.types';
+import { Project, Roles } from '../../../types/app.types';
 
 
 
@@ -15,7 +15,7 @@ export const setCanvasConfig = createAction(
 );
 
 
-export type setProjectsProps={project:Projects[]|Projects,method:'reset'|'push'|'replace'}
+export type setProjectsProps={project:Project[]|Project,method:'reset'|'push'|'replace'}
 export const setProjects = createAction(
   '[Action Component] setProjects',
   props<setProjectsProps>()

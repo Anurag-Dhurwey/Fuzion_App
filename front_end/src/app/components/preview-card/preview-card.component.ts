@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { Object, project } from '../../../types/app.types';
+import { Object, Project } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { v4 } from 'uuid';
 @Component({
@@ -10,7 +10,7 @@ import { v4 } from 'uuid';
   styleUrl: './preview-card.component.css',
 })
 export class PreviewCardComponent implements OnInit {
-  @Input() objects: project | undefined;
+  @Input() objects: Project | undefined;
   @Input() id: string = v4();
   @Input() dimension: { width: number; height: number } = {
     width: 250,
@@ -37,8 +37,8 @@ export class PreviewCardComponent implements OnInit {
         JSON.parse(this.objects.objects),
         (live: any) => {
           live?.forEach((obj: Object) => {
-            const scalY = this.dimension.height / window.innerHeight;
-            const scalX = this.dimension.width / window.innerWidth;
+            const scalY = this.dimension.height / this.objects!.height;
+            const scalX = this.dimension.width / this.objects!.width;
             obj.scaleToHeight(this.dimension.height * scalY);
             obj.scaleToWidth(this.dimension.width * scalX);
             obj.left = obj.left! * scalX;
@@ -50,7 +50,6 @@ export class PreviewCardComponent implements OnInit {
         'fabric'
       );
     }
-
   }
   test() {
     console.log(this.canvas?.toObject());

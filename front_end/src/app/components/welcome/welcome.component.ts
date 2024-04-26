@@ -10,10 +10,10 @@ import { AuthService } from '../../services/auth/auth.service';
 import { appState } from '../../store/reducers/state.reducer';
 import { Store } from '@ngrx/store';
 import { appSelector } from '../../store/selectors/app.selector';
-import { project } from '../../../types/app.types';
+import { Project } from '../../../types/app.types';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { PreviewCardComponent } from '../preview-card/preview-card.component';
-
+import { environment } from '../../../../environment';
 @Component({
   selector: 'app-welcome',
   standalone: true,
@@ -24,7 +24,7 @@ import { PreviewCardComponent } from '../preview-card/preview-card.component';
 export class WelcomeComponent implements OnInit {
   app$: appState | undefined;
   private store = inject(Store);
-  demo_projects: project[] = [];
+  demo_projects: Project[] = [];
 
   constructor(
     public authService: AuthService,
@@ -37,14 +37,14 @@ export class WelcomeComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      this.demo_projects = (await this.dbService.getProjectsByIds([
-        'R67bwQ8Dz03STMt1hfey',
-        'K3cm1DyTLghMlIVDPj55',
-      ])) as project[];
+      if (!environment.demo_project_ids.length) return;
+
+      this.demo_projects = (await this.dbService.getProjectsByIds(
+        environment.demo_project_ids
+      )) as Project[];
     } catch (error) {
       console.error(error);
     }
-
   }
 
   async signOut() {

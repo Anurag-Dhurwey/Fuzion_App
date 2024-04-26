@@ -8,12 +8,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth/auth.service';
 import { DbService } from '../../services/db/db.service';
-import { Object, Projects, project } from '../../../types/app.types';
+import { Object, Project,  } from '../../../types/app.types';
 import { appSelector } from '../../store/selectors/app.selector';
 import { Store } from '@ngrx/store';
 import { appState } from '../../store/reducers/state.reducer';
 import { setProjects } from '../../store/actions/state.action';
 import { PreviewCardComponent } from '../preview-card/preview-card.component';
+import { environment } from '../../../../environment';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -28,10 +29,10 @@ import { PreviewCardComponent } from '../preview-card/preview-card.component';
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit {
-  // projects: Projects[] = [];
+  // projects: Project[] = [];
   app$: appState | undefined;
   private store = inject(Store);
-  demo_projects: project[] = [];
+  demo_projects: Project[] = [];
   projectType = 'my';
   constructor(
     public authService: AuthService,
@@ -79,11 +80,8 @@ export class DashboardComponent implements OnInit {
   }
 
   async onClickPromotionalTab() {
-    if (!this.demo_projects.length) {
-      this.demo_projects = (await this.dbService.getProjectsByIds([
-        'R67bwQ8Dz03STMt1hfey',
-        'K3cm1DyTLghMlIVDPj55',
-      ])) as project[];
+    if (!this.demo_projects.length && environment.demo_project_ids.length) {
+      this.demo_projects = (await this.dbService.getProjectsByIds(environment.demo_project_ids)) as Project[];
     }
   }
 }

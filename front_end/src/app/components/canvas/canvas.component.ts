@@ -46,7 +46,7 @@ export class CanvasComponent implements OnInit {
   isDragging: boolean = false;
   lastPosX: undefined | number;
   lastPosY: undefined | number;
-  pathname=window.location.pathname
+  window = window;
   constructor(
     public socketService: SocketService,
     public canvasService: CanvasService,
@@ -91,6 +91,11 @@ export class CanvasComponent implements OnInit {
     }
   }
 
+  isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  }
   ngOnInit(): void {
     this.canvasService.projectId = this.route.snapshot.paramMap.get('id');
     if (this.authService.auth.currentUser && this.canvasService.projectId) {
@@ -98,10 +103,7 @@ export class CanvasComponent implements OnInit {
         .getProjectsByIds(this.canvasService.projectId)
         .then((data: any[]) => {
           if (!data.length) return;
-          this.canvasService.enliveObjcts(
-            JSON.parse(data[0].objects || '[]'),
-            true
-          );
+          this.canvasService.enliveObjcts(data[0], true);
           this.canvasService.members = data[0].members;
           this.canvasService.adminId = data[0].user;
           this.canvasService.background = data[0].background;
@@ -113,8 +115,9 @@ export class CanvasComponent implements OnInit {
               data[0].members.includes(
                 this.authService.auth.currentUser!.uid
               )) &&
-            this.canvasService.projectId
-            && !this.pathname.includes('demo')
+            this.canvasService.projectId &&
+            !this.window.location.pathname.includes('demo') &&
+            !this.isMobile()
           ) {
             this.socketService.connect(
               this.canvasService.projectId,
@@ -139,6 +142,9 @@ export class CanvasComponent implements OnInit {
     this.canvasService.canvas = new fabric.Canvas(board, {
       backgroundColor: this.app$?.canvasConfig.backgroungColor,
       stopContextMenu: true,
+      preserveObjectStacking: true,
+      skipTargetFind: this.isMobile(),
+      selectionKey:'ctrlKey'
       // defaultCursor:'pointer',
       // hoverCursor:'pointer'
       // targetFindTolerance:5,
@@ -149,6 +155,8 @@ export class CanvasComponent implements OnInit {
       board.height = window.innerHeight;
       this.canvasService.canvas?.setHeight(window.innerHeight);
       this.canvasService.canvas?.setWidth(window.innerWidth);
+      this.window = window;
+      this.canvasService.canvas!.skipTargetFind=this.isMobile()
     });
 
     this.canvasService.canvas.on('mouse:over', (event) => {
@@ -201,7 +209,7 @@ export class CanvasComponent implements OnInit {
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
-    if (event.e.altKey) {
+    if (this.isMobile() || event.e.altKey) {
       this.lastPosX = event.e.clientX;
       this.lastPosY = event.e.clientY;
       this.isDragging = true;
@@ -438,9 +446,9 @@ export class CanvasComponent implements OnInit {
 
     if (this.isDragging) {
       this.isDragging = false;
-      this.canvasService.canvas.selection = true;
       this.canvasService.canvas!.defaultCursor = 'grab';
       this.canvasService.canvas!.setCursor('grab');
+      this.canvasService.canvas.selection = true;
       // this.canvasService.canvas.renderAll()
     }
   }
@@ -570,6 +578,9 @@ export class CanvasComponent implements OnInit {
             ),
             version: this.canvasService.version,
             background: this.canvasService.background,
+            height:
+              this.canvasService.canvas?.height || this.window.innerHeight,
+            width: this.canvasService.canvas?.width || this.window.innerWidth,
           },
           method: 'replace',
         })

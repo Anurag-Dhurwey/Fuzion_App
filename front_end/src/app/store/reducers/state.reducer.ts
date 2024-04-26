@@ -5,7 +5,7 @@ import {
   setProjects,
   setRole,
 } from '../actions/state.action';
-import { Projects, Roles } from '../../../types/app.types';
+import { Project, Roles } from '../../../types/app.types';
 export type CanvasConfig = {
   backgroungColor: string;
   width: number;
@@ -14,7 +14,8 @@ export type CanvasConfig = {
 export type appState = {
   role: Roles;
   canvasConfig: CanvasConfig;
-  projects: Projects[];
+  projects: Project[];
+  demo_projects: Project[];
   isExportComponentVisible: boolean;
 };
 
@@ -26,6 +27,7 @@ const initialstate: appState = {
     height: window.innerHeight,
   },
   projects: [],
+  demo_projects: [],
   isExportComponentVisible: false,
 };
 
@@ -46,7 +48,7 @@ export const appReducer = createReducer(
         props.project = [props.project];
       }
       state.projects = state.projects.map((pro) => {
-        const mached = (props.project as Projects[]).find(
+        const mached = (props.project as Project[]).find(
           (item) => item.id == pro.id
         );
         if (mached) {

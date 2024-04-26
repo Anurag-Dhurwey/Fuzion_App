@@ -29,7 +29,7 @@ export class PropertyPanelComponent {
     });
     this.canvasService.canvas?.on('selection:updated', (event) => {
       if (!event.selected) return;
-      this.canvasService.selectedObj = [];
+      if (!event.e.ctrlKey) this.canvasService.selectedObj = [];
       event.selected.forEach((obj: any) => {
         this.canvasService.selectedObj.push(obj);
       });

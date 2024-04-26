@@ -44,12 +44,14 @@ export type CommonProperty = {
 };
 
 
-export type Projects = {
+export type Project = {
   id: string;
   background: string;
   objects: string;
-  user: string;
   version: string;
+  user: string;
+  width:number
+  height:number
 };
 
 export type SocketEmitEvents =
@@ -67,9 +69,9 @@ export type SocketOnEvents =
   | 'disconnect'
   | 'connect';
 
-export type project = {
-  id: string;
-  version: string;
-  background: string;
-  objects:  Object[]|string;
-};
+// export type project = {
+//   id: string;
+//   version: string;
+//   background: string;
+//   objects:  Object[]|string;
+// };
