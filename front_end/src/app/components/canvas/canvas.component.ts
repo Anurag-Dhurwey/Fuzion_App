@@ -47,6 +47,7 @@ export class CanvasComponent implements OnInit {
   lastPosX: undefined | number;
   lastPosY: undefined | number;
   window = window;
+
   constructor(
     public socketService: SocketService,
     public canvasService: CanvasService,
@@ -91,11 +92,11 @@ export class CanvasComponent implements OnInit {
     }
   }
 
-  isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    );
-  }
+  // isMobile() {
+  //   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+  //     navigator.userAgent
+  //   );
+  // }
   ngOnInit(): void {
     this.canvasService.projectId = this.route.snapshot.paramMap.get('id');
     if (this.authService.auth.currentUser && this.canvasService.projectId) {
@@ -109,7 +110,8 @@ export class CanvasComponent implements OnInit {
           this.canvasService.background = data[0].background;
           this.canvasService.version = data[0].version;
           this.canvasService.currentDrawingObject = undefined;
-
+          this.canvasService.frame.x = data[0].width;
+          this.canvasService.frame.y = data[0].height;
           if (
             (this.authService.auth.currentUser?.uid === data[0].user ||
               data[0].members.includes(
@@ -117,7 +119,7 @@ export class CanvasComponent implements OnInit {
               )) &&
             this.canvasService.projectId &&
             !this.window.location.pathname.includes('demo') &&
-            !this.isMobile()
+            !this.canvasService.isMobile()
           ) {
             this.socketService.connect(
               this.canvasService.projectId,
@@ -137,26 +139,32 @@ export class CanvasComponent implements OnInit {
     }
 
     const board = document.getElementById('canvas') as HTMLCanvasElement;
-    board.width = window.innerWidth;
-    board.height = window.innerHeight;
+    board.width = this.canvasService.frame.x;
+    board.height = this.canvasService.frame.y;
     this.canvasService.canvas = new fabric.Canvas(board, {
       backgroundColor: this.app$?.canvasConfig.backgroungColor,
       stopContextMenu: true,
       preserveObjectStacking: true,
-      skipTargetFind: this.isMobile(),
-      selectionKey:'ctrlKey'
+      skipTargetFind: this.canvasService.isMobile(),
+      selectionKey: 'ctrlKey',
       // defaultCursor:'pointer',
       // hoverCursor:'pointer'
       // targetFindTolerance:5,
       // perPixelTargetFind:true
     });
     window.addEventListener('resize', () => {
-      board.width = window.innerWidth;
-      board.height = window.innerHeight;
-      this.canvasService.canvas?.setHeight(window.innerHeight);
-      this.canvasService.canvas?.setWidth(window.innerWidth);
+      // board.width = window.innerWidth;
+      // board.height = window.innerHeight;
+      // this.canvasService.canvas?.setHeight(window.innerHeight);
+      // this.canvasService.canvas?.setWidth(window.innerWidth);
       this.window = window;
-      this.canvasService.canvas!.skipTargetFind=this.isMobile()
+      this.canvasService.canvas!.skipTargetFind = this.canvasService.isMobile();
+      this.canvasService.layout.visibility.layer_panel =
+        !this.canvasService.isMobile();
+      this.canvasService.layout.visibility.property_panel =
+        !this.canvasService.isMobile();
+      this.canvasService.canvas!.defaultCursor = 'default';
+      this.canvasService.canvas!.setCursor('default');
     });
 
     this.canvasService.canvas.on('mouse:over', (event) => {
@@ -183,17 +191,17 @@ export class CanvasComponent implements OnInit {
     );
     this.canvasService.canvas.on('mouse:up', (event) => this.onMouseUp(event));
     this.canvasService.canvas.on('mouse:wheel', (opt) => {
-      var delta = opt.e.deltaY;
-      var zoom = this.canvasService.canvas!.getZoom();
-      zoom = zoom - delta * 0.001;
-      if (zoom > 10) zoom = 10;
-      if (zoom < 0.1) zoom = 0.1;
-      this.canvasService.canvas!.zoomToPoint(
-        { x: opt.e.offsetX, y: opt.e.offsetY },
-        zoom
-      );
-      opt.e.preventDefault();
-      opt.e.stopPropagation();
+      // var delta = opt.e.deltaY;
+      // var zoom = this.canvasService.canvas!.getZoom();
+      // zoom = zoom - delta * 0.001;
+      // if (zoom > 10) zoom = 10;
+      // if (zoom < 0.1) zoom = 0.1;
+      // this.canvasService.canvas!.zoomToPoint(
+      //   { x: opt.e.offsetX, y: opt.e.offsetY },
+      //   zoom
+      // );
+      // opt.e.preventDefault();
+      // opt.e.stopPropagation();
     });
     this.canvasService.canvas.on('path:created', (event) =>
       this.onPathCreated(event as unknown as { path: fabric.Path })
@@ -209,7 +217,8 @@ export class CanvasComponent implements OnInit {
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
-    if (this.isMobile() || event.e.altKey) {
+    if (this.canvasService.isMobile() || event.e.altKey) {
+      console.log(this.canvasService.isMobile());
       this.lastPosX = event.e.clientX;
       this.lastPosY = event.e.clientY;
       this.isDragging = true;
@@ -559,6 +568,29 @@ export class CanvasComponent implements OnInit {
     });
   }
 
+  zoomBoard(e: WheelEvent) {
+    this.canvasService.zoom = Math.min(
+      3,
+      Math.max(0.1, this.canvasService.zoom - e.deltaY * 0.001)
+    );
+    const board = document.getElementById('canvas') as HTMLCanvasElement;
+    board.width = this.canvasService.frame.x * this.canvasService.zoom;
+    board.height = this.canvasService.frame.y * this.canvasService.zoom;
+    this.canvasService.canvas?.setWidth(
+      this.canvasService.frame.x * this.canvasService.zoom
+    );
+    this.canvasService.canvas?.setHeight(
+      this.canvasService.frame.y * this.canvasService.zoom
+    );
+
+    this.canvasService.canvas?.setZoom(this.canvasService.zoom);
+    this.canvasService.canvas?.forEachObject((obj) => {
+      obj.setCoords();
+    });
+    this.canvasService.canvas?.requestRenderAll();
+    this.canvasService.canvas?.renderAll();
+  }
+
   ngOnDestroy() {
     // const project={id:}
     if (
@@ -578,9 +610,8 @@ export class CanvasComponent implements OnInit {
             ),
             version: this.canvasService.version,
             background: this.canvasService.background,
-            height:
-              this.canvasService.canvas?.height || this.window.innerHeight,
-            width: this.canvasService.canvas?.width || this.window.innerWidth,
+            height: this.canvasService.frame.y,
+            width: this.canvasService.frame.x,
           },
           method: 'replace',
         })

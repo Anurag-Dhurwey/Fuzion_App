@@ -1,12 +1,12 @@
 <style>
   main {
-    position: relative;
+    /* position: relative; */
     top: 0%;
     left: 0%;
     width: 100vw;
     height: 100vh;
     display: flex;
-    flex-direction: column;
+    /* flex-direction: column; */
     justify-content: flex-start;
     align-items: center;
   }
@@ -30,7 +30,7 @@
   app-layer-panel,
   app-property-panel {
     z-index: 10;
-    position: fixed;
+    /* position: fixed; */
     background-color: gray;
   }
   app-tool-bar {
@@ -49,7 +49,7 @@
     width: 15vw;
     min-width: 230px;
     min-height: 500px;
-    border-radius: 0px 10px 10px 0px;
+    /* border-radius: 0px 10px 10px 0px; */
     flex-direction: column;
     display: flex;
     justify-content: flex-start;
@@ -68,7 +68,7 @@
     height: 100vh;
     right: 0;
     top: 0;
-    border-radius: 0px 10px 10px 0px;
+    /* border-radius: 0px 10px 10px 0px; */
     flex-direction: column;
   }
   #inputTextArea {
@@ -76,7 +76,7 @@
     z-index: 2;
   }
   main > canvas {
-    position: absolute;
+    /* position: absolute; */
     top: 0%;
     left: 0%;
   }
@@ -97,23 +97,69 @@
 <main class="main">
   @if(app$?.isExportComponentVisible){
   <app-export />
-  } @if(!isMobile()){
-  <app-tool-bar (setCurrentRole)="setCurrentRole($event)" />
+  } 
+  <!-- @if(!isMobile()){ -->
+  <!-- <app-tool-bar (setCurrentRole)="setCurrentRole($event)" /> -->
+ @if(canvasService.layout.visibility.layer_panel){
   <app-layer-panel
-    [layers]="canvasService.objects"
-    [group_id]="null"
-    [projectId]="canvasService.projectId"
-  />
+  [layers]="canvasService.objects"
+  [group_id]="null"
+  [projectId]="canvasService.projectId"
+/>
+ }
+
+  <section (wheel)="zoomBoard($event)" style="position: relative; flex: 1; width: 70vw; height: 100%; background-color:yellowgreen; display: flex; justify-content: center; align-items: center; flex-direction: column; row-gap: 10px; overflow: hidden;" class="canvas-board">
+    @if(!canvasService.layout.visibility.layer_panel){
+      <button
+    class="material-symbols-outlined"
+    style="
+      position: absolute;
+      left: 0;
+      top: 0;
+      cursor: pointer;
+      outline: none;
+      border: none;
+      background: none;
+    "
+    (click)="canvasService.toggleLayoutVisibility('layer_panel',true)"
+  >
+    arrow_forward_ios
+  </button>
+    }
+    @if(!canvasService.layout.visibility.property_panel){
+      <button
+      class="material-symbols-outlined"
+      style="
+        position: absolute;
+        right: 0;
+        top: 0;
+        cursor: pointer;
+        outline: none;
+        border: none;
+        background: none;
+      "
+       (click)="canvasService.toggleLayoutVisibility('property_panel',true)"
+    >
+      arrow_back_ios
+    </button>
+    }
+
+    <app-tool-bar (setCurrentRole)="setCurrentRole($event)" style="position: absolute; top: 0%;"/>
+    <canvas id="canvas"></canvas>
+  </section>
+@if(canvasService.layout.visibility.property_panel){
   <app-property-panel />
-  } @if(canvasService.projectId&&authService.auth.currentUser&&
+}
+  <!-- }  -->
+  @if(canvasService.projectId&&authService.auth.currentUser&&
   !socketService.socket?.connected &&
-  !window.location.pathname.includes('demo')&&!isMobile()){
+  !window.location.pathname.includes('demo')&&!canvasService.isMobile()){
   <div class="loader">
     <h3>Connecting to server</h3>
   </div>
   }
 
-  <canvas id="canvas"></canvas>
+  <!-- <canvas id="canvas"></canvas> -->
   @for (item of socketService.presense; track $index) {
   <div
     [style]="{ top: item.mouse.y + 'px', left: item.mouse.x + 'px' }"

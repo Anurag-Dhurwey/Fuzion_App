@@ -66,7 +66,29 @@
     border: 2px solid rgb(0, 106, 255);
   }
 </style>
-<div style="width: 100%; height: 30px; background-color: rgb(83, 137, 177);"></div>
+<div
+  style="
+    width: 100%;
+    height: 30px;
+    background-color: rgb(83, 137, 177);
+    position: relative;
+  "
+>
+  <button
+    class="material-symbols-outlined"
+    style="
+      position: absolute;
+      right: 0;
+      cursor: pointer;
+      outline: none;
+      border: none;
+      background: none;
+    "
+    (click)="canvasService.toggleLayoutVisibility('layer_panel',false)"
+  >
+    arrow_back_ios
+  </button>
+</div>
 @if(layerService.context_menu){
 <app-layer-panel-context-menu
   style="z-index: 2"
@@ -109,7 +131,7 @@
     <span
       (mousedown)="layerService.setObjToMove(obj._id, group_id, $index)"
       style="width: 60%; cursor: default; user-select: none"
-      (click)="layerService.onLeftClick($event, obj,group_id)"
+      (click)="layerService.onLeftClick($event, obj, group_id)"
       >{{ obj.type }}</span
     >
     <span style="width: 25%">
@@ -143,7 +165,7 @@
         : 'toMove_after'
       : ''
   }}"
-  (click)="layerService.onLeftClick($event, obj,group_id)"
+  (click)="layerService.onLeftClick($event, obj, group_id)"
   [style]="{
     backgroundColor: canvasService.idsOfSelectedObj.includes(obj._id)
       ? 'rgb(162, 160, 100)'

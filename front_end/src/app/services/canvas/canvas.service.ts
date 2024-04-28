@@ -26,9 +26,17 @@ export class CanvasService {
   currentDrawingObject: Object | undefined;
 
   selectedObj: Object[] = [];
+  zoom = 1;
+  frame = { x: 400, y: 600 };
+  layout = {
+    visibility: {
+      layer_panel: !this.isMobile(),
+      property_panel: !this.isMobile(),
+      tool_panel: true,
+    },
+  };
   constructor(
-    private socketService: SocketService,
-    // private authService: AuthService
+    private socketService: SocketService // private authService: AuthService
   ) {
     new Observable((observer) => {
       this.objectsObserver = observer;
@@ -188,18 +196,19 @@ export class CanvasService {
     fabric.util.enlivenObjects(
       JSON.parse(project.objects || '[]'),
       (createdObjs: Object[]) => {
-        console.log(this.canvas?.height ,window.innerHeight,project.height)
-        console.log(this.canvas?.width ,window.innerWidth,project.width)
+        // console.log(this.canvas?.height ,window.innerHeight,project.height)
+        // console.log(this.canvas?.width ,window.innerWidth,project.width)
         createdObjs?.forEach((obj: Object) => {
-          const scalY =this.canvas?.height!/ project.height;
-          const scalX =this.canvas?.width! / project.width;
-          obj.scaleToHeight(300 * scalY);
-          obj.scaleToWidth(300* scalX);
-          obj.left = obj.left! * scalX;
-          obj.top = obj.top! * scalY;
+          //   const scalY = this.canvas?.height! / project.height;
+          //   const scalX = this.canvas?.width! / project.width;
+          //   obj.scaleToHeight(300 * scalY);
+          //   obj.scaleToWidth(300 * scalX);
+          //   obj.left = obj.left! * scalX;
+          //   obj.top = obj.top! * scalY;
           this.canvas?.add(obj);
-          this.canvas?.renderAll();
         });
+        // this.canvas?.add(createdObjs as any);
+        this.canvas?.renderAll();
         if (replace) {
           this.objects = createdObjs;
           this.reRender();
@@ -327,5 +336,23 @@ export class CanvasService {
 
   reRender() {
     this.objectsObserver?.next('objects');
+  }
+  isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  }
+
+  toggleLayoutVisibility(
+    panel: 'layer_panel' | 'property_panel' | 'tool_panel',
+    status?: boolean
+  ) {
+    console.log('cl')
+    this.layout.visibility[panel] =
+      status == undefined ? !this.layout.visibility[panel] : status;
+    if (this.isMobile()) {
+      if (panel == 'layer_panel') this.layout.visibility.property_panel = false;
+      if (panel == 'property_panel') this.layout.visibility.layer_panel = false;
+    }
   }
 }
