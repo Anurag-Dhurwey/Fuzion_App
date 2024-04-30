@@ -196,7 +196,7 @@
           My
         </button>
       </div>
-      } @for (project of projectType=='my'?app$?.projects:demo_projects; track
+      } @for (project of projectType=='my'?dbService.projects:dbService.demo_projects; track
       $index) {
      
       <app-preview-card

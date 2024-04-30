@@ -1,11 +1,16 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, RouterOutlet } from '@angular/router';
+import {
+  ActivatedRoute,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ToolBarComponent } from '../tool-bar/tool-bar.component';
 import { Store } from '@ngrx/store';
-import { appSelector } from '../../store/selectors/app.selector';
+// import { appSelector } from '../../store/selectors/app.selector';
 import { appState } from '../../store/reducers/state.reducer';
-import { setProjects, setRole } from '../../store/actions/state.action';
+// import { setProjects, setRole } from '../../store/actions/state.action';
 import { Roles, Object, Presense } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,6 +22,8 @@ import { ExportComponent } from '../export/export.component';
 import { AuthService } from '../../services/auth/auth.service';
 import { DbService } from '../../services/db/db.service';
 import { LayerService } from '../../services/layer/layer.service';
+import { MenuPanelComponent } from './menu-panel/menu-panel.component';
+import { SettingPanelComponent } from './setting-panel/setting-panel.component';
 
 @Component({
   selector: 'app-canvas',
@@ -24,30 +31,33 @@ import { LayerService } from '../../services/layer/layer.service';
   imports: [
     CommonModule,
     RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
     ToolBarComponent,
     LayerPanelComponent,
     PropertyPanelComponent,
     ExportComponent,
+    MenuPanelComponent,
+    SettingPanelComponent,
   ],
   templateUrl: './canvas.component.html',
   styleUrl: './canvas.component.css',
 })
 export class CanvasComponent implements OnInit {
   title = 'fabric app';
-  app$: appState | undefined;
-
+  // canvasService: appState | undefined;
+  private _recentRole: Roles | undefined;
   isDrawing: boolean = false;
   isPathControlPointMoving: boolean = false;
   pathPointToAdjust:
     | { _refTo: fabric.Path; points: [number, number] }
     | undefined;
-  private store = inject(Store);
+  // private store = inject(Store);
   targetObjectStroke: string | undefined = '';
   isDragging: boolean = false;
   lastPosX: undefined | number;
   lastPosY: undefined | number;
   window = window;
-
   constructor(
     public socketService: SocketService,
     public canvasService: CanvasService,
@@ -56,47 +66,46 @@ export class CanvasComponent implements OnInit {
     public authService: AuthService,
     private route: ActivatedRoute
   ) {
-    this.store.select(appSelector).subscribe((state) => (this.app$ = state));
+    // this.store.select(appSelector).subscribe((state) => (this.canvasService = state));
   }
 
   @HostListener('window:keydown', ['$event'])
   keyDown(event: KeyboardEvent) {
-    if (event.altKey && this.app$?.role != 'text') {
+    if (event.key == ' ' && this.canvasService?.role != 'text') {
       this.canvasService.canvas!.defaultCursor = 'grab';
       this.canvasService.canvas!.setCursor('grab');
       this.canvasService.canvas!.skipTargetFind = true;
+      if (this.canvasService.role != 'pan')
+        this._recentRole = this.canvasService.role;
+      this.canvasService.setRole('pan');
     }
   }
   @HostListener('window:keyup', ['$event'])
   keyUp(event: KeyboardEvent) {
-    if (this.app$?.role == 'text') return;
-    if (!event.altKey) {
+    if (this.canvasService?.role == 'text') return;
+    if (event.key == ' ') {
       this.canvasService.canvas!.defaultCursor = 'default';
       this.canvasService.canvas!.setCursor('default');
       this.canvasService.canvas!.skipTargetFind = false;
-    }
-    if (event.key == 'c') {
-      this.setCurrentRole('circle');
+      this._recentRole && this.canvasService.setRole(this._recentRole);
+      this._recentRole = undefined;
+    } else if (event.key == 'c') {
+      this.canvasService.setRole('circle');
     } else if (event.key == 'r') {
-      this.setCurrentRole('rectangle');
+      this.canvasService.setRole('rectangle');
     } else if (event.key == 'l') {
-      this.setCurrentRole('line');
+      this.canvasService.setRole('line');
     } else if (event.key == 't') {
-      this.setCurrentRole('text');
+      this.canvasService.setRole('text');
     } else if (event.key == 'p') {
-      this.setCurrentRole('pencil');
+      this.canvasService.setRole('pencil');
     } else if (event.key == 's') {
-      this.setCurrentRole('pen');
+      this.canvasService.setRole('pen');
     } else if (event.key == 'a') {
       this.layerService.setAllObjsToActiveSelection();
     }
   }
 
-  // isMobile() {
-  //   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-  //     navigator.userAgent
-  //   );
-  // }
   ngOnInit(): void {
     this.canvasService.projectId = this.route.snapshot.paramMap.get('id');
     if (this.authService.auth.currentUser && this.canvasService.projectId) {
@@ -142,10 +151,10 @@ export class CanvasComponent implements OnInit {
     board.width = this.canvasService.frame.x;
     board.height = this.canvasService.frame.y;
     this.canvasService.canvas = new fabric.Canvas(board, {
-      backgroundColor: this.app$?.canvasConfig.backgroungColor,
+      backgroundColor: this.canvasService.background,
       stopContextMenu: true,
       preserveObjectStacking: true,
-      skipTargetFind: this.canvasService.isMobile(),
+      // skipTargetFind: this.canvasService.isMobile(),
       selectionKey: 'ctrlKey',
       // defaultCursor:'pointer',
       // hoverCursor:'pointer'
@@ -160,9 +169,9 @@ export class CanvasComponent implements OnInit {
       this.window = window;
       this.canvasService.canvas!.skipTargetFind = this.canvasService.isMobile();
       this.canvasService.layout.visibility.layer_panel =
-        !this.canvasService.isMobile();
+        !this.canvasService.isMobile() && window.innerWidth > 999;
       this.canvasService.layout.visibility.property_panel =
-        !this.canvasService.isMobile();
+        !this.canvasService.isMobile() && window.innerWidth > 999;
       this.canvasService.canvas!.defaultCursor = 'default';
       this.canvasService.canvas!.setCursor('default');
     });
@@ -217,8 +226,7 @@ export class CanvasComponent implements OnInit {
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
-    if (this.canvasService.isMobile() || event.e.altKey) {
-      console.log(this.canvasService.isMobile());
+    if (this.canvasService.role == 'pan') {
       this.lastPosX = event.e.clientX;
       this.lastPosY = event.e.clientY;
       this.isDragging = true;
@@ -228,10 +236,10 @@ export class CanvasComponent implements OnInit {
       return;
     }
 
-    if (this.app$?.role == 'text') {
+    if (this.canvasService.role == 'text') {
       this.isDrawing = true;
       if (!this.canvasService.currentDrawingObject) {
-        const obj = this.createObjects(event, this.app$.role);
+        const obj = this.createObjects(event, this.canvasService.role);
         if (obj) {
           obj._id = uuidv4();
           this.canvasService.updateObjects(obj);
@@ -245,9 +253,9 @@ export class CanvasComponent implements OnInit {
             this.canvasService.currentDrawingObject._id,
           ]);
         this.canvasService.currentDrawingObject = undefined;
-        this.setCurrentRole('select');
+        this.canvasService.setRole('select');
       }
-    } else if (this.app$?.role === 'pen') {
+    } else if (this.canvasService.role === 'pen') {
       this.isPathControlPointMoving = true;
       this.isDrawing = true;
       if (this.canvasService.currentDrawingObject) {
@@ -262,7 +270,7 @@ export class CanvasComponent implements OnInit {
           'popAndPush'
         );
       } else {
-        const obj = this.createObjects(event, this.app$.role);
+        const obj = this.createObjects(event, this.canvasService.role);
         if (obj) {
           obj._id = uuidv4();
           this.canvasService.currentDrawingObject = obj;
@@ -270,12 +278,12 @@ export class CanvasComponent implements OnInit {
         }
       }
     } else if (
-      this.app$?.role &&
-      this.app$.role != 'select' &&
-      this.app$.role != 'image'
+      this.canvasService.role &&
+      this.canvasService.role != 'select' &&
+      this.canvasService.role != 'image'
     ) {
       this.isDrawing = true;
-      const obj = this.createObjects(event, this.app$.role);
+      const obj = this.createObjects(event, this.canvasService.role);
       if (obj) {
         obj._id = uuidv4();
         this.canvasService.updateObjects(obj);
@@ -284,7 +292,10 @@ export class CanvasComponent implements OnInit {
     }
   }
   onMouseDoubleClick(event: fabric.IEvent<MouseEvent>): void {
-    if (this.app$?.role === 'select' && event.target?.type === 'path') {
+    if (
+      this.canvasService?.role === 'select' &&
+      event.target?.type === 'path'
+    ) {
       const path = event.target as fabric.Path & { _id: string };
       this.canvasService.tempRefObj = [];
       path.path?.forEach((points, i) => {
@@ -343,12 +354,12 @@ export class CanvasComponent implements OnInit {
     if (
       this.isDrawing &&
       event.pointer &&
-      this.app$?.role &&
-      this.app$.role != 'select' &&
-      this.app$.role != 'pencil'
+      this.canvasService?.role &&
+      this.canvasService.role != 'select' &&
+      this.canvasService.role != 'pencil'
     ) {
       const { x, y } = this.canvasService.canvas!.getPointer(event.e, false);
-      switch (this.app$.role) {
+      switch (this.canvasService.role) {
         case 'line':
           const line = obj as unknown as fabric.Line;
           line.set({ x2: x, y2: y });
@@ -384,7 +395,7 @@ export class CanvasComponent implements OnInit {
       this.canvasService.updateObjects(obj, 'popAndPush');
     }
     if (
-      this.app$?.role === 'pen' &&
+      this.canvasService?.role === 'pen' &&
       this.canvasService.currentDrawingObject?.type == 'path' &&
       !this.isPathControlPointMoving
     ) {
@@ -410,6 +421,9 @@ export class CanvasComponent implements OnInit {
       if (!vpt) return;
       vpt[4] += e.clientX - this.lastPosX;
       vpt[5] += e.clientY - this.lastPosY;
+      this.canvasService.canvas?.forEachObject((obj) => {
+        obj.setCoords();
+      });
       this.canvasService.canvas!.requestRenderAll();
       this.lastPosX = e.clientX;
       this.lastPosY = e.clientY;
@@ -421,7 +435,7 @@ export class CanvasComponent implements OnInit {
     this.isDrawing = false;
     this.isPathControlPointMoving = false;
 
-    if (this.app$?.role === 'pen') {
+    if (this.canvasService?.role === 'pen') {
       if (
         this.canvasService.currentDrawingObject &&
         this.canvasService.currentDrawingObject.type === 'path'
@@ -438,19 +452,20 @@ export class CanvasComponent implements OnInit {
           Math.abs(path[0][1] - path[path.length - 1][3]) < 5 &&
           Math.abs(path[0][2] - path[path.length - 1][4]) < 5
         ) {
-          this.loadSVGFromString(penPath);
+          this.canvasService.loadSVGFromString(penPath);
         }
       }
     }
 
     if (
-      this.app$?.role !== 'pencil' &&
-      this.app$?.role !== 'select' &&
-      this.app$?.role !== 'pen' &&
-      this.app$?.role != 'text'
+      this.canvasService?.role !== 'pencil' &&
+      this.canvasService?.role !== 'select' &&
+      this.canvasService?.role !== 'pen' &&
+      this.canvasService?.role != 'text' &&
+      this.canvasService?.role != 'pan'
     ) {
       this.canvasService.currentDrawingObject = undefined;
-      this.setCurrentRole('select');
+      this.canvasService.setRole('select');
     }
 
     if (this.isDragging) {
@@ -463,7 +478,7 @@ export class CanvasComponent implements OnInit {
   }
 
   onPathCreated(e: { path: fabric.Path }): void {
-    if (this.app$?.role !== 'pencil') return;
+    if (this.canvasService?.role !== 'pencil') return;
     const path = e.path as Object;
     path._id = uuidv4();
     this.canvasService.updateObjects(path);
@@ -522,51 +537,51 @@ export class CanvasComponent implements OnInit {
     }
   }
 
-  setCurrentRole(role: Roles) {
-    if (!this.canvasService.canvas) return;
-    this.store.dispatch(setRole({ role }));
-    if (this.canvasService.currentDrawingObject?.type === 'path') {
-      this.loadSVGFromString(this.canvasService.currentDrawingObject);
-    } else if (this.canvasService.currentDrawingObject?.type == 'i-text') {
-      (this.canvasService.currentDrawingObject as fabric.IText).exitEditing();
-      !(this.canvasService.currentDrawingObject as fabric.IText).text &&
-        this.canvasService.filterObjectsByIds([
-          this.canvasService.currentDrawingObject._id,
-        ]);
-    }
-    this.canvasService.currentDrawingObject = undefined;
-    this.canvasService.reRender();
-    if (role === 'pencil') {
-      this.canvasService.canvas.isDrawingMode = true;
-    } else {
-      this.canvasService.canvas.isDrawingMode = false;
-    }
-    if (role === 'select') {
-      this.objectCustomization(true);
-    } else {
-      this.objectCustomization(false);
-    }
-    this.canvasService.tempRefObj = [];
-  }
+  // setCurrentRole(role: Roles) {
+  //   if (!this.canvasService.canvas) return;
+  //   this.canvasService.role = role;
+  //   if (this.canvasService.currentDrawingObject?.type === 'path') {
+  //     this.loadSVGFromString(this.canvasService.currentDrawingObject);
+  //   } else if (this.canvasService.currentDrawingObject?.type == 'i-text') {
+  //     (this.canvasService.currentDrawingObject as fabric.IText).exitEditing();
+  //     !(this.canvasService.currentDrawingObject as fabric.IText).text &&
+  //       this.canvasService.filterObjectsByIds([
+  //         this.canvasService.currentDrawingObject._id,
+  //       ]);
+  //   }
+  //   this.canvasService.currentDrawingObject = undefined;
+  //   this.canvasService.reRender();
+  //   if (role === 'pencil') {
+  //     this.canvasService.canvas.isDrawingMode = true;
+  //   } else {
+  //     this.canvasService.canvas.isDrawingMode = false;
+  //   }
+  //   if (role === 'select') {
+  //     this.objectCustomization(true);
+  //   } else {
+  //     this.objectCustomization(false);
+  //   }
+  //   this.canvasService.tempRefObj = [];
+  // }
 
-  objectCustomization(arg: boolean) {
-    this.canvasService.canvas?.getObjects().forEach((object) => {
-      // Prevent customization:
-      object.selectable = arg;
-      object.evented = arg;
-    });
-    this.canvasService.canvas?.renderAll();
-  }
+  // objectCustomization(arg: boolean) {
+  //   this.canvasService.canvas?.getObjects().forEach((object) => {
+  //     // Prevent customization:
+  //     object.selectable = arg;
+  //     object.evented = arg;
+  //   });
+  //   this.canvasService.canvas?.renderAll();
+  // }
 
-  loadSVGFromString(data: Object) {
-    fabric.loadSVGFromString(data.toSVG(), (str) => {
-      const newPath = str[0] as Object;
-      newPath._id = uuidv4();
-      this.canvasService.updateObjects(newPath, 'popAndPush');
-      this.canvasService.currentDrawingObject = undefined;
-      this.setCurrentRole('select');
-    });
-  }
+  // loadSVGFromString(data: Object) {
+  //   fabric.loadSVGFromString(data.toSVG(), (str) => {
+  //     const newPath = str[0] as Object;
+  //     newPath._id = uuidv4();
+  //     this.canvasService.updateObjects(newPath, 'popAndPush');
+  //     this.canvasService.currentDrawingObject = undefined;
+  //     this.setCurrentRole('select');
+  //   });
+  // }
 
   zoomBoard(e: WheelEvent) {
     this.canvasService.zoom = Math.min(
@@ -600,27 +615,25 @@ export class CanvasComponent implements OnInit {
       this.canvasService.objects.length &&
       this.canvasService.version
     ) {
-      this.store.dispatch(
-        setProjects({
-          project: {
-            id: this.canvasService.projectId,
-            user: this.canvasService.adminId,
-            objects: JSON.stringify(
-              this.canvasService.canvas?.toJSON(['_id', 'name']).objects || []
-            ),
-            version: this.canvasService.version,
-            background: this.canvasService.background,
-            height: this.canvasService.frame.y,
-            width: this.canvasService.frame.x,
-          },
-          method: 'replace',
-        })
+      this.dbService.setProjects(
+        {
+          id: this.canvasService.projectId,
+          user: this.canvasService.adminId,
+          objects: JSON.stringify(
+            this.canvasService.canvas?.toJSON(['_id', 'name']).objects || []
+          ),
+          version: this.canvasService.version,
+          background: this.canvasService.background,
+          height: this.canvasService.frame.y,
+          width: this.canvasService.frame.x,
+        },
+        'replace'
       );
     }
     if (this.canvasService.projectId) {
       this.socketService.emit('room:leave', this.canvasService.projectId);
     }
-    this.canvasService.objects = [];
+    this.canvasService.updateObjects([], 'reset');
     this.canvasService.members = [];
     this.canvasService.projectId = null;
     this.canvasService.background = undefined;

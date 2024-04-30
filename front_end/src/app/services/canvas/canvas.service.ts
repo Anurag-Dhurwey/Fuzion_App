@@ -1,23 +1,25 @@
 import { Injectable } from '@angular/core';
 import { fabric } from 'fabric';
 import { SocketService } from '../socket/socket.service';
-import { Observable, Subscriber } from 'rxjs';
-import { Group, Object, Project } from '../../../types/app.types';
+// import { Observable, Subscriber } from 'rxjs';
+import { Group, Object, Project, Roles } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { IGroupOptions } from 'fabric/fabric-impl';
-import { AuthService } from '../auth/auth.service';
+import { v4 as uuidv4 } from 'uuid';
+// import { AuthService } from '../auth/auth.service';
 @Injectable({
   providedIn: 'root',
 })
 export class CanvasService {
+  private _role: Roles = 'select';
+  private _objects: Object[] = [];
   canvas: fabric.Canvas | undefined;
-  objects: Object[] = [];
   projectId: string | null = null;
   version: string | undefined;
-  background: string | undefined;
+  background: string | undefined = '#282829';
   members: string[] = [];
   adminId: string | undefined;
-  objectsObserver: Subscriber<'objects' | 'role'> | undefined;
+  // objectsObserver: Subscriber<'objects' | 'role'> | undefined;
   tempRefObj: (
     | fabric.Line
     | (fabric.Circle & { _refTo: string; _refIndex: [number, number] })
@@ -33,20 +35,28 @@ export class CanvasService {
       layer_panel: !this.isMobile(),
       property_panel: !this.isMobile(),
       tool_panel: true,
+      setting_panel: false,
+      menu_panel: false,
+      export_panel: false,
     },
   };
   constructor(
     private socketService: SocketService // private authService: AuthService
   ) {
-    new Observable((observer) => {
-      this.objectsObserver = observer;
-    })?.subscribe((arg) => {
-      if ('objects') {
-        this.renderObjectsOnCanvas();
-      }
-    });
+    // new Observable((observer) => {
+    //   this.objectsObserver = observer;
+    // })?.subscribe((arg) => {
+    //   if ('objects') {
+    //     this.renderObjectsOnCanvas();
+    //   }
+    // });
   }
-
+  get role() {
+    return this._role;
+  }
+  get objects() {
+    return this._objects;
+  }
   removeEmptyGroups(objects: Object[]) {
     return objects.flatMap((obj) => {
       if (obj.type === 'group') {
@@ -210,7 +220,7 @@ export class CanvasService {
         // this.canvas?.add(createdObjs as any);
         this.canvas?.renderAll();
         if (replace) {
-          this.objects = createdObjs;
+          this._objects = createdObjs;
           this.reRender();
         }
       },
@@ -235,7 +245,7 @@ export class CanvasService {
         changeId(objects);
 
         if (objects.length === 1 && objects[0].type === 'group') {
-          this.objects = [objects[0], ...this.objects];
+          this._objects = [objects[0], ...this.objects];
         } else {
           const newGroup = new fabric.Group([], {
             _id: v4(),
@@ -243,7 +253,7 @@ export class CanvasService {
             left: objects[0].left,
           } as IGroupOptions) as Group;
           newGroup._objects = objects;
-          this.objects = [newGroup, ...this.objects];
+          this._objects = [newGroup, ...this.objects];
         }
         this.reRender();
       },
@@ -252,37 +262,31 @@ export class CanvasService {
   }
 
   updateObjects(
-    object: Object | Object[],
+    objs: Object | Object[],
     method: 'push' | 'reset' | 'popAndPush' | 'replace' = 'push'
   ) {
-    if (method === 'reset' && Array.isArray(object)) {
-      this.objects = [...object];
-    }
-
-    if (method === 'push' && !Array.isArray(object)) {
-      this.objects.push(object);
-    } else if (method === 'popAndPush' && !Array.isArray(object)) {
-      this.objects[this.objects.length - 1] = object;
-    } else if (method === 'replace' && !Array.isArray(object)) {
-      this.objects = this.objects.map((obj) => {
-        if (object._id === obj._id) {
-          return object;
+    if (!Array.isArray(objs)) objs = [objs];
+    if (method === 'reset') {
+      this._objects = objs;
+    } else if (method === 'push') {
+      objs.forEach((obj) => {
+        this._objects.push(obj);
+      });
+    } else if (method === 'popAndPush') {
+      this._objects[this._objects.length - 1] = objs[0];
+    } else if (method === 'replace') {
+      this._objects = this._objects.map((obj) => {
+        for (const its of objs as Object[]) {
+          if (its._id == obj._id) return its;
         }
         return obj;
       });
     }
     this.reRender();
-    // if (
-    //   this.projectId&&
-    //   this.authService.auth.currentUser &&
-    //   (this.members.includes(this.authService.auth.currentUser!.uid) ||
-    //     this.authService.auth.currentUser?.uid === this.adminId)
-    // ) {
     this.socketService.emit('objects:modified', {
       roomId: this.projectId,
       objects: this.canvas?.toObject(['_id', 'name']).objects,
     });
-    // }
   }
 
   removeElements = (array: Object[], ids: string[]) => {
@@ -335,7 +339,8 @@ export class CanvasService {
   }
 
   reRender() {
-    this.objectsObserver?.next('objects');
+    // this.objectsObserver?.next('objects');
+    this.renderObjectsOnCanvas();
   }
   isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -344,15 +349,82 @@ export class CanvasService {
   }
 
   toggleLayoutVisibility(
-    panel: 'layer_panel' | 'property_panel' | 'tool_panel',
+    panel: (
+      | 'layer_panel'
+      | 'property_panel'
+      | 'tool_panel'
+      | 'setting_panel'
+      | 'menu_panel'
+      | 'export_panel'
+    )[],
     status?: boolean
   ) {
-    console.log('cl')
-    this.layout.visibility[panel] =
-      status == undefined ? !this.layout.visibility[panel] : status;
-    if (this.isMobile()) {
-      if (panel == 'layer_panel') this.layout.visibility.property_panel = false;
-      if (panel == 'property_panel') this.layout.visibility.layer_panel = false;
+    panel.forEach((str) => {
+      this.layout.visibility[str] =
+        status == undefined ? !this.layout.visibility[str] : status;
+    });
+    if (
+      (panel.includes('layer_panel') || panel.includes('property_panel')) &&
+      this.isMobile() &&
+      window.innerWidth < 999
+    ) {
+      if (panel.includes('layer_panel'))
+        this.layout.visibility.property_panel = false;
+      if (panel.includes('property_panel'))
+        this.layout.visibility.layer_panel = false;
     }
+  }
+
+  setRole(role: Roles) {
+    if (!this.canvas) return;
+    this._role = role;
+    if (this.currentDrawingObject?.type === 'path') {
+      this.loadSVGFromString(this.currentDrawingObject);
+    } else if (this.currentDrawingObject?.type == 'i-text') {
+      (this.currentDrawingObject as fabric.IText).exitEditing();
+      !(this.currentDrawingObject as fabric.IText).text &&
+        this.filterObjectsByIds([this.currentDrawingObject._id]);
+    }
+    this.currentDrawingObject = undefined;
+    this.reRender();
+    if (role === 'pencil') {
+      this.canvas.isDrawingMode = true;
+    } else {
+      this.canvas.isDrawingMode = false;
+    }
+    if (role === 'select') {
+      this.objectCustomization(true);
+    } else {
+      this.objectCustomization(false);
+    }
+    this.tempRefObj = [];
+    if (role != 'pan') {
+      this.canvas!.defaultCursor = 'default';
+      this.canvas!.setCursor('default');
+      this.canvas!.skipTargetFind = false;
+    }else{
+      this.canvas!.defaultCursor = 'grab';
+      this.canvas!.setCursor('grab');
+      this.canvas!.skipTargetFind = true;
+    }
+  }
+
+  objectCustomization(arg: boolean) {
+    this.canvas?.getObjects().forEach((objs) => {
+      // Prevent customization:
+      objs.selectable = arg;
+      objs.evented = arg;
+    });
+    this.canvas?.renderAll();
+  }
+
+  loadSVGFromString(data: Object) {
+    fabric.loadSVGFromString(data.toSVG(), (str) => {
+      const newPath = str[0] as Object;
+      newPath._id = uuidv4();
+      this.updateObjects(newPath, 'popAndPush');
+      this.currentDrawingObject = undefined;
+      this.setRole('select');
+    });
   }
 }

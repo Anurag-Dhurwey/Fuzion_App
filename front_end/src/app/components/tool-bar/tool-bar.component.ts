@@ -11,15 +11,15 @@ import {
 import { Roles } from '../../../types/app.types';
 import { Store } from '@ngrx/store';
 import { appState } from '../../store/reducers/state.reducer';
-import { appSelector } from '../../store/selectors/app.selector';
+// import { appSelector } from '../../store/selectors/app.selector';
 import { CommonModule } from '@angular/common';
 import { Object } from '../../../types/app.types';
 import { v4 as uuidv4, v4 } from 'uuid';
-import {
-  setCanvasConfig,
-  setCanvasConfigProp,
-  setExportComponentVisibility,
-} from '../../store/actions/state.action';
+// import {
+//   setCanvasConfig,
+//   setCanvasConfigProp,
+//   setExportComponentVisibility,
+// } from '../../store/actions/state.action';
 import { fabric } from 'fabric';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { ExportComponent } from '../export/export.component';
@@ -40,12 +40,12 @@ import { SocketService } from '../../services/socket/socket.service';
   styleUrl: './tool-bar.component.css',
 })
 export class ToolBarComponent {
-  @Output() setCurrentRole = new EventEmitter<Roles>();
+  // @Output() setCurrentRole = new EventEmitter<Roles>();
 
-  private store = inject(Store);
-  app$: appState | undefined;
-  isSettingVisible: boolean = false;
-  isMenuVisible: boolean = false;
+  // private store = inject(Store);
+  // app$: appState | undefined;
+  // isSettingVisible: boolean = false;
+  // isMenuVisible: boolean = false;
 
   @ViewChild('fileInput') fileInput: ElementRef<HTMLInputElement> | undefined;
   @ViewChild('importInput') importInput:
@@ -62,13 +62,14 @@ export class ToolBarComponent {
    
 
   constructor(
-    private canvasService: CanvasService,
+    public canvasService: CanvasService,
     private socketService: SocketService,
     private dbService: DbService
   ) {
-    this.store.select(appSelector).subscribe((state) => (this.app$ = state));
+    // this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
   roles: { role: Roles; icon: string }[] = [
+    { role: 'pan', icon: 'pan_tool' },
     { role: 'select', icon: 'arrow_selector_tool' },
     { role: 'line', icon: 'pen_size_2' },
     { role: 'circle', icon: 'radio_button_unchecked' },
@@ -110,49 +111,50 @@ export class ToolBarComponent {
   }
 
   onClickRoleButton(role: Roles) {
-    this.setCurrentRole.emit(role);
+    // this.setCurrentRole.emit(role);
+    this.canvasService.setRole(role)
     if (role === 'image') {
       this.fileInput?.nativeElement.click();
     }
    
   }
-  export() {
-    this.store.dispatch(
-      setExportComponentVisibility({
-        isExportComponentVisible: !this.app$?.isExportComponentVisible,
-      })
-    );
-  }
-  import(files: FileList | null) {
-    if (files && files.length) {
-      const file = files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          typeof reader.result === 'string' &&
-            this.canvasService.importJsonObjects(reader.result);
-        } catch (error) {
-          console.error('json.parse error');
-        }
-      };
-      reader.readAsText(file);
-    }
-  }
+  // export() {
+  //   this.store.dispatch(
+  //     setExportComponentVisibility({
+  //       isExportComponentVisible: !this.app$?.isExportComponentVisible,
+  //     })
+  //   );
+  // }
+  // import(files: FileList | null) {
+  //   if (files && files.length) {
+  //     const file = files[0];
+  //     const reader = new FileReader();
+  //     reader.onload = () => {
+  //       try {
+  //         typeof reader.result === 'string' &&
+  //           this.canvasService.importJsonObjects(reader.result);
+  //       } catch (error) {
+  //         console.error('json.parse error');
+  //       }
+  //     };
+  //     reader.readAsText(file);
+  //   }
+  // }
   // toggleSetting(arg?: boolean) {
   //   this.setting = arg != undefined ? arg : !this.setting;
   // }
 
-  setCanvasBackground(color: string | null) {
-    color && this.configCanvas({ backgroungColor: color });
-  }
+  // setCanvasBackground(color: string | null) {
+  //   color && this.configCanvas({ backgroungColor: color });
+  // }
 
-  configCanvas(data: setCanvasConfigProp) {
-    this.store.dispatch(setCanvasConfig(data));
-    data.backgroungColor &&
-      this.canvasService.canvas?.setBackgroundColor(
-        data.backgroungColor,
-        () => {}
-      );
-    this.canvasService.canvas?.renderAll();
-  }
+  // configCanvas(data: setCanvasConfigProp) {
+  //   this.store.dispatch(setCanvasConfig(data));
+  //   data.backgroungColor &&
+  //     this.canvasService.canvas?.setBackgroundColor(
+  //       data.backgroungColor,
+  //       () => {}
+  //     );
+  //   this.canvasService.canvas?.renderAll();
+  // }
 }

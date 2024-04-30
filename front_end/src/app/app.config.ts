@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideState, provideStore } from '@ngrx/store';
-import { appReducer } from './store/reducers/state.reducer';
+// import { appReducer } from './store/reducers/state.reducer';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 
 // import {
@@ -24,7 +24,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideStore(),
-    provideState('app', appReducer),
+    // provideState('app', appReducer),
     provideHttpClient(withFetch()),
     // importProvidersFrom([
     //   provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),

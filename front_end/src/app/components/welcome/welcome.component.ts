@@ -9,7 +9,7 @@ import { DbService } from '../../services/db/db.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { appState } from '../../store/reducers/state.reducer';
 import { Store } from '@ngrx/store';
-import { appSelector } from '../../store/selectors/app.selector';
+// import { appSelector } from '../../store/selectors/app.selector';
 import { Project } from '../../../types/app.types';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { PreviewCardComponent } from '../preview-card/preview-card.component';
@@ -22,7 +22,7 @@ import { environment } from '../../../../environment';
   styleUrl: './welcome.component.css',
 })
 export class WelcomeComponent implements OnInit {
-  app$: appState | undefined;
+  // app$: appState | undefined;
   private store = inject(Store);
   demo_projects: Project[] = [];
 
@@ -32,7 +32,7 @@ export class WelcomeComponent implements OnInit {
     public canvasService: CanvasService,
     private dbService: DbService
   ) {
-    this.store.select(appSelector).subscribe((state) => (this.app$ = state));
+    // this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
 
   async ngOnInit() {

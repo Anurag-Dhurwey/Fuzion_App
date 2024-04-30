@@ -4,6 +4,8 @@
     justify-content: center;
     align-items: center;
     column-gap: 7px;
+    row-gap: 5px;
+    flex-wrap: wrap;
   }
   button {
     font-size: larger;
@@ -76,30 +78,28 @@
   }
 </style>
 
+
 <div class="menuIcon">
   <button
-    (click)="isMenuVisible = !isMenuVisible"
+    (click)="canvasService.toggleLayoutVisibility(['menu_panel'],true)"
     class="material-symbols-outlined"
   >
     menu
   </button>
-  <div class="menu" [style]="{ display: isMenuVisible ? 'flex' : 'none' }">
-    <button>new project</button>
-    <button>reset</button>
-    <button routerLink="/dashboard" routerLinkActive="active">Dashboard</button>
-    <button
-      class="material-symbols-outlined"
-      (click)="isMenuVisible = !isMenuVisible"
-    >
-      close
-    </button>
-  </div>
+</div>
+<div id="setting">
+  <button
+    class="material-symbols-outlined"
+  >
+   pageless
+  </button>
+
 </div>
 <div>
   @for (role of roles; track $index) {
   <button
     class="material-symbols-outlined"
-    [style.background-color]="app$?.role == role.role ? '#73c7af' : ''"
+    [style.background-color]="canvasService.role == role.role ? '#73c7af' : ''"
     (click)="onClickRoleButton(role.role)"
   >
     {{ role.icon }}
@@ -117,14 +117,14 @@
   (change)="onImageInput(fileInput.files)"
 />
 
-<div>
+<!-- <div>
   <input
     style="display: none"
     type="file"
     accept=".json"
     #importInput
     (change)="import(importInput.files)"
-  />
+    />
   <button
     id="importBtn"
     class="material-symbols-outlined"
@@ -135,49 +135,19 @@
   </button>
   <button
     class="material-symbols-outlined"
-    (click)="export()"
+    (click)="canvasService.toggleLayoutVisibility(['export_panel'],true)"
     (click)="setCurrentRole.emit('select')"
   >
     ios_share
   </button>
-</div>
+</div> -->
 <div id="setting">
   <button
     class="material-symbols-outlined"
-    (click)="isSettingVisible = !isSettingVisible"
+    (click)="canvasService.toggleLayoutVisibility(['setting_panel'],true)"
   >
     settings_b_roll
   </button>
-  <div
-    id="settingPanel"
-    [style]="{ display: isSettingVisible ? 'block' : 'none' }"
-  >
-    <!-- <div>
-      <span style="width: 15%">
-      </span
-      >
-      <span style="width: 85%; justify-content: center">Configration</span>
-    </div> -->
-    <div>
-      <span>
-        <label for="background-color">Background</label>
-      </span>
-      <span>
-        <input
-          (input)="setCanvasBackground($any($event.target).value)"
-          type="color"
-          name=""
-          id="background-color"
-        />
-      </span>
-    </div>
-    <button
-      style="font-size: small; width: 100%; margin: 5px 0px;"
-      (click)="isSettingVisible = !isSettingVisible"
-      class="material-symbols-outlined"
-    >
-      close
-    </button>
-  </div>
+
 </div>
 

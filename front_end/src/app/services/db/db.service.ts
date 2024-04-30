@@ -36,6 +36,8 @@ export class DbService {
   store;
   auth;
   storage;
+  private _projects: Project[] = [];
+  demo_projects: Project[] = [];
   constructor(
     private socketService: SocketService,
     private canvasService: CanvasService
@@ -45,7 +47,9 @@ export class DbService {
     this.auth = getAuth(this.app);
     this.storage = getStorage();
   }
-
+  get projects() {
+    return this._projects;
+  }
   async createProject() {
     if (!this.auth.currentUser) return;
     try {
@@ -55,8 +59,8 @@ export class DbService {
         objects: '[]',
         user: this.auth.currentUser?.uid,
         members: [],
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: this.canvasService.frame.x,
+        height: this.canvasService.frame.y,
       });
 
       this.socketService.emit('room:join', docRef.id);
@@ -68,8 +72,8 @@ export class DbService {
   }
 
   async getProjects() {
-    if (!this.auth.currentUser) return;
-    const projects: Project[] = [];
+    if (!this.auth.currentUser || this.projects.length) return this.projects;
+    // const projects: Project[] = [];
     const q = query(
       collection(this.store, 'projects'),
       where('user', '==', this.auth.currentUser.uid)
@@ -78,11 +82,19 @@ export class DbService {
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      projects.push({ ...data, id: doc.id } as Project);
+      this.setProjects({ ...data, id: doc.id } as Project, 'push');
     });
-    return projects;
+    // this.projects=projects
+    return this.projects;
   }
-
+  async getDemoProjects() {
+    if (!this.demo_projects.length && environment.demo_project_ids.length) {
+      this.demo_projects = (await this.getProjectsByIds(
+        environment.demo_project_ids
+      )) as Project[];
+    }
+    return this.demo_projects;
+  }
   async getProjectsByIds(ids: string[] | string) {
     if (typeof ids === 'string') {
       ids = [ids];
@@ -123,5 +135,24 @@ export class DbService {
     const storageRef = ref(this.storage, 'images/' + v4());
     const uploadTask = uploadBytesResumable(storageRef, img, metadata);
     return await getDownloadURL(uploadTask.snapshot.ref);
+  }
+
+  setProjects(
+    project: Project | Project[],
+    method: 'reset' | 'push' | 'replace'
+  ) {
+    if (!Array.isArray(project)) project = [project];
+    if (method === 'reset' && Array.isArray(project)) {
+      this._projects = project;
+    } else if (method === 'push') {
+      this._projects = [...this.projects, ...project];
+    } else if (method === 'replace') {
+      this._projects = this.projects.map((pro) => {
+        for (const its of project as Project[]) {
+          if (its.id == pro.id) return its;
+        }
+        return pro;
+      });
+    }
   }
 }

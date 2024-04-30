@@ -9,9 +9,9 @@ import { CanvasService } from '../../services/canvas/canvas.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import jsPDF from 'jspdf';
 import { Store } from '@ngrx/store';
-import { appSelector } from '../../store/selectors/app.selector';
+// import { appSelector } from '../../store/selectors/app.selector';
 import { appState } from '../../store/reducers/state.reducer';
-import { setExportComponentVisibility } from '../../store/actions/state.action';
+// import { setExportComponentVisibility } from '../../store/actions/state.action';
 @Component({
   selector: 'app-export',
   standalone: true,
@@ -21,14 +21,14 @@ import { setExportComponentVisibility } from '../../store/actions/state.action';
 })
 export class ExportComponent {
   private store = inject(Store);
-  app$: appState | undefined;
+  // app$: appState | undefined;
   file_name = new FormControl('');
   file_type = new FormControl('jpeg');
   windowWidth: number = window.innerWidth;
   windowHeight: number = window.innerHeight;
 
   constructor(private canvasService: CanvasService) {
-    this.store.select(appSelector).subscribe((state) => (this.app$ = state));
+    // this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
 
   @HostListener('window:resize', ['$event'])
@@ -82,8 +82,6 @@ export class ExportComponent {
   }
 
   close(arg: boolean) {
-    this.store.dispatch(
-      setExportComponentVisibility({ isExportComponentVisible: arg })
-    );
+  this.canvasService.toggleLayoutVisibility(['export_panel'],false)
   }
 }

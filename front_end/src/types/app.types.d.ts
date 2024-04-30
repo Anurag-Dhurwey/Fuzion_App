@@ -1,4 +1,5 @@
 export type Roles =
+  | 'pan'
   | 'select'
   | 'pen'
   | 'line'
@@ -43,15 +44,14 @@ export type CommonProperty = {
   }[];
 };
 
-
 export type Project = {
   id: string;
   background: string;
   objects: string;
   version: string;
   user: string;
-  width:number
-  height:number
+  width: number;
+  height: number;
 };
 
 export type SocketEmitEvents =
