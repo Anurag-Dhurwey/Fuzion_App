@@ -101,6 +101,9 @@
 
   <section
     (wheel)="zoomBoard($event)"
+    (touchstart)="onTouchStart($event)"
+    (touchmove)="onTouchMove($event)"
+    (touchend)="onTouchEnd($event)"
     style="
       position: relative;
       flex: 1;
@@ -121,6 +124,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
         column-gap: 10px;
         width: 100%;
         position: absolute;
@@ -144,9 +148,22 @@
       >
         arrow_forward_ios
       </button>
+      } @if(canvasService.layout.visibility.tool_panel){
+      <app-tool-bar />
       }
-      <app-tool-bar  />
-
+      <!-- <div style=""> -->
+      <button
+        class="material-symbols-outlined"
+        style="cursor: pointer; outline: none; border: none; background: none"
+        (click)="canvasService.toggleLayoutVisibility(['tool_panel'])"
+      >
+        {{
+          canvasService.layout.visibility.tool_panel
+            ? "expand_less"
+            : "expand_more"
+        }}
+      </button>
+      <!-- </div> -->
       @if(!canvasService.layout.visibility.property_panel){
       <button
         class="material-symbols-outlined"

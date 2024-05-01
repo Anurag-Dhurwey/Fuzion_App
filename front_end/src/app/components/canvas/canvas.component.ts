@@ -174,6 +174,7 @@ export class CanvasComponent implements OnInit {
         !this.canvasService.isMobile() && window.innerWidth > 999;
       this.canvasService.canvas!.defaultCursor = 'default';
       this.canvasService.canvas!.setCursor('default');
+      this.canvasService.setRole('select')
     });
 
     this.canvasService.canvas.on('mouse:over', (event) => {
@@ -199,19 +200,7 @@ export class CanvasComponent implements OnInit {
       this.onMouseMove(event)
     );
     this.canvasService.canvas.on('mouse:up', (event) => this.onMouseUp(event));
-    this.canvasService.canvas.on('mouse:wheel', (opt) => {
-      // var delta = opt.e.deltaY;
-      // var zoom = this.canvasService.canvas!.getZoom();
-      // zoom = zoom - delta * 0.001;
-      // if (zoom > 10) zoom = 10;
-      // if (zoom < 0.1) zoom = 0.1;
-      // this.canvasService.canvas!.zoomToPoint(
-      //   { x: opt.e.offsetX, y: opt.e.offsetY },
-      //   zoom
-      // );
-      // opt.e.preventDefault();
-      // opt.e.stopPropagation();
-    });
+   
     this.canvasService.canvas.on('path:created', (event) =>
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
@@ -226,7 +215,7 @@ export class CanvasComponent implements OnInit {
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
-    if (this.canvasService.role == 'pan') {
+    if (!this.canvasService.isMobile()&& this.canvasService.role == 'pan') {
       this.lastPosX = event.e.clientX;
       this.lastPosY = event.e.clientY;
       this.isDragging = true;
@@ -415,19 +404,15 @@ export class CanvasComponent implements OnInit {
       );
     }
 
-    if (this.isDragging && this.lastPosX && this.lastPosY) {
-      var e = event.e;
-      var vpt = this.canvasService.canvas!.viewportTransform;
-      if (!vpt) return;
-      vpt[4] += e.clientX - this.lastPosX;
-      vpt[5] += e.clientY - this.lastPosY;
-      this.canvasService.canvas?.forEachObject((obj) => {
-        obj.setCoords();
-      });
-      this.canvasService.canvas!.requestRenderAll();
-      this.lastPosX = e.clientX;
-      this.lastPosY = e.clientY;
+    if (this.isDragging &&!this.canvasService.isMobile()&& this.lastPosX && this.lastPosY) {
+      this.canvasService.setViewPortTransform(
+        event.e.clientX - this.lastPosX,
+        event.e.clientY - this.lastPosY
+      );
+      this.lastPosX = event.e.clientX;
+      this.lastPosY = event.e.clientY;
     }
+    
   }
 
   onMouseUp(event: fabric.IEvent<MouseEvent>): void {
@@ -468,7 +453,7 @@ export class CanvasComponent implements OnInit {
       this.canvasService.setRole('select');
     }
 
-    if (this.isDragging) {
+    if (!this.canvasService.isMobile()&&this.isDragging) {
       this.isDragging = false;
       this.canvasService.canvas!.defaultCursor = 'grab';
       this.canvasService.canvas!.setCursor('grab');
@@ -537,73 +522,10 @@ export class CanvasComponent implements OnInit {
     }
   }
 
-  // setCurrentRole(role: Roles) {
-  //   if (!this.canvasService.canvas) return;
-  //   this.canvasService.role = role;
-  //   if (this.canvasService.currentDrawingObject?.type === 'path') {
-  //     this.loadSVGFromString(this.canvasService.currentDrawingObject);
-  //   } else if (this.canvasService.currentDrawingObject?.type == 'i-text') {
-  //     (this.canvasService.currentDrawingObject as fabric.IText).exitEditing();
-  //     !(this.canvasService.currentDrawingObject as fabric.IText).text &&
-  //       this.canvasService.filterObjectsByIds([
-  //         this.canvasService.currentDrawingObject._id,
-  //       ]);
-  //   }
-  //   this.canvasService.currentDrawingObject = undefined;
-  //   this.canvasService.reRender();
-  //   if (role === 'pencil') {
-  //     this.canvasService.canvas.isDrawingMode = true;
-  //   } else {
-  //     this.canvasService.canvas.isDrawingMode = false;
-  //   }
-  //   if (role === 'select') {
-  //     this.objectCustomization(true);
-  //   } else {
-  //     this.objectCustomization(false);
-  //   }
-  //   this.canvasService.tempRefObj = [];
-  // }
-
-  // objectCustomization(arg: boolean) {
-  //   this.canvasService.canvas?.getObjects().forEach((object) => {
-  //     // Prevent customization:
-  //     object.selectable = arg;
-  //     object.evented = arg;
-  //   });
-  //   this.canvasService.canvas?.renderAll();
-  // }
-
-  // loadSVGFromString(data: Object) {
-  //   fabric.loadSVGFromString(data.toSVG(), (str) => {
-  //     const newPath = str[0] as Object;
-  //     newPath._id = uuidv4();
-  //     this.canvasService.updateObjects(newPath, 'popAndPush');
-  //     this.canvasService.currentDrawingObject = undefined;
-  //     this.setCurrentRole('select');
-  //   });
-  // }
-
   zoomBoard(e: WheelEvent) {
-    this.canvasService.zoom = Math.min(
-      3,
-      Math.max(0.1, this.canvasService.zoom - e.deltaY * 0.001)
+    this.canvasService.setZoom(
+      Math.min(3, Math.max(0.1, this.canvasService.zoom - e.deltaY * 0.001))
     );
-    const board = document.getElementById('canvas') as HTMLCanvasElement;
-    board.width = this.canvasService.frame.x * this.canvasService.zoom;
-    board.height = this.canvasService.frame.y * this.canvasService.zoom;
-    this.canvasService.canvas?.setWidth(
-      this.canvasService.frame.x * this.canvasService.zoom
-    );
-    this.canvasService.canvas?.setHeight(
-      this.canvasService.frame.y * this.canvasService.zoom
-    );
-
-    this.canvasService.canvas?.setZoom(this.canvasService.zoom);
-    this.canvasService.canvas?.forEachObject((obj) => {
-      obj.setCoords();
-    });
-    this.canvasService.canvas?.requestRenderAll();
-    this.canvasService.canvas?.renderAll();
   }
 
   ngOnDestroy() {
@@ -643,4 +565,78 @@ export class CanvasComponent implements OnInit {
     this.socketService.socket?.disconnect();
     this.socketService.socket?.off();
   }
+
+  lastDistance = 0;
+  onTouchStart(event: TouchEvent) {
+    if (this.canvasService.role == 'pan'&&event.touches.length === 1) {
+      this.lastPosX = event.touches[0].clientX;
+      this.lastPosY = event.touches[0].clientY;
+      this.isDragging = true;
+      this.canvasService.canvas!.selection = false;
+      // this.canvasService.canvas!.defaultCursor = 'grabbing';
+      // this.canvasService.canvas!.setCursor('grabbing');
+      return;
+    }
+    if (event.touches.length === 2) {
+      this.canvasService.canvas!.skipTargetFind = true;
+      this.canvasService.canvas!.selection = false;
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+      const distance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) +
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      this.lastDistance = distance;
+    }
+  }
+
+  onTouchMove(event: TouchEvent) {
+    console.log(event.touches[0].clientX,this.lastPosX,this.lastPosY,this.isDragging,)
+    // console.log(this.lastPosX,this.lastPosY,this.isDragging,event.touches.length)
+    if (event.touches.length === 1&&this.isDragging && this.lastPosX && this.lastPosY) {
+      this.canvasService.setViewPortTransform(
+        event.touches[0].clientX - this.lastPosX,
+        event.touches[0].clientY - this.lastPosY
+      );
+      this.lastPosX = event.touches[0].clientX;
+      this.lastPosY = event.touches[0].clientY;
+    }
+    if (event.touches.length === 2) {
+      event.preventDefault();
+      const touch1 = event.touches[0];
+      const touch2 = event.touches[1];
+      const distance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) +
+          Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      this.canvasService.setZoom(
+        Math.min(
+          3,
+          Math.max(
+            0.1,
+            this.canvasService.zoom + (distance - this.lastDistance) * 0.005
+          )
+        )
+      );
+      this.lastDistance = distance;
+    }
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    if (event.touches.length !== 2) {
+      this.lastDistance = 0;
+      this.canvasService.canvas!.skipTargetFind = false;
+      this.canvasService.canvas!.selection = true;
+    }
+    if (this.isDragging&&event.touches.length !== 1) {
+      this.isDragging = false;
+      // this.canvasService.canvas!.defaultCursor = 'grab';
+      // this.canvasService.canvas!.setCursor('grab');
+      this.canvasService.canvas!.selection = true;
+      // this.canvasService.canvas.renderAll()
+    }
+  }
+
+
+
 }

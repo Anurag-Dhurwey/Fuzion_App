@@ -28,7 +28,7 @@ export class CanvasService {
   currentDrawingObject: Object | undefined;
 
   selectedObj: Object[] = [];
-  zoom = 1;
+  private _zoom = 1;
   frame = { x: 400, y: 600 };
   layout = {
     visibility: {
@@ -50,6 +50,9 @@ export class CanvasService {
     //     this.renderObjectsOnCanvas();
     //   }
     // });
+  }
+  get zoom() {
+    return this._zoom;
   }
   get role() {
     return this._role;
@@ -347,7 +350,9 @@ export class CanvasService {
       navigator.userAgent
     );
   }
-
+  isTouchDevice() {
+    return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  }
   toggleLayoutVisibility(
     panel: (
       | 'layer_panel'
@@ -402,13 +407,36 @@ export class CanvasService {
       this.canvas!.defaultCursor = 'default';
       this.canvas!.setCursor('default');
       this.canvas!.skipTargetFind = false;
-    }else{
+    } else {
       this.canvas!.defaultCursor = 'grab';
       this.canvas!.setCursor('grab');
       this.canvas!.skipTargetFind = true;
     }
   }
+  setZoom(val: number) {
+    this._zoom = val;
+    const board = document.getElementById('canvas') as HTMLCanvasElement;
+    board.width = this.frame.x * this.zoom;
+    board.height = this.frame.y * this.zoom;
+    this.canvas?.setWidth(this.frame.x * this.zoom);
+    this.canvas?.setHeight(this.frame.y * this.zoom);
 
+    this.canvas?.setZoom(this.zoom);
+    this.canvas?.forEachObject((obj) => {
+      obj.setCoords();
+    });
+    this.canvas?.requestRenderAll();
+    this.canvas?.renderAll();
+  }
+  setViewPortTransform(x: number, y: number) {
+    if (!this.canvas?.viewportTransform) return;
+    this.canvas!.viewportTransform[4] += x;
+    this.canvas!.viewportTransform[5] += y;
+    this.canvas?.forEachObject((obj) => {
+      obj.setCoords();
+    });
+    this.canvas!.requestRenderAll();
+  }
   objectCustomization(arg: boolean) {
     this.canvas?.getObjects().forEach((objs) => {
       // Prevent customization:

@@ -56,7 +56,7 @@
     border-radius: 5px;
     background: transparent;
   }
-  .menu {
+  /* .menu {
     cursor: default;
     position: absolute;
     top: 0px;
@@ -75,7 +75,7 @@
   }
   .menu > button {
     width: 100%;
-  }
+  } */
 </style>
 
 
@@ -107,40 +107,7 @@
   }
 </div>
 
-<!-- this input will be trigger when user click on image role button  -->
-<input
-  type="file"
-  id="img-input"
-  #fileInput
-  style="display: none"
-  accept="image/*"
-  (change)="onImageInput(fileInput.files)"
-/>
 
-<!-- <div>
-  <input
-    style="display: none"
-    type="file"
-    accept=".json"
-    #importInput
-    (change)="import(importInput.files)"
-    />
-  <button
-    id="importBtn"
-    class="material-symbols-outlined"
-    (click)="importInput.click()"
-    (click)="setCurrentRole.emit('select')"
-  >
-    ios_share
-  </button>
-  <button
-    class="material-symbols-outlined"
-    (click)="canvasService.toggleLayoutVisibility(['export_panel'],true)"
-    (click)="setCurrentRole.emit('select')"
-  >
-    ios_share
-  </button>
-</div> -->
 <div id="setting">
   <button
     class="material-symbols-outlined"
@@ -150,4 +117,5 @@
   </button>
 
 </div>
+
 
