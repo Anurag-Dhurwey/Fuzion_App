@@ -7,7 +7,6 @@ import {
 } from '@angular/router';
 import { DbService } from '../../services/db/db.service';
 import { AuthService } from '../../services/auth/auth.service';
-import { appState } from '../../store/reducers/state.reducer';
 import { Store } from '@ngrx/store';
 // import { appSelector } from '../../store/selectors/app.selector';
 import { Project } from '../../../types/app.types';

@@ -29,7 +29,7 @@ export class CanvasService {
 
   selectedObj: Object[] = [];
   private _zoom = 1;
-  frame = { x: 400, y: 600 };
+  frame = { x: 1920, y: 1080 };
   layout = {
     visibility: {
       layer_panel: !this.isMobile(),
@@ -38,6 +38,7 @@ export class CanvasService {
       setting_panel: false,
       menu_panel: false,
       export_panel: false,
+      frame_selection_panel:true
     },
   };
   constructor(
@@ -415,9 +416,6 @@ export class CanvasService {
   }
   setZoom(val: number) {
     this._zoom = val;
-    const board = document.getElementById('canvas') as HTMLCanvasElement;
-    board.width = this.frame.x * this.zoom;
-    board.height = this.frame.y * this.zoom;
     this.canvas?.setWidth(this.frame.x * this.zoom);
     this.canvas?.setHeight(this.frame.y * this.zoom);
 

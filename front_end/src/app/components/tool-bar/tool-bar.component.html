@@ -78,10 +78,19 @@
   } */
 </style>
 
+<input
+  type="file"
+  name="fileInput"
+  id="fileInput"
+  #fileInput
+  style="display: none"
+  accept="image/*"
+  (change)="onImageInput(fileInput.files)"
+/>
 
 <div class="menuIcon">
   <button
-    (click)="canvasService.toggleLayoutVisibility(['menu_panel'],true)"
+    (click)="canvasService.toggleLayoutVisibility(['menu_panel'], true)"
     class="material-symbols-outlined"
   >
     menu
@@ -89,11 +98,11 @@
 </div>
 <div id="setting">
   <button
+    (click)="canvasService.layout.visibility.frame_selection_panel = true"
     class="material-symbols-outlined"
   >
-   pageless
+    pageless
   </button>
-
 </div>
 <div>
   @for (role of roles; track $index) {
@@ -107,15 +116,11 @@
   }
 </div>
 
-
 <div id="setting">
   <button
     class="material-symbols-outlined"
-    (click)="canvasService.toggleLayoutVisibility(['setting_panel'],true)"
+    (click)="canvasService.toggleLayoutVisibility(['setting_panel'], true)"
   >
     settings_b_roll
   </button>
-
 </div>
-
-

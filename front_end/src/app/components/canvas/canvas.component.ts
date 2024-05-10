@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import {
   ActivatedRoute,
   RouterLink,
@@ -7,10 +7,6 @@ import {
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ToolBarComponent } from '../tool-bar/tool-bar.component';
-import { Store } from '@ngrx/store';
-// import { appSelector } from '../../store/selectors/app.selector';
-import { appState } from '../../store/reducers/state.reducer';
-// import { setProjects, setRole } from '../../store/actions/state.action';
 import { Roles, Object, Presense } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,6 +20,7 @@ import { DbService } from '../../services/db/db.service';
 import { LayerService } from '../../services/layer/layer.service';
 import { MenuPanelComponent } from './menu-panel/menu-panel.component';
 import { SettingPanelComponent } from './setting-panel/setting-panel.component';
+import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-selection-panel.component';
 
 @Component({
   selector: 'app-canvas',
@@ -39,6 +36,7 @@ import { SettingPanelComponent } from './setting-panel/setting-panel.component';
     ExportComponent,
     MenuPanelComponent,
     SettingPanelComponent,
+    FrameSelectionPanelComponent,
   ],
   templateUrl: './canvas.component.html',
   styleUrl: './canvas.component.css',
@@ -174,7 +172,7 @@ export class CanvasComponent implements OnInit {
         !this.canvasService.isMobile() && window.innerWidth > 999;
       this.canvasService.canvas!.defaultCursor = 'default';
       this.canvasService.canvas!.setCursor('default');
-      this.canvasService.setRole('select')
+      this.canvasService.setRole('select');
     });
 
     this.canvasService.canvas.on('mouse:over', (event) => {
@@ -200,7 +198,7 @@ export class CanvasComponent implements OnInit {
       this.onMouseMove(event)
     );
     this.canvasService.canvas.on('mouse:up', (event) => this.onMouseUp(event));
-   
+
     this.canvasService.canvas.on('path:created', (event) =>
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
@@ -215,7 +213,7 @@ export class CanvasComponent implements OnInit {
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
-    if (!this.canvasService.isMobile()&& this.canvasService.role == 'pan') {
+    if (!this.canvasService.isMobile() && this.canvasService.role == 'pan') {
       this.lastPosX = event.e.clientX;
       this.lastPosY = event.e.clientY;
       this.isDragging = true;
@@ -404,7 +402,12 @@ export class CanvasComponent implements OnInit {
       );
     }
 
-    if (this.isDragging &&!this.canvasService.isMobile()&& this.lastPosX && this.lastPosY) {
+    if (
+      this.isDragging &&
+      !this.canvasService.isMobile() &&
+      this.lastPosX &&
+      this.lastPosY
+    ) {
       this.canvasService.setViewPortTransform(
         event.e.clientX - this.lastPosX,
         event.e.clientY - this.lastPosY
@@ -412,7 +415,6 @@ export class CanvasComponent implements OnInit {
       this.lastPosX = event.e.clientX;
       this.lastPosY = event.e.clientY;
     }
-    
   }
 
   onMouseUp(event: fabric.IEvent<MouseEvent>): void {
@@ -453,7 +455,7 @@ export class CanvasComponent implements OnInit {
       this.canvasService.setRole('select');
     }
 
-    if (!this.canvasService.isMobile()&&this.isDragging) {
+    if (!this.canvasService.isMobile() && this.isDragging) {
       this.isDragging = false;
       this.canvasService.canvas!.defaultCursor = 'grab';
       this.canvasService.canvas!.setCursor('grab');
@@ -524,7 +526,15 @@ export class CanvasComponent implements OnInit {
 
   zoomBoard(e: WheelEvent) {
     this.canvasService.setZoom(
-      Math.min(3, Math.max(0.1, this.canvasService.zoom - e.deltaY * 0.001))
+      Math.min(
+        3,
+        Math.max(
+          0.1,
+          this.canvasService.zoom -
+            e.deltaY *
+             0.001
+        )
+      )
     );
   }
 
@@ -568,7 +578,7 @@ export class CanvasComponent implements OnInit {
 
   lastDistance = 0;
   onTouchStart(event: TouchEvent) {
-    if (this.canvasService.role == 'pan'&&event.touches.length === 1) {
+    if (this.canvasService.role == 'pan' && event.touches.length === 1) {
       this.lastPosX = event.touches[0].clientX;
       this.lastPosY = event.touches[0].clientY;
       this.isDragging = true;
@@ -591,9 +601,19 @@ export class CanvasComponent implements OnInit {
   }
 
   onTouchMove(event: TouchEvent) {
-    console.log(event.touches[0].clientX,this.lastPosX,this.lastPosY,this.isDragging,)
+    console.log(
+      event.touches[0].clientX,
+      this.lastPosX,
+      this.lastPosY,
+      this.isDragging
+    );
     // console.log(this.lastPosX,this.lastPosY,this.isDragging,event.touches.length)
-    if (event.touches.length === 1&&this.isDragging && this.lastPosX && this.lastPosY) {
+    if (
+      event.touches.length === 1 &&
+      this.isDragging &&
+      this.lastPosX &&
+      this.lastPosY
+    ) {
       this.canvasService.setViewPortTransform(
         event.touches[0].clientX - this.lastPosX,
         event.touches[0].clientY - this.lastPosY
@@ -628,7 +648,7 @@ export class CanvasComponent implements OnInit {
       this.canvasService.canvas!.skipTargetFind = false;
       this.canvasService.canvas!.selection = true;
     }
-    if (this.isDragging&&event.touches.length !== 1) {
+    if (this.isDragging && event.touches.length !== 1) {
       this.isDragging = false;
       // this.canvasService.canvas!.defaultCursor = 'grab';
       // this.canvasService.canvas!.setCursor('grab');
@@ -636,7 +656,4 @@ export class CanvasComponent implements OnInit {
       // this.canvasService.canvas.renderAll()
     }
   }
-
-
-
 }

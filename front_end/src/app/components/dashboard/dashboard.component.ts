@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   Router,
   RouterLink,
@@ -8,11 +8,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth/auth.service';
 import { DbService } from '../../services/db/db.service';
-import { Object, Project,  } from '../../../types/app.types';
-// import { appSelector } from '../../store/selectors/app.selector';
-import { Store } from '@ngrx/store';
-import { appState } from '../../store/reducers/state.reducer';
-// import { setProjects } from '../../store/actions/state.action';
 import { PreviewCardComponent } from '../preview-card/preview-card.component';
 import { environment } from '../../../../environment';
 @Component({

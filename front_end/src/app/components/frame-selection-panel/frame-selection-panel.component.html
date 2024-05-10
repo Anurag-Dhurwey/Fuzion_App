@@ -1,0 +1,90 @@
+<style>
+  .frame {
+    background-color: gray;
+    margin: 2px;
+    text-align: center;
+    border-radius: 10px;
+    border: 4px solid gray;
+    cursor: pointer;
+  }
+  .frame:hover {
+    border: 4px solid rgb(112, 195, 240);
+  }
+</style>
+<div
+  style="
+    width: fit-content;
+    height: fit-content;
+    min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    row-gap: 10px;
+    column-gap: 5px;
+    flex-wrap: wrap;
+    background-color: gray;
+    padding: 20px 10px;
+    border-radius: 10px;
+  "
+>
+  <div
+    style="
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      row-gap: 10px;
+      column-gap: 5px;
+      flex-wrap: wrap;
+      padding: 20px 0px;
+    "
+  >
+    <span style="padding: 4px 6px;">
+      <label for="x">Width : </label>
+      <input style="width: 100px; text-align: center; font-size: large; font-weight: bold; padding: 3px 2px;" id="x" type="number" [formControl]="x" />
+      <label for="x"> px </label>
+    </span >
+    <span style="padding: 4px 6px;">
+      <label for="y">Height : </label>
+      <input style="width: 100px; text-align: center; font-size: large; font-weight: bold; padding: 3px 2px;" id="y" type="number" [formControl]="y" />
+      <label for="y"> px </label>
+    </span>
+  </div>
+
+  <button
+    type="button"
+    style="
+      width: 100%;
+      outline: none;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 15px;
+      font-size: larger;
+      font-weight: bolder;
+      background: rgb(7, 142, 215);
+      cursor: pointer;
+    "
+    (click)="applyFrame()"
+  >
+    Apply
+  </button>
+  <button
+    type="button"
+    style="
+      width: 100%;
+      outline: none;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 15px;
+      font-size: larger;
+      font-weight: bolder;
+      background: rgb(103, 107, 109);
+      cursor: pointer;
+    "
+    (click)="_canvasService.layout.visibility.frame_selection_panel=false"
+  >
+    Cancel
+  </button>
+
+</div>
+

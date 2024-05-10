@@ -1,17 +1,10 @@
 import {
   Component,
-  EventEmitter,
   HostListener,
-  Output,
-  inject,
 } from '@angular/core';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import jsPDF from 'jspdf';
-import { Store } from '@ngrx/store';
-// import { appSelector } from '../../store/selectors/app.selector';
-import { appState } from '../../store/reducers/state.reducer';
-// import { setExportComponentVisibility } from '../../store/actions/state.action';
 @Component({
   selector: 'app-export',
   standalone: true,
@@ -20,7 +13,6 @@ import { appState } from '../../store/reducers/state.reducer';
   styleUrl: './export.component.css',
 })
 export class ExportComponent {
-  private store = inject(Store);
   // app$: appState | undefined;
   file_name = new FormControl('');
   file_type = new FormControl('jpeg');
