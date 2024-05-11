@@ -1,7 +1,4 @@
-import {
-  Component,
-  HostListener,
-} from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import jsPDF from 'jspdf';
@@ -45,9 +42,9 @@ export class ExportComponent {
     };
     // const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     if (this.file_type.value === 'png') {
-      click(this.canvasService?.canvas?.toDataURL({ format: 'image/png' }));
+      click(this.canvasService!.export('image/png') as string);
     } else if (this.file_type.value === 'jpeg') {
-      click(this.canvasService.canvas?.toDataURL({ format: 'image/jpeg' }));
+      click(this.canvasService.export('image/jpeg') as string);
     } else if (this.file_type.value === 'pdf') {
       const { width, height } = this.canvasService.canvas;
       const pdf = new jsPDF({
@@ -55,14 +52,12 @@ export class ExportComponent {
         unit: 'px',
         format: [width!, height!],
       });
-      const dataImg = this.canvasService.canvas.toDataURL({
-        format: 'image/png',
-      });
+      const dataImg = this.canvasService.export('image/png') as string;
       pdf.addImage(dataImg, 'PNG', 0, 0, width!, height!);
       pdf.save(`${this.file_name || 'myDrawing'}`);
     } else if (this.file_type.value === 'JSON') {
       const blob = new Blob(
-        [JSON.stringify(this.canvasService.canvas.toJSON())],
+        [JSON.stringify(this.canvasService.export('json'))],
         { type: 'application/json' }
       );
       const url = URL.createObjectURL(blob);
@@ -74,6 +69,6 @@ export class ExportComponent {
   }
 
   close(arg: boolean) {
-  this.canvasService.toggleLayoutVisibility(['export_panel'],false)
+    this.canvasService.toggleLayoutVisibility(['export_panel'], false);
   }
 }

@@ -32,13 +32,13 @@ export class CanvasService {
   frame = { x: 1920, y: 1080 };
   layout = {
     visibility: {
-      layer_panel: !this.isMobile(),
-      property_panel: !this.isMobile(),
+      layer_panel: !this.isMobile() && window.innerWidth > 1050,
+      property_panel: !this.isMobile() && window.innerWidth > 1050,
       tool_panel: true,
       setting_panel: false,
       menu_panel: false,
       export_panel: false,
-      frame_selection_panel:true
+      frame_selection_panel: true,
     },
   };
   constructor(
@@ -369,15 +369,13 @@ export class CanvasService {
       this.layout.visibility[str] =
         status == undefined ? !this.layout.visibility[str] : status;
     });
-    if (
-      (panel.includes('layer_panel') || panel.includes('property_panel')) &&
-      this.isMobile() &&
-      window.innerWidth < 999
-    ) {
-      if (panel.includes('layer_panel'))
-        this.layout.visibility.property_panel = false;
-      if (panel.includes('property_panel'))
-        this.layout.visibility.layer_panel = false;
+    if (panel.includes('layer_panel') || panel.includes('property_panel')) {
+      if (this.isMobile() || window.innerWidth < 1000) {
+        if (panel.includes('layer_panel'))
+          this.layout.visibility.property_panel = false;
+        if (panel.includes('property_panel'))
+          this.layout.visibility.layer_panel = false;
+      }
     }
   }
 
@@ -452,5 +450,27 @@ export class CanvasService {
       this.currentDrawingObject = undefined;
       this.setRole('select');
     });
+  }
+
+  export(format: 'image/png' | 'image/jpeg' | 'json') {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'exportable_canvas';
+    canvas.width = this.frame.x;
+    canvas.height = this.frame.y;
+    const exportable_canvas = new fabric.Canvas(canvas, {
+      selection: false,
+      perPixelTargetFind: false,
+    });
+    this.objects.forEach((obj) => {
+      exportable_canvas.add(obj);
+    });
+    exportable_canvas.requestRenderAll();
+    if (format == 'image/jpeg' || format == 'image/png') {
+      return exportable_canvas.toDataURL({ format });
+    } else if (format == 'json') {
+      return exportable_canvas.toJSON();
+    } else {
+      return;
+    }
   }
 }
