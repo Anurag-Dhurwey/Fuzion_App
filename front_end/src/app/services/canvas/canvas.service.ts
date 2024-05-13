@@ -210,18 +210,9 @@ export class CanvasService {
     fabric.util.enlivenObjects(
       JSON.parse(project.objects || '[]'),
       (createdObjs: Object[]) => {
-        // console.log(this.canvas?.height ,window.innerHeight,project.height)
-        // console.log(this.canvas?.width ,window.innerWidth,project.width)
         createdObjs?.forEach((obj: Object) => {
-          //   const scalY = this.canvas?.height! / project.height;
-          //   const scalX = this.canvas?.width! / project.width;
-          //   obj.scaleToHeight(300 * scalY);
-          //   obj.scaleToWidth(300 * scalX);
-          //   obj.left = obj.left! * scalX;
-          //   obj.top = obj.top! * scalY;
           this.canvas?.add(obj);
         });
-        // this.canvas?.add(createdObjs as any);
         this.canvas?.renderAll();
         if (replace) {
           this._objects = createdObjs;
@@ -272,21 +263,29 @@ export class CanvasService {
     if (!Array.isArray(objs)) objs = [objs];
     if (method === 'reset') {
       this._objects = objs;
+      this.reRender()
     } else if (method === 'push') {
       objs.forEach((obj) => {
         this._objects.push(obj);
+        this.canvas?.add(obj)
       });
     } else if (method === 'popAndPush') {
+      this.canvas?.remove(this._objects[this._objects.length - 1]);
+      this.canvas?.add(objs[0]);
       this._objects[this._objects.length - 1] = objs[0];
     } else if (method === 'replace') {
       this._objects = this._objects.map((obj) => {
         for (const its of objs as Object[]) {
-          if (its._id == obj._id) return its;
+          if (its._id == obj._id) {
+            this.canvas?.remove(obj);
+            this.canvas?.add(its);
+            return its;
+          }
         }
         return obj;
       });
     }
-    this.reRender();
+    // this.reRender();
     this.socketService.emit('objects:modified', {
       roomId: this.projectId,
       objects: this.canvas?.toObject(['_id', 'name']).objects,
@@ -298,7 +297,6 @@ export class CanvasService {
       const index = array.findIndex((element) => element._id === Id);
       if (index !== -1) {
         array.splice(index, 1);
-        console.log(Id, ' ', 'deleted');
       }
     });
 
@@ -398,7 +396,9 @@ export class CanvasService {
     }
     if (role === 'select') {
       this.objectCustomization(true);
+      this.canvas.selection = true;
     } else {
+      this.canvas.selection = false;
       this.objectCustomization(false);
     }
     this.tempRefObj = [];
@@ -452,7 +452,7 @@ export class CanvasService {
     });
   }
 
-  export(format: 'image/png' | 'image/jpeg' | 'json') {
+  export(format: 'png' | 'jpeg' | 'json') {
     const canvas = document.createElement('canvas');
     canvas.id = 'exportable_canvas';
     canvas.width = this.frame.x;
@@ -465,7 +465,7 @@ export class CanvasService {
       exportable_canvas.add(obj);
     });
     exportable_canvas.requestRenderAll();
-    if (format == 'image/jpeg' || format == 'image/png') {
+    if (format == 'jpeg' || format == 'png') {
       return exportable_canvas.toDataURL({ format });
     } else if (format == 'json') {
       return exportable_canvas.toJSON();

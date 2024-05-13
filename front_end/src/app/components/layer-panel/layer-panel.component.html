@@ -137,13 +137,13 @@
     <span style="width: 25%">
       <button
         class="material-symbols-outlined"
-        (click)="layerService.toggleVisibility(obj)"
+        (click)="$event.stopPropagation();layerService.toggleVisibility(obj)"
       >
         {{ obj.visible ? "visibility " : " visibility_off" }}
       </button>
       <button
         class="material-symbols-outlined"
-        (click)="layerService.toggleControllability(obj)"
+        (click)="$event.stopPropagation();layerService.toggleControllability(obj)"
       >
         {{ obj.selectable ? "lock_open_right" : "lock" }}
       </button>

@@ -55,7 +55,7 @@ export class CanvasComponent implements OnInit {
   isDragging: boolean = false;
   lastPosX: undefined | number;
   lastPosY: undefined | number;
-  window = window;
+  // window = window;
   constructor(
     public socketService: SocketService,
     public canvasService: CanvasService,
@@ -102,6 +102,10 @@ export class CanvasComponent implements OnInit {
     } else if (event.key == 'a') {
       this.layerService.setAllObjsToActiveSelection();
     }
+  }
+
+  get window() {
+    return window;
   }
 
   ngOnInit(): void {
@@ -164,7 +168,7 @@ export class CanvasComponent implements OnInit {
       // board.height = window.innerHeight;
       // this.canvasService.canvas?.setHeight(window.innerHeight);
       // this.canvasService.canvas?.setWidth(window.innerWidth);
-      this.window = window;
+      // this.window = window;
       this.canvasService.canvas!.skipTargetFind = this.canvasService.isMobile();
       this.canvasService.layout.visibility.layer_panel =
         !this.canvasService.isMobile() && window.innerWidth > 999;
@@ -172,7 +176,7 @@ export class CanvasComponent implements OnInit {
         !this.canvasService.isMobile() && window.innerWidth > 999;
       this.canvasService.canvas!.defaultCursor = 'default';
       this.canvasService.canvas!.setCursor('default');
-      this.canvasService.setRole('select');
+      // this.canvasService.setRole('select','resize');
     });
 
     this.canvasService.canvas.on('mouse:over', (event) => {
@@ -334,7 +338,7 @@ export class CanvasComponent implements OnInit {
         roomId: this.canvasService.projectId,
       });
     }
-
+    // if (this.isDrawing) this.canvasService.canvas!.selection = false;
     const obj =
       this.canvasService.objects[this.canvasService.objects.length - 1];
     if (!obj) return;
@@ -348,32 +352,30 @@ export class CanvasComponent implements OnInit {
       const { x, y } = this.canvasService.canvas!.getPointer(event.e, false);
       switch (this.canvasService.role) {
         case 'line':
-          const line = obj as unknown as fabric.Line;
-          line.set({ x2: x, y2: y });
+          (obj as fabric.Line).set({ x2: x, y2: y });
+          // line.set({ x2: x, y2: y });
           break;
         case 'rectangle':
-          const rect = obj as fabric.Rect;
-          rect.set({
-            width: Math.abs(x - rect.left!),
-            height: Math.abs(y - rect.top!),
+          // const rect = obj as fabric.Rect;
+          (obj as fabric.Rect).set({
+            width: Math.abs(x - obj.left!),
+            height: Math.abs(y - obj.top!),
           });
           break;
         case 'circle':
-          const circle = obj as unknown as fabric.Circle;
-          circle.set({
+          // const circle = obj as unknown as fabric.Circle;
+          (obj as unknown as fabric.Circle).set({
             radius: Math.floor(
-              Math.abs(
-                Math.sqrt((x - circle.left!) ** 2 + (y - circle.top!) ** 2)
-              )
+              Math.abs(Math.sqrt((x - obj.left!) ** 2 + (y - obj.top!) ** 2))
             ),
           });
           break;
         case 'pen':
           const pen = obj as unknown as fabric.Path;
           if (!pen.path) break;
-          const toEdit = pen.path[pen.path.length - 1] as unknown as number[];
-          toEdit[1] = x;
-          toEdit[2] = y;
+          // const toEdit = pen.path[pen.path.length - 1] as unknown as number[];
+          (pen.path[pen.path.length - 1] as unknown as number[])[1] = x;
+          (pen.path[pen.path.length - 1] as unknown as number[])[2] = y;
           this.canvasService.currentDrawingObject = obj;
           break;
         default:
@@ -476,7 +478,7 @@ export class CanvasComponent implements OnInit {
     // const { x, y } = e.pointer;
     const { x, y } = this.canvasService.canvas!.getPointer(e.e, false);
     if (role === 'line') {
-      return new fabric.Line([x, y, x, y], {
+      return new fabric.Line([x, y, x+100, y], {
         stroke: '#81868a',
         fill: '',
       }) as Object;
@@ -486,8 +488,8 @@ export class CanvasComponent implements OnInit {
         left: x,
         fill: '',
         stroke: '#81868a',
-        width: 0,
-        height: 0,
+        width: 100,
+        height: 100,
       }) as Object;
     } else if (role === 'circle') {
       return new fabric.Circle({
@@ -495,7 +497,7 @@ export class CanvasComponent implements OnInit {
         left: x,
         originX: 'center',
         originY: 'center',
-        radius: 0,
+        radius: 50,
         stroke: '#81868a',
         fill: '',
       }) as Object;
@@ -526,15 +528,7 @@ export class CanvasComponent implements OnInit {
 
   zoomBoard(e: WheelEvent) {
     this.canvasService.setZoom(
-      Math.min(
-        3,
-        Math.max(
-          0.1,
-          this.canvasService.zoom -
-            e.deltaY *
-             0.001
-        )
-      )
+      Math.min(3, Math.max(0.1, this.canvasService.zoom - e.deltaY * 0.001))
     );
   }
 
@@ -576,7 +570,7 @@ export class CanvasComponent implements OnInit {
     this.socketService.socket?.off();
   }
 
-  lastDistance = 0;
+  private lastDistance = 0;
   onTouchStart(event: TouchEvent) {
     if (this.canvasService.role == 'pan' && event.touches.length === 1) {
       this.lastPosX = event.touches[0].clientX;
@@ -601,13 +595,6 @@ export class CanvasComponent implements OnInit {
   }
 
   onTouchMove(event: TouchEvent) {
-    console.log(
-      event.touches[0].clientX,
-      this.lastPosX,
-      this.lastPosY,
-      this.isDragging
-    );
-    // console.log(this.lastPosX,this.lastPosY,this.isDragging,event.touches.length)
     if (
       event.touches.length === 1 &&
       this.isDragging &&

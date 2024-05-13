@@ -135,7 +135,7 @@ export class CommomComponent {
           value
         );
       })
-      this.canvasService.canvas?.renderAll();
+      this.canvasService.canvas?.requestRenderAll();
     }
   }
 

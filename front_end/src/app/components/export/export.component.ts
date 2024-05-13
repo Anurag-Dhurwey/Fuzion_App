@@ -42,9 +42,9 @@ export class ExportComponent {
     };
     // const canvas = document.getElementById("canvas") as HTMLCanvasElement;
     if (this.file_type.value === 'png') {
-      click(this.canvasService!.export('image/png') as string);
+      click(this.canvasService!.export('png') as string);
     } else if (this.file_type.value === 'jpeg') {
-      click(this.canvasService.export('image/jpeg') as string);
+      click(this.canvasService.export('jpeg') as string);
     } else if (this.file_type.value === 'pdf') {
       const { width, height } = this.canvasService.canvas;
       const pdf = new jsPDF({
@@ -52,9 +52,9 @@ export class ExportComponent {
         unit: 'px',
         format: [width!, height!],
       });
-      const dataImg = this.canvasService.export('image/png') as string;
+      const dataImg = this.canvasService.export('png') as string;
       pdf.addImage(dataImg, 'PNG', 0, 0, width!, height!);
-      pdf.save(`${this.file_name || 'myDrawing'}`);
+      pdf.save(`${this.file_name.value || 'myDrawing'}`);
     } else if (this.file_type.value === 'JSON') {
       const blob = new Blob(
         [JSON.stringify(this.canvasService.export('json'))],
