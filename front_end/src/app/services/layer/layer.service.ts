@@ -86,11 +86,14 @@ export class LayerService {
     console.log(this.canvasService.selectedObj);
   }
 
-
-  setAllObjsToActiveSelection(){
+  setAllObjsToActiveSelection() {
     this.canvasService.canvas?.discardActiveObject();
     this.canvasService.selectedObj = [...this.canvasService.oneDarrayOfObjects];
-    if(this.canvasService.oneDarrayOfSelectedObj.length){
+    if (this.canvasService.oneDarrayOfSelectedObj.length === 1) {
+      const select = this.canvasService.oneDarrayOfSelectedObj[0];
+      this.canvasService.canvas?.setActiveObject(select);
+      // this.canvasService.canvas?.requestRenderAll();
+    } else if (this.canvasService.oneDarrayOfSelectedObj.length > 1) {
       const select = new fabric.ActiveSelection(
         this.canvasService.oneDarrayOfSelectedObj,
         {
@@ -98,16 +101,15 @@ export class LayerService {
         }
       );
       this.canvasService.canvas?.setActiveObject(select);
-      this.canvasService.canvas?.requestRenderAll();
     }
+    this.canvasService.canvas?.requestRenderAll();
   }
 
-  onLeftClick(e: MouseEvent, data: Object,groupId:null|string) {
-    if(e.ctrlKey&& this.canvasService.isSelected(groupId||'')){
-      console.log(groupId)
-      return
-    }else{
-
+  onLeftClick(e: MouseEvent, data: Object, groupId: null | string) {
+    if (e.ctrlKey && this.canvasService.isSelected(groupId || '')) {
+      console.log(groupId);
+      return;
+    } else {
       this.setActiveSelection(e, data);
     }
   }

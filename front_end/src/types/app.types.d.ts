@@ -1,3 +1,5 @@
+import { FormControl } from "@angular/forms";
+
 export type Roles =
   | 'pan'
   | 'select'
@@ -33,16 +35,19 @@ export type Presense = { id: string; mouse: Position; expire: number };
 
 export type CommonProperty = {
   title: string;
-  keys: {
-    lable: string;
-    key: keyof fabric.Object;
-    val_type: string;
-    inputBox_type: string;
-    min?: number;
-    max?: number;
-    step?: number;
-  }[];
+  keys: Keys[];
 };
+
+export interface Keys{
+  lable: string;
+  key: keyof fabric.Object;
+  val_type: string;
+  inputBox_type: string;
+  pipe:(val:any)=>any
+  min?: number;
+  max?: number;
+  step?: number;
+}
 
 export type Project = {
   id: string;

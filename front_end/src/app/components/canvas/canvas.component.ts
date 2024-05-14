@@ -163,21 +163,21 @@ export class CanvasComponent implements OnInit {
       // targetFindTolerance:5,
       // perPixelTargetFind:true
     });
-    window.addEventListener('resize', () => {
+    // window.addEventListener('resize', () => {
       // board.width = window.innerWidth;
       // board.height = window.innerHeight;
       // this.canvasService.canvas?.setHeight(window.innerHeight);
       // this.canvasService.canvas?.setWidth(window.innerWidth);
       // this.window = window;
-      this.canvasService.canvas!.skipTargetFind = this.canvasService.isMobile();
-      this.canvasService.layout.visibility.layer_panel =
-        !this.canvasService.isMobile() && window.innerWidth > 999;
-      this.canvasService.layout.visibility.property_panel =
-        !this.canvasService.isMobile() && window.innerWidth > 999;
-      this.canvasService.canvas!.defaultCursor = 'default';
-      this.canvasService.canvas!.setCursor('default');
+      // this.canvasService.canvas!.skipTargetFind = this.canvasService.isMobile();
+      // this.canvasService.layout.visibility.layer_panel =
+      //   !this.canvasService.isMobile() && window.innerWidth > 999;
+      // this.canvasService.layout.visibility.property_panel =
+      //   !this.canvasService.isMobile() && window.innerWidth > 999;
+      // this.canvasService.canvas!.defaultCursor = 'default';
+      // this.canvasService.canvas!.setCursor('default');
       // this.canvasService.setRole('select','resize');
-    });
+    // });
 
     this.canvasService.canvas.on('mouse:over', (event) => {
       if (event.target) {
