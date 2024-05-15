@@ -35,6 +35,7 @@ export class LayerService {
       this.traveseAndSetToAll(obj._objects, 'visible', obj.visible);
     }
     // this.canvasService.reRender();
+    this.canvasService.canvas?.requestRenderAll()
   }
   toggleControllability(obj: Object, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
@@ -42,6 +43,7 @@ export class LayerService {
     if (obj.type === 'group') {
       this.traveseAndSetToAll(obj._objects, 'selectable', obj.selectable);
     }
+    this.canvasService.canvas?.requestRenderAll()
     // this.canvasService.reRender();
   }
 

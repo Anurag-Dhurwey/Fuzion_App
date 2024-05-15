@@ -66,7 +66,8 @@
     border: 2px solid rgb(0, 106, 255);
   }
 </style>
-<div
+@if(group_id==null){
+  <div
   style="
     width: 100%;
     height: 30px;
@@ -89,6 +90,7 @@
     arrow_back_ios
   </button>
 </div>
+}
 @if(layerService.context_menu){
 <app-layer-panel-context-menu
   style="z-index: 2"
@@ -182,13 +184,13 @@
   <span style="width: 25%">
     <button
       class="material-symbols-outlined"
-      (click)="layerService.toggleVisibility(obj)"
+      (click)="$event.stopPropagation(); layerService.toggleVisibility(obj)"
     >
       {{ obj.visible ? "visibility " : " visibility_off" }}
     </button>
     <button
       class="material-symbols-outlined"
-      (click)="layerService.toggleControllability(obj)"
+      (click)="$event.stopPropagation(); layerService.toggleControllability(obj)"
     >
       {{ obj.selectable ? "lock_open_right" : "lock" }}
     </button>

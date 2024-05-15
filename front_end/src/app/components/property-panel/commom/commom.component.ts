@@ -10,7 +10,8 @@ import { CanvasService } from '../../../services/canvas/canvas.service';
   styleUrl: './commom.component.css',
 })
 export class CommomComponent {
-  commonData: CommonProperty[] = [
+  constructor(public canvasService: CanvasService) {}
+  commonFields: CommonProperty<fabric.Object>[] = [
     {
       title: 'Position',
       keys: [
@@ -77,6 +78,77 @@ export class CommomComponent {
         },
       ],
     },
+
+    {
+      title: 'Stroke',
+      keys: [
+        {
+          lable: 'Color',
+          key: 'stroke',
+          val_type: 'string',
+          inputBox_type: 'color',
+          pipe(val: string) {
+            return val;
+          },
+        },
+        {
+          lable: 'Size',
+          key: 'strokeWidth',
+          val_type: 'number',
+          inputBox_type: 'number',
+          min: 0,
+          pipe(val: number) {
+            return val;
+          },
+        },
+      ],
+      buttons: {
+        add: (keys: Keys<fabric.Object>[]) => {
+          for (let key of keys) {
+            this.addInitialValueToField(key.key);
+          }
+        },
+        remove: (keys: Keys<fabric.Object>[]) => {
+          for (let key of keys) {
+            (this.canvasService.selectedObj[0] as fabric.Object).set(
+              key.key,
+              ''
+            );
+          }
+          this.canvasService.canvas?.requestRenderAll();
+        },
+      },
+    },
+    {
+      title: 'Fill',
+      keys: [
+        {
+          lable: 'color',
+          key: 'fill',
+          val_type: 'string',
+          inputBox_type: 'color',
+          pipe(val: string) {
+            return val;
+          },
+        },
+      ],
+      buttons: {
+        add: (keys: Keys<fabric.Object>[]) => {
+          for (let key of keys) {
+            this.addInitialValueToField(key.key);
+          }
+        },
+        remove: (keys: Keys<fabric.Object>[]) => {
+          for (let key of keys) {
+            (this.canvasService.selectedObj[0] as fabric.Object).set(
+              key.key,
+              ''
+            );
+          }
+          this.canvasService.canvas?.requestRenderAll();
+        },
+      },
+    },
     {
       title: 'Flip',
       keys: [
@@ -101,41 +173,8 @@ export class CommomComponent {
       ],
     },
     {
-      title: 'Stroke',
-      keys: [
-        {
-          lable: 'Color',
-          key: 'stroke',
-          val_type: 'string',
-          inputBox_type: 'color',
-          pipe(val: string) {
-            return val;
-          },
-        },
-        {
-          lable: 'Size',
-          key: 'strokeWidth',
-          val_type: 'number',
-          inputBox_type: 'number',
-          min: 0,
-          pipe(val: number) {
-            return val;
-          },
-        },
-      ],
-    },
-    {
       title: 'Others',
       keys: [
-        {
-          lable: 'Fill',
-          key: 'fill',
-          val_type: 'string',
-          inputBox_type: 'color',
-          pipe(val: string) {
-            return val;
-          },
-        },
         {
           lable: 'Opacity',
           key: 'opacity',
@@ -148,20 +187,60 @@ export class CommomComponent {
             return val;
           },
         },
+        // {
+        //   lable: 'Background',
+        //   key: 'backgroundColor',
+        //   val_type: 'string',
+        //   inputBox_type: 'color',
+        //   pipe(val: string) {
+        //     return val;
+        //   },
+        // },
+      ],
+    },
+  ];
+
+  rectFields: CommonProperty<fabric.Rect>[] = [
+    {
+      title: 'Corners',
+      keys: [
         {
-          lable: 'Background',
-          key: 'backgroundColor',
-          val_type: 'string',
-          inputBox_type: 'color',
+          lable: 'RX',
+          key: 'rx',
+          val_type: 'number',
+          inputBox_type: 'number',
+          pipe(val: string) {
+            return val;
+          },
+        },
+        {
+          lable: 'RY',
+          key: 'ry',
+          val_type: 'number',
+          inputBox_type: 'number',
           pipe(val: string) {
             return val;
           },
         },
       ],
+      buttons: {
+        add: (keys: Keys<fabric.Object>[]) => {
+          for (let key of keys) {
+            this.addInitialValueToField(key.key);
+          }
+        },
+        remove: (keys: Keys<fabric.Object>[]) => {
+          for (let key of keys) {
+            (this.canvasService.selectedObj[0] as fabric.Object).set(
+              key.key,
+              ''
+            );
+          }
+          this.canvasService.canvas?.requestRenderAll();
+        },
+      },
     },
   ];
-
-  constructor(public canvasService: CanvasService) {}
 
   onChange(event: Event) {
     const target = event.target as HTMLInputElement;
@@ -180,19 +259,6 @@ export class CommomComponent {
     }
   }
 
-  // onInputValue(key: Keys) {
-  //   if (!key.controller.value) {
-  //     key.controller.setValue(this.canvasService.selectedObj[0][key.key]);
-  //     // console.log(this.form.top.value);
-  //   } else {
-  //     (this.canvasService.selectedObj[0] as fabric.Object).set(
-  //       key.key,
-  //       key.controller.value!
-  //     );
-  //     this.canvasService.selectedObj[0].setCoords()
-  //     this.canvasService.canvas?.requestRenderAll();
-  //   }
-  // }
 
   extractValueFromTarget(target: HTMLInputElement) {
     if (
@@ -214,5 +280,46 @@ export class CommomComponent {
     } else {
       return target.value;
     }
+  }
+
+  addInitialValueToField(field: keyof fabric.Object) {
+    if (['stroke', 'fill'].includes(field.toLowerCase())) {
+      (this.canvasService.selectedObj[0] as fabric.Object).set(
+        field,
+        '#07a4b0'
+      );
+    } else if (['strokewidth'].includes(field.toLowerCase())) {
+      (this.canvasService.selectedObj[0] as fabric.Object).set(field, 1);
+    } else if(['rx','ry'].includes(field.toLowerCase())){
+      (this.canvasService.selectedObj[0] as fabric.Object).set(field, 10);
+
+    }
+    this.canvasService.canvas?.requestRenderAll();
+  }
+
+  isThisKeyRequired(key: Keys<fabric.Object>) {
+    if (
+      this.canvasService.selectedObj[0].type == 'line' &&
+      key.key == 'height'
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  showElement(keys: Keys<fabric.Object>[], title: string) {
+    if (['stroke', 'fill','corners','rx','ry'].includes(title.toLowerCase())) {
+      return this.isValueExist(keys);
+    }
+    return true;
+  }
+
+  isValueExist(key: Keys<fabric.Object>[]) {
+    for (const item of key) {
+      if (this.canvasService.selectedObj[0][item.key].toString().length) {
+        return true;
+      }
+    }
+    return false;
   }
 }

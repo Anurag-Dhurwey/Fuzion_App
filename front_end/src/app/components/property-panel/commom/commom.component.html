@@ -51,7 +51,7 @@
     padding: 2px;
     overflow: hidden;
   }
-  #add-remove{
+  #add-remove {
     outline: none;
     border: none;
     background: none;
@@ -60,29 +60,117 @@
   }
 </style>
 
-@for (common of commonData; track $index) {
+@for (common of commonFields; track $index) {
 <div class="propertyCard">
-  <h6 style="margin: 4px 0px">{{ common.title }}</h6>
+  <h6
+    style="
+      margin: 4px 0px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    "
+  >
+    <span>{{ common.title }}</span>
+
+    @if (common.buttons) { @if(isValueExist(common.keys)){
+    <span
+      style="cursor: pointer; font-size: large; padding-right: 10px"
+      (click)="common.buttons.remove(common.keys)"
+      class="material-symbols-outlined"
+    >
+      remove
+    </span>
+    }@else {
+
+    <span
+      style="cursor: pointer; font-size: large; padding-right: 10px"
+      (click)="common.buttons.add(common.keys)"
+      class="material-symbols-outlined"
+    >
+      add
+    </span>
+    } }
+  </h6>
   <div>
-    @if(canvasService.selectedObj.length===1){ @for (key of common.keys; track $index) {
+    @if(canvasService.selectedObj.length===1){ @for (key of common.keys; track
+    $index) { @if(isThisKeyRequired(key) &&
+    showElement(common.keys,common.title)){
     <span>
       <label [for]="key.key">
         {{ key.lable }}
       </label>
       <input
-      [max]="key.max"
-      [min]="key.min"
-      [step]="key.step"
-      [class]="key.inputBox_type == 'color' ? 'color_box' : ''"
-      [type]="key.inputBox_type"
-      [name]="key.key"
-      [id]="key.key"
-      (input)="onChange($event)"
-      [value]="key.pipe(canvasService.selectedObj[0][key.key])"
-      [checked]="canvasService.selectedObj[0][key.key]"
-    />
+        [max]="key.max"
+        [min]="key.min"
+        [step]="key.step"
+        [class]="key.inputBox_type == 'color' ? 'color_box' : ''"
+        [type]="key.inputBox_type"
+        [name]="key.key"
+        [id]="key.key"
+        (input)="onChange($event)"
+        [value]="key.pipe(canvasService.selectedObj[0][key.key])"
+        [checked]="canvasService.selectedObj[0][key.key]"
+      />
     </span>
-  } }
+    } } }
+  </div>
 </div>
+@if(canvasService.selectedObj[0].type=='rect' &&
+common.title.toLowerCase()=='stroke' ){ @for (field of rectFields; track $index)
+{
+<div class="propertyCard">
+  <h6
+    style="
+      margin: 4px 0px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    "
+  >
+    {{ field.title }}
+
+    @if (field.buttons) { @if(isValueExist(field.keys)){
+    <span
+      style="cursor: pointer; font-size: large; padding-right: 10px"
+      (click)="field.buttons.remove(field.keys)"
+      class="material-symbols-outlined"
+    >
+      remove
+    </span>
+    }@else {
+
+    <span
+      style="cursor: pointer; font-size: large; padding-right: 10px"
+      (click)="field.buttons.add(field.keys)"
+      class="material-symbols-outlined"
+    >
+      add
+    </span>
+    } }
+  </h6>
+  <div>
+    @if(canvasService.selectedObj.length===1){ @for (key of field.keys; track
+    $index) { @if(isThisKeyRequired(key)&&showElement(field.keys,field.title)){
+    <span>
+      <label [for]="key.key">
+        {{ key.lable }}
+      </label>
+      <input
+        [max]="key.max"
+        [min]="key.min"
+        [step]="key.step"
+        [class]="key.inputBox_type == 'color' ? 'color_box' : ''"
+        [type]="key.inputBox_type"
+        [name]="key.key"
+        [id]="key.key"
+        (input)="onChange($event)"
+        [value]="key.pipe(canvasService.selectedObj[0][key.key])"
+        [checked]="canvasService.selectedObj[0][key.key]"
+      />
+    </span>
+    } } }
+  </div>
 </div>
-}
+} } }

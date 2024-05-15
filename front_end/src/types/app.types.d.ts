@@ -1,4 +1,4 @@
-import { FormControl } from "@angular/forms";
+import { FormControl } from '@angular/forms';
 
 export type Roles =
   | 'pan'
@@ -33,17 +33,21 @@ export type Object = (
 export type Position = { x: number; y: number };
 export type Presense = { id: string; mouse: Position; expire: number };
 
-export type CommonProperty = {
-  title: string;
-  keys: Keys[];
+export type CommonProperty<Type> = {
+  title: 'Position'|'Stroke' | 'Size' | 'Fill' | 'Flip' | 'Others'|'Corners';
+  keys: Keys<Type>[];
+  buttons?: {
+    add: (keys: Keys<fabric.Object>[]) => void;
+    remove: (keys: Keys<fabric.Object>[]) => void;
+  };
 };
 
-export interface Keys{
+export interface Keys<Type> {
   lable: string;
-  key: keyof fabric.Object;
+  key: keyof Type;
   val_type: string;
   inputBox_type: string;
-  pipe:(val:any)=>any
+  pipe: (val: any) => any;
   min?: number;
   max?: number;
   step?: number;

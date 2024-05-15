@@ -148,6 +148,30 @@
       >
         arrow_forward_ios
       </button>
+      }@else {
+      <!-- <div
+        style="
+          width: 100%;
+          height: 30px;
+          background-color: rgb(83, 137, 177);
+          position: relative;
+        "
+      >
+        <button
+          class="material-symbols-outlined"
+          style="
+            position: absolute;
+            right: 0;
+            cursor: pointer;
+            outline: none;
+            border: none;
+            background: none;
+          "
+          (click)="canvasService.toggleLayoutVisibility(['layer_panel'], false)"
+        >
+          arrow_back_ios
+        </button>
+      </div> -->
       } @if(canvasService.layout.visibility.tool_panel){
       <app-tool-bar />
       }
@@ -181,7 +205,7 @@
       </button>
       }
     </div>
-    <canvas id="canvas" ></canvas>
+    <canvas id="canvas"></canvas>
   </section>
   @if(canvasService.layout.visibility.property_panel){
   <app-property-panel />

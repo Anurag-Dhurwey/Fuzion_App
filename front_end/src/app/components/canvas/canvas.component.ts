@@ -51,7 +51,7 @@ export class CanvasComponent implements OnInit {
     | { _refTo: fabric.Path; points: [number, number] }
     | undefined;
   // private store = inject(Store);
-  targetObjectStroke: string | undefined = '';
+  // targetObjectStroke: string | undefined = '';
   isDragging: boolean = false;
   lastPosX: undefined | number;
   lastPosY: undefined | number;
@@ -179,19 +179,19 @@ export class CanvasComponent implements OnInit {
       // this.canvasService.setRole('select','resize');
     // });
 
-    this.canvasService.canvas.on('mouse:over', (event) => {
-      if (event.target) {
-        this.targetObjectStroke = event.target.stroke;
-        event.target?.set('stroke', '#00FFFF');
-        this.canvasService.canvas?.renderAll();
-      }
-    });
-    this.canvasService.canvas.on('mouse:out', (event) => {
-      if (event.target) {
-        event.target?.set('stroke', this.targetObjectStroke);
-        this.canvasService.canvas?.renderAll();
-      }
-    });
+    // this.canvasService.canvas.on('mouse:over', (event) => {
+    //   if (event.target) {
+    //     this.targetObjectStroke = event.target.stroke;
+    //     event.target?.set('stroke', '#00FFFF');
+    //     this.canvasService.canvas?.renderAll();
+    //   }
+    // });
+    // this.canvasService.canvas.on('mouse:out', (event) => {
+    //   if (event.target) {
+    //     event.target?.set('stroke', this.targetObjectStroke);
+    //     this.canvasService.canvas?.renderAll();
+    //   }
+    // });
     this.canvasService.canvas.on('mouse:down', (event) =>
       this.onMouseDown(event)
     );
