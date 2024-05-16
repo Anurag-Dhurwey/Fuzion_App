@@ -59,7 +59,7 @@
     cursor: pointer;
   }
 </style>
-
+ 
 @for (common of commonFields; track $index) {
 <div class="propertyCard">
   <h6
@@ -73,7 +73,7 @@
   >
     <span>{{ common.title }}</span>
 
-    @if (common.buttons) { @if(isValueExist(common.keys)){
+    @if (common.buttons &&canvasService.selectedObj.length===1) { @if(isValueExist(common.keys)){
     <span
       style="cursor: pointer; font-size: large; padding-right: 10px"
       (click)="common.buttons.remove(common.keys)"
@@ -131,7 +131,7 @@ common.title.toLowerCase()=='stroke' ){ @for (field of rectFields; track $index)
   >
     {{ field.title }}
 
-    @if (field.buttons) { @if(isValueExist(field.keys)){
+    @if (field.buttons&&canvasService.selectedObj.length===1) { @if(isValueExist(field.keys)){
     <span
       style="cursor: pointer; font-size: large; padding-right: 10px"
       (click)="field.buttons.remove(field.keys)"

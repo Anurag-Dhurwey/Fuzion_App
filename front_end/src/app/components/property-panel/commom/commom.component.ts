@@ -76,6 +76,16 @@ export class CommomComponent {
             return val.toFixed(3);
           },
         },
+        {
+          lable: 'Angle',
+          key: 'angle',
+          val_type: 'number',
+          inputBox_type: 'number',
+          step: 1,
+          pipe(val: number) {
+            return val.toFixed();
+          },
+        },
       ],
     },
 

@@ -43,15 +43,7 @@ export class CanvasService {
   };
   constructor(
     private socketService: SocketService // private authService: AuthService
-  ) {
-    // new Observable((observer) => {
-    //   this.objectsObserver = observer;
-    // })?.subscribe((arg) => {
-    //   if ('objects') {
-    //     this.renderObjectsOnCanvas();
-    //   }
-    // });
-  }
+  ) {}
   get zoom() {
     return this._zoom;
   }
@@ -60,6 +52,9 @@ export class CanvasService {
   }
   get objects() {
     return this._objects;
+  }
+  get activeObjects() {
+    return this.canvas?._activeObject;
   }
   removeEmptyGroups(objects: Object[]) {
     return objects.flatMap((obj) => {
@@ -263,11 +258,11 @@ export class CanvasService {
     if (!Array.isArray(objs)) objs = [objs];
     if (method === 'reset') {
       this._objects = objs;
-      this.reRender()
+      this.reRender();
     } else if (method === 'push') {
       objs.forEach((obj) => {
         this._objects.push(obj);
-        this.canvas?.add(obj)
+        this.canvas?.add(obj);
       });
     } else if (method === 'popAndPush') {
       this.canvas?.remove(this._objects[this._objects.length - 1]);
