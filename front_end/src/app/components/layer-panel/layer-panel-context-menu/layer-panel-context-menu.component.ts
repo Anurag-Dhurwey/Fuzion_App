@@ -16,6 +16,6 @@ export class LayerPanelContextMenuComponent {
   constructor(public canvasService: CanvasService) {}
 
   onDeleteClick() {
-    this.canvasService.filterObjectsByIds(this.canvasService.idsOfSelectedObj);
+    this.canvasService.updateObjects(this.canvasService.selectedObj,"delete");
   }
 }

@@ -63,7 +63,7 @@ export class DbService {
         height: this.canvasService.frame.y,
       });
 
-      this.socketService.emit('room:join', docRef.id);
+      this.socketService.emit.room_join( docRef.id);
       return docRef.id;
     } catch (error) {
       console.error(error);

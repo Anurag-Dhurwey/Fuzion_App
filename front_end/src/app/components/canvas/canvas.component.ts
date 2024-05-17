@@ -115,7 +115,7 @@ export class CanvasComponent implements OnInit {
         .getProjectsByIds(this.canvasService.projectId)
         .then((data: any[]) => {
           if (!data.length) return;
-          this.canvasService.enliveObjcts(data[0], true);
+          this.canvasService.enliveProject(data[0], () => {}, true);
           this.canvasService.members = data[0].members;
           this.canvasService.adminId = data[0].user;
           this.canvasService.background = data[0].background;
@@ -136,15 +136,29 @@ export class CanvasComponent implements OnInit {
               this.canvasService.projectId,
               this.authService.auth.currentUser?.email
             );
-            this.socketService.on('mouse:move', (data: Presense[]) => {
+            this.socketService.on.mouse_move((data: Presense[]) => {
               this.socketService.presense = data.filter(
                 (pre) => pre.id !== this.socketService.socket?.id
               );
             });
-            this.socketService.on('objects:modified', (new_objects) => {
-              this.canvasService.enliveObjcts(new_objects, true);
+            this.socketService.on.object_modified((new_objects, method) => {
+              if (typeof new_objects === 'string') {
+                let parsed = JSON.parse(new_objects);
+                new_objects = Array.isArray(parsed) ? parsed : [parsed];
+              }
+              if (!Array.isArray(new_objects)) {
+                new_objects = [new_objects];
+              }
+              this.canvasService.enliveObjs(
+                new_objects,
+                (obj) => {
+                  // console.log(obj)
+                },
+                method
+              );
+              console.log(new_objects);
             });
-            this.socketService.emit('room:join', this.canvasService.projectId);
+            this.socketService.emit.room_join(this.canvasService.projectId);
           }
         });
     }
@@ -153,7 +167,7 @@ export class CanvasComponent implements OnInit {
     board.width = this.canvasService.frame.x;
     board.height = this.canvasService.frame.y;
     this.canvasService.canvas = new fabric.Canvas(board, {
-      backgroundColor: this.canvasService.background,
+      backgroundColor: this.canvasService.background || '#282829',
       stopContextMenu: true,
       preserveObjectStacking: true,
       // skipTargetFind: this.canvasService.isMobile(),
@@ -163,22 +177,6 @@ export class CanvasComponent implements OnInit {
       // targetFindTolerance:5,
       // perPixelTargetFind:true
     });
-    // window.addEventListener('resize', () => {
-      // board.width = window.innerWidth;
-      // board.height = window.innerHeight;
-      // this.canvasService.canvas?.setHeight(window.innerHeight);
-      // this.canvasService.canvas?.setWidth(window.innerWidth);
-      // this.window = window;
-      // this.canvasService.canvas!.skipTargetFind = this.canvasService.isMobile();
-      // this.canvasService.layout.visibility.layer_panel =
-      //   !this.canvasService.isMobile() && window.innerWidth > 999;
-      // this.canvasService.layout.visibility.property_panel =
-      //   !this.canvasService.isMobile() && window.innerWidth > 999;
-      // this.canvasService.canvas!.defaultCursor = 'default';
-      // this.canvasService.canvas!.setCursor('default');
-      // this.canvasService.setRole('select','resize');
-    // });
-
     // this.canvasService.canvas.on('mouse:over', (event) => {
     //   if (event.target) {
     //     this.targetObjectStroke = event.target.stroke;
@@ -206,13 +204,51 @@ export class CanvasComponent implements OnInit {
     this.canvasService.canvas.on('path:created', (event) =>
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
-
-    this.canvasService.canvas?.on('object:moving', (event) => {
-      this.socketService.emit('objects:modified', {
-        objects: this.canvasService.canvas?.toObject(['_id', 'name']).objects,
-        roomId: this.canvasService.projectId,
+    this.canvasService.canvas?.on('selection:created', (event) => {
+      if (!event.selected) return;
+      event.selected.forEach((obj: any) => {
+        if (!this.canvasService.isSelected(obj._id)) {
+          this.canvasService.selectedObj.push(obj);
+        }
       });
     });
+    this.canvasService.canvas?.on('selection:updated', (event) => {
+      if (!event.selected) return;
+      if (!event.e.ctrlKey) this.canvasService.selectedObj = [];
+      event.selected.forEach((obj: any) => {
+        this.canvasService.selectedObj.push(obj);
+      });
+    });
+    this.canvasService.canvas?.on('selection:cleared', () => {
+      this.canvasService.selectedObj = [];
+    });
+    this.canvasService.canvas?.on('object:moving', () => {
+      // this.canvasService.projectId &&
+      //   this.socketService.emit.object_modified(
+      //     this.canvasService.projectId,
+      //     this.canvasService.selectedObj,
+      //     'replace'
+      //   );
+      this.emitModifyEvent();
+    });
+    this.canvasService.canvas?.on('object:resizing', () => {
+      this.emitModifyEvent();
+    });
+    this.canvasService.canvas?.on('object:rotating', () => {
+      this.emitModifyEvent();
+    });
+    this.canvasService.canvas?.on('object:scaling', () => {
+      this.emitModifyEvent();
+    });
+  }
+
+  emitModifyEvent() {
+    this.canvasService.projectId &&
+      this.socketService.emit.object_modified(
+        this.canvasService.projectId,
+        this.canvasService.selectedObj,
+        'replace'
+      );
   }
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
@@ -240,9 +276,10 @@ export class CanvasComponent implements OnInit {
       } else {
         (this.canvasService.currentDrawingObject as fabric.IText).exitEditing();
         !(this.canvasService.currentDrawingObject as fabric.IText).text &&
-          this.canvasService.filterObjectsByIds([
-            this.canvasService.currentDrawingObject._id,
-          ]);
+          this.canvasService.updateObjects(
+            [this.canvasService.currentDrawingObject],
+            'delete'
+          );
         this.canvasService.currentDrawingObject = undefined;
         this.canvasService.setRole('select');
       }
@@ -329,13 +366,15 @@ export class CanvasComponent implements OnInit {
     }
   }
   onMouseMove(event: fabric.IEvent<MouseEvent>): void {
-    if (this.canvasService.projectId && this.authService.auth.currentUser) {
-      this.socketService.emit('mouse:move', {
-        position: {
-          x: event.pointer?.x,
-          y: event.pointer?.y,
-        },
-        roomId: this.canvasService.projectId,
+    if (
+      this.canvasService.projectId &&
+      this.authService.auth.currentUser &&
+      event.pointer?.x &&
+      event.pointer?.y
+    ) {
+      this.socketService.emit.mouse_move(this.canvasService.projectId, {
+        x: event.pointer.x,
+        y: event.pointer.y,
       });
     }
     // if (this.isDrawing) this.canvasService.canvas!.selection = false;
@@ -478,7 +517,7 @@ export class CanvasComponent implements OnInit {
     // const { x, y } = e.pointer;
     const { x, y } = this.canvasService.canvas!.getPointer(e.e, false);
     if (role === 'line') {
-      return new fabric.Line([x, y, x+100, y], {
+      return new fabric.Line([x, y, x + 100, y], {
         stroke: '#81868a',
         fill: '',
       }) as Object;
@@ -557,7 +596,7 @@ export class CanvasComponent implements OnInit {
       );
     }
     if (this.canvasService.projectId) {
-      this.socketService.emit('room:leave', this.canvasService.projectId);
+      this.socketService.emit.room_leave(this.canvasService.projectId);
     }
     this.canvasService.updateObjects([], 'reset');
     this.canvasService.members = [];

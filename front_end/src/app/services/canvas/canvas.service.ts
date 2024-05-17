@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { fabric } from 'fabric';
-import { SocketService } from '../socket/socket.service';
+import {
+  SocketService,
+  object_modified_method,
+} from '../socket/socket.service';
 // import { Observable, Subscriber } from 'rxjs';
 import { Group, Object, Project, Roles } from '../../../types/app.types';
 import { v4 } from 'uuid';
@@ -38,7 +41,7 @@ export class CanvasService {
       setting_panel: false,
       menu_panel: false,
       export_panel: false,
-      frame_selection_panel: true,
+      frame_selection_panel: !this.frame.x&&!this.frame.x,
     },
   };
   constructor(
@@ -201,18 +204,55 @@ export class CanvasService {
     return undefined;
   }
 
-  enliveObjcts(project: Project, replace: boolean = false): void {
+  enliveProject(
+    project: Project,
+    cb: (Project: Object[]) => void,
+    replace: boolean = false
+  ): void {
     fabric.util.enlivenObjects(
       JSON.parse(project.objects || '[]'),
       (createdObjs: Object[]) => {
+        cb(createdObjs);
+        if (replace) {
+          this._objects = createdObjs;
+          this.reRender();
+          return;
+        }
         createdObjs?.forEach((obj: Object) => {
           this.canvas?.add(obj);
         });
         this.canvas?.renderAll();
-        if (replace) {
-          this._objects = createdObjs;
-          this.reRender();
-        }
+      },
+      'fabric'
+    );
+  }
+
+  enliveObjs(
+    objs: Object[],
+    cb: (obj: Object[]) => void,
+    method?: object_modified_method
+  ): void {
+    // if (typeof objs === 'string') {
+    //   let parsed = JSON.parse(objs);
+    //   objs = Array.isArray(parsed) ? parsed : [parsed];
+    // }
+    // if (!Array.isArray(objs)) {
+    //   objs = [objs];
+    // }
+    fabric.util.enlivenObjects(
+      objs,
+      (createdObjs: Object[]) => {
+        method &&
+          createdObjs.forEach((item) => {
+            // const i = this.objects.findIndex((obj) => obj._id == item._id);
+            // if (i >= 0) {
+            this.updateObjects(item, method,false);
+            // } else {
+            // this.updateObjects(item, 'push');
+            // }
+          });
+        cb(createdObjs);
+        console.log(method)
       },
       'fabric'
     );
@@ -253,7 +293,8 @@ export class CanvasService {
 
   updateObjects(
     objs: Object | Object[],
-    method: 'push' | 'reset' | 'popAndPush' | 'replace' = 'push'
+    method: 'push' | 'reset' | 'popAndPush' | 'replace' | 'delete' = 'push',
+    emit_event: boolean = true
   ) {
     if (!Array.isArray(objs)) objs = [objs];
     if (method === 'reset') {
@@ -269,22 +310,44 @@ export class CanvasService {
       this.canvas?.add(objs[0]);
       this._objects[this._objects.length - 1] = objs[0];
     } else if (method === 'replace') {
-      this._objects = this._objects.map((obj) => {
-        for (const its of objs as Object[]) {
-          if (its._id == obj._id) {
-            this.canvas?.remove(obj);
-            this.canvas?.add(its);
-            return its;
-          }
+      // this._objects = this._objects.map((obj) => {
+      //   for (const its of objs as Object[]) {
+      //     if (its._id == obj._id) {
+      //       this.canvas?.remove(obj);
+      //       this.canvas?.add(its);
+      //       return its;
+      //     }
+      //   }
+      //   return obj;
+      // });
+      objs.forEach((item) => {
+        const i = this.objects.findIndex((obj) => obj._id == item._id);
+        if (i >= 0) {
+          this.canvas?.remove(this._objects[i]);
+          this._objects[i] = item;
+          this.canvas?.add(item);
         }
-        return obj;
+        // else{
+        //   data.unshift(item)
+        // }
+      });
+    } else if (method === 'delete') {
+      objs.forEach((obj) => {
+        const index = this._objects.findIndex(
+          (element) => element._id === obj._id
+        );
+        if (index >= 0) {
+          this.canvas?.remove(this._objects[index]);
+          this._objects.splice(index, 1);
+        }
+        // this._objects=this._objects.filter(item=>item._id!=obj._id)
       });
     }
-    // this.reRender();
-    this.socketService.emit('objects:modified', {
-      roomId: this.projectId,
-      objects: this.canvas?.toObject(['_id', 'name']).objects,
-    });
+    console.log(method)
+    this.canvas?.renderAll()
+    this.projectId &&
+      emit_event &&
+      this.socketService.emit.object_modified(this.projectId, objs, method);
   }
 
   removeElements = (array: Object[], ids: string[]) => {
@@ -307,15 +370,16 @@ export class CanvasService {
     console.log(this.selectedObj);
   }
 
-  filterObjectsByIds(ids: string[]) {
-    this.removeElements(this.objects, ids);
-    this.reRender();
-    this.socketService.emit('objects:modified', {
-      roomId: this.projectId,
-      objects: this.canvas?.toObject(['_id', 'name']).objects,
-    });
-    // this.idsOfSelectedObj = [];
-  }
+  // filterObjectsByIds(ids: string[]) {
+  //   // there is problem neet to delete from other user
+  //   this.removeElements(this.objects, ids);
+  //   this.reRender();
+  //   // this.projectId &&
+  //   //   this.socketService.emit.object_modified(
+  //   //     this.projectId,
+  //   //     this.selectedObj
+  //   //   );
+  // }
 
   renderObjectsOnCanvas(backgroungColor?: string) {
     this.canvas?.clear();
@@ -380,7 +444,7 @@ export class CanvasService {
     } else if (this.currentDrawingObject?.type == 'i-text') {
       (this.currentDrawingObject as fabric.IText).exitEditing();
       !(this.currentDrawingObject as fabric.IText).text &&
-        this.filterObjectsByIds([this.currentDrawingObject._id]);
+        this.updateObjects([this.currentDrawingObject], 'delete');
     }
     this.currentDrawingObject = undefined;
     this.reRender();

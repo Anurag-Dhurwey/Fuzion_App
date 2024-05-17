@@ -6,6 +6,7 @@ import { client } from "./redis.config";
 import { routes } from "./routes/routes";
 import { admin, db } from "./firebase.config";
 import { socket_middleware } from "./middleware/socket_middleware";
+import { IObjectOptions } from "../types";
 require("dotenv").config();
 
 const app = express();
@@ -26,7 +27,6 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
   // res.send('working server')
 });
-
 
 io.use(socket_middleware);
 
@@ -76,12 +76,54 @@ io.on("connection", async (socket) => {
 
   socket.on(
     "objects:modified",
-    async ({ objects, roomId }: { objects: any; roomId: string }) => {
+    async ({
+      objects,
+      roomId,
+      method,
+    }: {
+      objects: IObjectOptions | IObjectOptions[];
+      roomId: string;
+      method: "push" | "reset" | "popAndPush" | "replace" | "delete";
+    }) => {
       if (!objects || !roomId) return;
-      await client.hSet(`room:${roomId}`, {
-        objects: JSON.stringify(objects),
-      });
-      socket.to(roomId).emit("objects:modified", objects);
+
+      if (!Array.isArray(objects)) {
+        objects = [objects];
+      }
+
+      try {
+        let data: IObjectOptions[] = JSON.parse(
+          (await client.hGet(`room:${roomId}`, "objects")) || "[]"
+        );
+        if(method=='push'){
+          objects.forEach(obj=>{
+
+            data.push(obj)
+          })
+        }else if(method==='popAndPush'){
+          data[data.length-1]=objects[0]
+        }else if(method==='replace'){
+          objects.forEach((item) => {
+            const i = data.findIndex((obj) => obj._id == item._id);
+            if (i >= 0) {
+              data[i] = item;
+            } 
+          });
+        }else if(method=="delete"){
+         objects.forEach(obj=>{
+          data=data.filter(item=>item._id!=obj._id)
+         })
+        }else if(method==='reset'){
+          data=objects
+        }
+        await client.hSet(`room:${roomId}`, {
+          objects: JSON.stringify(data),
+        });
+
+        socket.to(roomId).emit("objects:modified", objects, method);
+      } catch (error) {
+        console.error(error);
+      }
     }
   );
 
