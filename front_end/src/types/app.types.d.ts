@@ -31,7 +31,7 @@ export type Object = (
 };
 
 export type Position = { x: number; y: number };
-export type Presense = { id: string; mouse: Position; expire: number };
+// export type Presense = { id: string; mouse: Position; expire: number };
 
 export type CommonProperty<Type> = {
   title: 'Position'|'Stroke' | 'Size' | 'Fill' | 'Flip' | 'Others'|'Corners';

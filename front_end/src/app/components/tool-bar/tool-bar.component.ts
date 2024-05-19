@@ -93,7 +93,6 @@ export class ToolBarComponent {
   }
 
   onClickRoleButton(role: Roles) {
-    // this.setCurrentRole.emit(role);
     this.canvasService.setRole(role)
     if (role === 'image') {
       this.fileInput?.nativeElement.click();

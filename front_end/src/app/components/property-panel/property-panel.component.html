@@ -31,21 +31,24 @@
     background-color: rgb(83, 137, 177);
   "
 >
-  <button
+  <span
     class="material-symbols-outlined"
-    style="
-      position: absolute;
-      left: 0;
-      top: 0;
-      cursor: pointer;
-      outline: none;
-      border: none;
-      background: none;
-    "
-     (click)="canvasService.toggleLayoutVisibility(['property_panel'],false)"
+    style="cursor: pointer"
+    (click)="canvasService.toggleLayoutVisibility(['property_panel'], false)"
   >
     arrow_forward_ios
-  </button>
+  </span>
+  <span
+    class="material-symbols-outlined"
+    style="cursor: pointer"
+    (click)="canvasService.preview_scence_toggle()"
+  >
+    {{
+      canvasService.viewport_refs.preview_scence?.pre_trans_target
+        ? "preview"
+        : "preview_off"
+    }}
+  </span>
 </div>
 <div class="propertyBar">
   @if(canvasService.selectedObj.length){
@@ -74,5 +77,15 @@
       delete
     </button>
   </span>
+  }@else {
+ <div style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+  <span
+  class="material-symbols-outlined"
+  style="cursor: pointer"
+  (click)="canvasService.setViewPortTransform(0, 0)"
+>
+  transform
+</span>
+ </div>
   }
 </div>

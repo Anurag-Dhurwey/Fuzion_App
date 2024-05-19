@@ -27,6 +27,17 @@ export class CanvasService {
     | fabric.Line
     | (fabric.Circle & { _refTo: string; _refIndex: [number, number] })
   )[] = [];
+  // private _viewport_status = {
+  //   preview_scence: false,
+  // };
+  private _viewport_refs: {
+    preview_scence: null | {
+      pre_trans_target: { x: number; y: number };
+      rect: fabric.Rect;
+    };
+  } = {
+    preview_scence: null,
+  };
 
   currentDrawingObject: Object | undefined;
 
@@ -41,7 +52,7 @@ export class CanvasService {
       setting_panel: false,
       menu_panel: false,
       export_panel: false,
-      frame_selection_panel: !this.frame.x&&!this.frame.x,
+      frame_selection_panel: !this.frame.x && !this.frame.x,
     },
   };
   constructor(
@@ -59,6 +70,52 @@ export class CanvasService {
   get activeObjects() {
     return this.canvas?._activeObject;
   }
+  get viewport_refs() {
+    return this._viewport_refs;
+  }
+
+  preview_scence_start() {
+    if (this.viewport_refs.preview_scence) return;
+    if (!this.canvas?.viewportTransform) return;
+    const strokeWidth = 6 / this.zoom;
+    this.viewport_refs.preview_scence = {
+      rect: new fabric.Rect({
+        top: 0,
+        left: 0,
+        width: this.frame.x - strokeWidth,
+        height: this.frame.y - strokeWidth,
+        stroke: '#000000',
+        strokeWidth,
+        excludeFromExport: true,
+        evented: false,
+        fill: '',
+        selectable: false,
+      }),
+      pre_trans_target: {
+        x: this.canvas?.viewportTransform[4],
+        y: this.canvas?.viewportTransform[5],
+      },
+    };
+    this.canvas?.add(this.viewport_refs.preview_scence.rect);
+    this.setViewPortTransform(0, 0);
+  }
+  preview_scence_stop() {
+    if (!this.viewport_refs.preview_scence) return;
+    this.canvas?.remove(this.viewport_refs.preview_scence.rect);
+    this.setViewPortTransform(
+      this.viewport_refs.preview_scence.pre_trans_target.x,
+      this.viewport_refs.preview_scence.pre_trans_target.y
+    );
+    this.viewport_refs.preview_scence = null;
+  }
+  preview_scence_toggle(){
+    if(this.viewport_refs.preview_scence){
+      this.preview_scence_stop()
+    }else{
+      this.preview_scence_start()
+    }
+  }
+
   removeEmptyGroups(objects: Object[]) {
     return objects.flatMap((obj) => {
       if (obj.type === 'group') {
@@ -246,13 +303,13 @@ export class CanvasService {
           createdObjs.forEach((item) => {
             // const i = this.objects.findIndex((obj) => obj._id == item._id);
             // if (i >= 0) {
-            this.updateObjects(item, method,false);
+            this.updateObjects(item, method, false);
             // } else {
             // this.updateObjects(item, 'push');
             // }
           });
         cb(createdObjs);
-        console.log(method)
+        console.log(method);
       },
       'fabric'
     );
@@ -343,8 +400,8 @@ export class CanvasService {
         // this._objects=this._objects.filter(item=>item._id!=obj._id)
       });
     }
-    console.log(method)
-    this.canvas?.renderAll()
+    console.log(method);
+    this.canvas?.renderAll();
     this.projectId &&
       emit_event &&
       this.socketService.emit.object_modified(this.projectId, objs, method);
@@ -438,6 +495,7 @@ export class CanvasService {
 
   setRole(role: Roles) {
     if (!this.canvas) return;
+    this.preview_scence_stop()
     this._role = role;
     if (this.currentDrawingObject?.type === 'path') {
       this.loadSVGFromString(this.currentDrawingObject);
@@ -447,7 +505,7 @@ export class CanvasService {
         this.updateObjects([this.currentDrawingObject], 'delete');
     }
     this.currentDrawingObject = undefined;
-    this.reRender();
+    // this.reRender();
     if (role === 'pencil') {
       this.canvas.isDrawingMode = true;
     } else {
@@ -481,17 +539,25 @@ export class CanvasService {
       obj.setCoords();
     });
     this.canvas?.requestRenderAll();
-    this.canvas?.renderAll();
   }
-  setViewPortTransform(x: number, y: number) {
+   setViewPortTransform(x: number, y: number) {
     if (!this.canvas?.viewportTransform) return;
-    this.canvas!.viewportTransform[4] += x;
-    this.canvas!.viewportTransform[5] += y;
+    this.canvas!.viewportTransform[4] = x;
+    this.canvas!.viewportTransform[5] = y;
     this.canvas?.forEachObject((obj) => {
       obj.setCoords();
     });
     this.canvas!.requestRenderAll();
   }
+
+  transformViewPort(x: number, y: number) {
+    if (!this.canvas?.viewportTransform) return;
+    this.setViewPortTransform(
+      this.canvas!.viewportTransform[4] + x,
+      this.canvas!.viewportTransform[5] + y
+    );
+  }
+
   objectCustomization(arg: boolean) {
     this.canvas?.getObjects().forEach((objs) => {
       // Prevent customization:

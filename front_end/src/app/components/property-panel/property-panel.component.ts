@@ -19,23 +19,5 @@ export class PropertyPanelComponent {
   }
 
   ngAfterViewInit() {
-    // this.canvasService.canvas?.on('selection:created', (event) => {
-    //   if (!event.selected) return;
-    //   event.selected.forEach((obj: any) => {
-    //     if (!this.canvasService.isSelected(obj._id)) {
-    //       this.canvasService.selectedObj.push(obj);
-    //     }
-    //   });
-    // });
-    // this.canvasService.canvas?.on('selection:updated', (event) => {
-    //   if (!event.selected) return;
-    //   if (!event.e.ctrlKey) this.canvasService.selectedObj = [];
-    //   event.selected.forEach((obj: any) => {
-    //     this.canvasService.selectedObj.push(obj);
-    //   });
-    // });
-    // this.canvasService.canvas?.on('selection:cleared', () => {
-    //   this.canvasService.selectedObj = [];
-    // });
   }
 }

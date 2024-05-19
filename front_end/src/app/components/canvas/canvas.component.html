@@ -215,12 +215,13 @@
   <div class="loader">
     <h3>Connecting to server</h3>
   </div>
-  } @for (item of socketService.presense; track $index) {
+  }
+   <!-- @for (item of socketService.presense; track $index) {
   <div
     [style]="{ top: item.mouse.y + 'px', left: item.mouse.x + 'px' }"
     id="mouse"
   ></div>
-  }
+  } -->
   @if(canvasService.layout.visibility.setting_panel||canvasService.layout.visibility.menu_panel||canvasService.layout.visibility.frame_selection_panel){
   <section
     style="
