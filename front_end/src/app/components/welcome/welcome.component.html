@@ -183,25 +183,7 @@
       <h3 style="margin: 0%; padding: 10px 0px; text-align: center">
         Welcome! Unleash your creativity with our powerful design tool.
       </h3>
-      <!-- <p style="text-align: center; font-weight: bold; padding: 0px 30px">
-        This app empowers you to bring your ideas to life with an intuitive
-        interface and robust features, similar to popular design platforms like
-        Figma and Canva.
-      </p> -->
-      <!-- <ul class="ul">
-        <li>
-          <span>Shape creation:</span> Effortlessly create various shapes,
-          including lines, rectangles, circles, and more.
-        </li>
-        <li>
-          <span>Customization:</span> Personalize your creations with diverse
-          options like color, size, and position adjustments.
-        </li>
-        <li>
-          <span>Export flexibility:</span> Seamlessly export your work as an
-          image (JPG, PNG) or PDF, allowing for easy sharing and integration.
-        </li>
-      </ul> -->
+
       <div class="start-explore">
         <!-- <h4>Start exploring and turn your vision into reality!</h4> -->
         <button
@@ -226,15 +208,17 @@
       class="directry"
       style="background: linear-gradient(45deg, #c94f74 0%, #3e870d 100%)"
     >
-      @for (project of demo_projects; track $index) {
+      @for (project of dbService.promotional_projects; track $index) {
       <app-preview-card
-        [routerLink]="'/canvas/demo/' + project.id"
         class="card"
         style="overflow: auto"
         [style]="{ backgroundColor: 'gray' }"
-        [objects]="project"
+        [project]="project"
         [id]="project.id"
-        [dimension]="{ width: 250, height: 150 }"
+        [dimension]="{
+          width: 300,
+          height: 300 * (project.height / project.width)
+        }"
       />
       }
     </div>

@@ -22,7 +22,7 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.authService.whenAuthStateChange((user) => {
       if (user) {
-        this.router.navigate(['/canvas']);
+        this.router.navigate(['/dashboard']);
       } else {
         this.router.navigate(['/welcome']);
       }

@@ -5,9 +5,9 @@ import {
   object_modified_method,
 } from '../socket/socket.service';
 // import { Observable, Subscriber } from 'rxjs';
-import { Group, Object, Project, Roles } from '../../../types/app.types';
+import { Group, Fab_Objects, Project, Roles } from '../../../types/app.types';
 import { v4 } from 'uuid';
-import { IGroupOptions } from 'fabric/fabric-impl';
+import { IGroupOptions} from 'fabric/fabric-impl';
 import { v4 as uuidv4 } from 'uuid';
 // import { AuthService } from '../auth/auth.service';
 @Injectable({
@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 })
 export class CanvasService {
   private _role: Roles = 'select';
-  private _objects: Object[] = [];
+  private _objects: Fab_Objects[] = [];
   canvas: fabric.Canvas | undefined;
   projectId: string | null = null;
   version: string | undefined;
@@ -39,9 +39,9 @@ export class CanvasService {
     preview_scence: null,
   };
 
-  currentDrawingObject: Object | undefined;
+  currentDrawingObject: Fab_Objects | undefined;
 
-  selectedObj: Object[] = [];
+  selectedObj: Fab_Objects[] = [];
   private _zoom = 1;
   frame = { x: 1920, y: 1080 };
   layout = {
@@ -72,6 +72,16 @@ export class CanvasService {
   }
   get viewport_refs() {
     return this._viewport_refs;
+  }
+
+
+  emitReplaceObjsEventToSocket(){
+    this.projectId &&
+    this.socketService.emit.object_modified(
+      this.projectId,
+      this.selectedObj,
+      'replace'
+    );
   }
 
   preview_scence_start() {
@@ -108,22 +118,22 @@ export class CanvasService {
     );
     this.viewport_refs.preview_scence = null;
   }
-  preview_scence_toggle(){
-    if(this.viewport_refs.preview_scence){
-      this.preview_scence_stop()
-    }else{
-      this.preview_scence_start()
+  preview_scence_toggle() {
+    if (this.viewport_refs.preview_scence) {
+      this.preview_scence_stop();
+    } else {
+      this.preview_scence_start();
     }
   }
 
-  removeEmptyGroups(objects: Object[]) {
+  removeEmptyGroups(objects: Fab_Objects[]) {
     return objects.flatMap((obj) => {
       if (obj.type === 'group') {
         if (obj._objects.length) {
           obj._objects = this.removeEmptyGroups(obj._objects);
           return [obj];
         } else {
-          return [] as Object[];
+          return [] as Fab_Objects[];
         }
       }
       return [obj];
@@ -131,7 +141,7 @@ export class CanvasService {
   }
 
   countChildsLength(id: string) {
-    function traverse(obj: Object): number | undefined {
+    function traverse(obj: Fab_Objects): number | undefined {
       if (obj.type === 'group') {
         if (id === obj._id) {
           return obj._objects.length;
@@ -157,8 +167,8 @@ export class CanvasService {
   }
 
   get idsOfSelectedObj() {
-    function traverse(obj: Object[]): string[] {
-      return obj.flatMap((ob: Object) => {
+    function traverse(obj: Fab_Objects[]): string[] {
+      return obj.flatMap((ob: Fab_Objects) => {
         if (ob.type === 'group') {
           return [ob._id, ...traverse(ob._objects)];
         } else {
@@ -170,9 +180,9 @@ export class CanvasService {
     return traverse(this.selectedObj);
   }
 
-  getOneDarray(obj: Object[]) {
-    function traverse(obj: Object[]): Object[] {
-      return obj.flatMap((ob: Object) => {
+  getOneDarray(obj: Fab_Objects[]) {
+    function traverse(obj: Fab_Objects[]): Fab_Objects[] {
+      return obj.flatMap((ob: Fab_Objects) => {
         if (ob.type === 'group') {
           return traverse(ob._objects);
         } else {
@@ -192,9 +202,9 @@ export class CanvasService {
     return this.getOneDarray(this.selectedObj);
   }
 
-  static extractIds(objects: Object[]) {
-    function traverse(obj: Object[]): string[] {
-      return obj.flatMap((ob: Object) => {
+  static extractIds(objects: Fab_Objects[]) {
+    function traverse(obj: Fab_Objects[]): string[] {
+      return obj.flatMap((ob: Fab_Objects) => {
         if (ob.type === 'group') {
           return [ob._id, ...traverse(ob._objects)];
         } else {
@@ -207,7 +217,7 @@ export class CanvasService {
   }
 
   isSelected(id: string): boolean {
-    function isExist(obj: Object): boolean {
+    function isExist(obj: Fab_Objects): boolean {
       if (obj._id === id) {
         return true;
       }
@@ -234,7 +244,7 @@ export class CanvasService {
   seriesIndex(id: string, text?: string) {
     let count = 0;
     function traverse(
-      obj: Object & { series_index?: number }
+      obj: Fab_Objects & { series_index?: number }
     ): number | undefined {
       if (id === obj._id) {
         return count;
@@ -263,19 +273,19 @@ export class CanvasService {
 
   enliveProject(
     project: Project,
-    cb: (Project: Object[]) => void,
+    cb: (Project: Fab_Objects[]) => void,
     replace: boolean = false
   ): void {
     fabric.util.enlivenObjects(
       JSON.parse(project.objects || '[]'),
-      (createdObjs: Object[]) => {
+      (createdObjs: Fab_Objects[]) => {
         cb(createdObjs);
         if (replace) {
-          this._objects = createdObjs;
+          this.mountProject({ ...project, objects: createdObjs });
           this.reRender();
           return;
         }
-        createdObjs?.forEach((obj: Object) => {
+        createdObjs?.forEach((obj: Fab_Objects) => {
           this.canvas?.add(obj);
         });
         this.canvas?.renderAll();
@@ -284,9 +294,33 @@ export class CanvasService {
     );
   }
 
+  mountProject(project: Omit<Project, 'objects'> & { objects: Fab_Objects[] }) {
+    this._objects = project.objects;
+    this.members = project.members;
+    this.projectId=project.id
+    this.adminId = project.user;
+    this.background = project.background;
+    this.version = project.version;
+    this.currentDrawingObject = undefined;
+    this.frame.x = project.width;
+    this.frame.y = project.height;
+  }
+
+  unMountProject(){
+    this._objects = [];
+    this.members = [];
+    this.adminId = undefined;
+    this.projectId=null
+    this.background = undefined;
+    this.version = undefined;
+    this.currentDrawingObject = undefined;
+    this.frame.x = 1920;
+    this.frame.y = 1080;
+  }
+
   enliveObjs(
-    objs: Object[],
-    cb: (obj: Object[]) => void,
+    objs: Fab_Objects[],
+    cb: (obj: Fab_Objects[]) => void,
     method?: object_modified_method
   ): void {
     // if (typeof objs === 'string') {
@@ -298,7 +332,7 @@ export class CanvasService {
     // }
     fabric.util.enlivenObjects(
       objs,
-      (createdObjs: Object[]) => {
+      (createdObjs: Fab_Objects[]) => {
         method &&
           createdObjs.forEach((item) => {
             // const i = this.objects.findIndex((obj) => obj._id == item._id);
@@ -320,7 +354,7 @@ export class CanvasService {
       JSON.parse(json).objects,
       (objects: any) => {
         if (!objects || !objects.length) return;
-        function changeId(objects: Object[]) {
+        function changeId(objects: Fab_Objects[]) {
           objects.forEach((obj) => {
             obj._id = v4();
             if (obj.type === 'group') {
@@ -349,7 +383,7 @@ export class CanvasService {
   }
 
   updateObjects(
-    objs: Object | Object[],
+    objs: Fab_Objects | Fab_Objects[],
     method: 'push' | 'reset' | 'popAndPush' | 'replace' | 'delete' = 'push',
     emit_event: boolean = true
   ) {
@@ -360,15 +394,16 @@ export class CanvasService {
     } else if (method === 'push') {
       objs.forEach((obj) => {
         this._objects.push(obj);
-        this.canvas?.add(obj);
+        this.canvas?.add(this._objects[this._objects.length-1]);
       });
     } else if (method === 'popAndPush') {
       this.canvas?.remove(this._objects[this._objects.length - 1]);
-      this.canvas?.add(objs[0]);
       this._objects[this._objects.length - 1] = objs[0];
+      // this.canvas?.add(objs[0]);
+      this.canvas?.add(this._objects[this._objects.length - 1]);
     } else if (method === 'replace') {
       // this._objects = this._objects.map((obj) => {
-      //   for (const its of objs as Object[]) {
+      //   for (const its of objs as Fab_Objects[]) {
       //     if (its._id == obj._id) {
       //       this.canvas?.remove(obj);
       //       this.canvas?.add(its);
@@ -382,7 +417,7 @@ export class CanvasService {
         if (i >= 0) {
           this.canvas?.remove(this._objects[i]);
           this._objects[i] = item;
-          this.canvas?.add(item);
+          this.canvas?.add(this._objects[i]);
         }
         // else{
         //   data.unshift(item)
@@ -400,14 +435,13 @@ export class CanvasService {
         // this._objects=this._objects.filter(item=>item._id!=obj._id)
       });
     }
-    console.log(method);
     this.canvas?.renderAll();
     this.projectId &&
       emit_event &&
       this.socketService.emit.object_modified(this.projectId, objs, method);
   }
 
-  removeElements = (array: Object[], ids: string[]) => {
+  removeElements = (array: Fab_Objects[], ids: string[]) => {
     ids.forEach((Id) => {
       const index = array.findIndex((element) => element._id === Id);
       if (index !== -1) {
@@ -441,10 +475,10 @@ export class CanvasService {
   renderObjectsOnCanvas(backgroungColor?: string) {
     this.canvas?.clear();
     this.canvas?.setBackgroundColor(backgroungColor || '#282829', () => {});
-    const draw = (objects: Object[]) => {
+    const draw = (objects: Fab_Objects[]) => {
       objects.forEach((obj) => {
         if (obj.type === 'group') {
-          draw(obj._objects as Object[]);
+          draw(obj._objects as Fab_Objects[]);
         } else {
           this.canvas?.add(obj);
         }
@@ -495,7 +529,7 @@ export class CanvasService {
 
   setRole(role: Roles) {
     if (!this.canvas) return;
-    this.preview_scence_stop()
+    this.preview_scence_stop();
     this._role = role;
     if (this.currentDrawingObject?.type === 'path') {
       this.loadSVGFromString(this.currentDrawingObject);
@@ -540,7 +574,7 @@ export class CanvasService {
     });
     this.canvas?.requestRenderAll();
   }
-   setViewPortTransform(x: number, y: number) {
+  setViewPortTransform(x: number, y: number) {
     if (!this.canvas?.viewportTransform) return;
     this.canvas!.viewportTransform[4] = x;
     this.canvas!.viewportTransform[5] = y;
@@ -567,9 +601,9 @@ export class CanvasService {
     this.canvas?.renderAll();
   }
 
-  loadSVGFromString(data: Object) {
+  loadSVGFromString(data: Fab_Objects) {
     fabric.loadSVGFromString(data.toSVG(), (str) => {
-      const newPath = str[0] as Object;
+      const newPath = str[0] as Fab_Objects;
       newPath._id = uuidv4();
       this.updateObjects(newPath, 'popAndPush');
       this.currentDrawingObject = undefined;
@@ -593,7 +627,7 @@ export class CanvasService {
     if (format == 'jpeg' || format == 'png') {
       return exportable_canvas.toDataURL({ format });
     } else if (format == 'json') {
-      return exportable_canvas.toJSON();
+      return exportable_canvas.toJSON(['_id','type']);
     } else {
       return;
     }

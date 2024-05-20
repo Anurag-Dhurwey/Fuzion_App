@@ -4,6 +4,7 @@
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    position: relative;
   }
   .dashboard .menu {
     width: 100vw;
@@ -29,7 +30,6 @@
     cursor: pointer;
   }
 
-
   .menubar .top {
     height: 50px !important;
     width: 100%;
@@ -47,10 +47,10 @@
     height: 100vh;
     min-height: 100px;
     background-color: gray;
-    display: flex;
+    /* display: flex;
     justify-content: center;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    align-items: center;
+    flex-wrap: wrap; */
     gap: 5px;
     overflow-y: auto;
     padding-bottom: 5px;
@@ -63,7 +63,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
+    /* cursor: pointer; */
   }
   @media (min-width: 1000px) {
     .dashboard {
@@ -91,6 +91,103 @@
 </style>
 
 <main class="dashboard">
+  @if (creatingNewProject) {
+  <section
+    style="
+      z-index: 4;
+      position: absolute;
+      top: 0%;
+      left: 0%;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(128, 128, 128, 0.678);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      column-gap: 10px;
+    "
+  >
+    @if (canvasService.layout.visibility.frame_selection_panel) {
+    <app-frame-selection-panel />
+    }@else {
+    <div
+      style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #749595;
+      "
+      [style]="{
+        width: 300 + 'px',
+        height: 300 * (canvasService.frame.y / canvasService.frame.x) + 'px'
+      }"
+    >
+      <span style="display: flex; justify-content: center; align-items: center">
+        {{ canvasService.frame.x
+        }}<span class="material-symbols-outlined"> close </span
+        >{{ canvasService.frame.y }}
+      </span>
+    </div>
+    <button
+      (click)="canvasService.layout.visibility.frame_selection_panel = true"
+      style="
+        margin: 10px;
+        background: rgba(4, 119, 139, 0.915);
+        border-radius: 12px;
+        width: 300px;
+        border: none;
+        outline: none;
+        height: 30px;
+        text-transform: uppercase;
+        cursor: pointer;
+      "
+    >
+      Change frame
+    </button>
+    <button
+      (click)="
+        canvasService.layout.visibility.frame_selection_panel = false;
+        creatingNewProject = false;
+        createProject()
+      "
+      style="
+        margin: 10px;
+        text-transform: uppercase;
+        border-radius: 12px;
+        width: 300px;
+        border: none;
+        outline: none;
+        height: 30px;
+        background: linear-gradient(0deg, #3584e4 0%, #aac7ba 100%);
+        cursor: pointer;
+      "
+    >
+      Create
+    </button>
+    <button
+      (click)="
+        canvasService.layout.visibility.frame_selection_panel = false;
+        creatingNewProject = false
+      "
+      style="
+        margin: 10px;
+        text-transform: uppercase;
+        background: rgb(75, 74, 74);
+        border-radius: 12px;
+        width: 300px;
+        border: none;
+        outline: none;
+        height: 30px;
+        cursor: pointer;
+      "
+    >
+      Cancel
+    </button>
+
+    }
+  </section>
+  }
   <section class="menu">
     <div class="menubar">
       <div
@@ -117,7 +214,10 @@
       </div>
 
       <button
-        (click)="createProject()"
+        (click)="
+          canvasService.layout.visibility.frame_selection_panel = true;
+          creatingNewProject = true
+        "
         id="icon"
         class="material-symbols-outlined"
         style="
@@ -145,7 +245,7 @@
         background: linear-gradient(45deg, #c94f74 0%, #3e870d 100%);
       "
     >
-      @if(authService.auth.currentUser?.email==='anuragdhurwey046@gmail.com'){
+      @if(authService.isDeveloper){
       <div
         style="
           width: 100%;
@@ -159,15 +259,13 @@
           column-gap: 10px;
         "
       >
-        <button
+        <span
           style="
             padding: 5px 10px;
-            outline: none;
-            border: none;
             border-radius: 5px;
             font-size: large;
             cursor: pointer;
-            background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%);
+            /* background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%); */
           "
           [style]="{
             cursor: 'pointer',
@@ -176,16 +274,14 @@
           (click)="onClickPromotionalTab(); projectType = 'promotional'"
         >
           Promotional
-        </button>
-        <button
+        </span>
+        <span
           style="
             padding: 5px 10px;
-            outline: none;
-            border: none;
             border-radius: 5px;
             font-size: large;
             cursor: pointer;
-            background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%);
+            /* background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%); */
           "
           [style]="{
             cursor: 'pointer',
@@ -194,23 +290,37 @@
           (click)="projectType = 'my'"
         >
           My
-        </button>
+        </span>
       </div>
-      } @for (project of projectType=='my'?dbService.projects:dbService.demo_projects; track
-      $index) {
-     
-      <app-preview-card
-        class="card"
-        style="overflow: hidden"
-        [routerLink]="'/canvas/' + project.id"
-        [style]="{ backgroundColor: 'dimgray' }"
-        [objects]="project"
-        [id]="project.id"
-        [dimension]="{ width: 250, height: 150 }"
-      />
-      } @empty {
-      <p style="align-self: flex-start; font-size: x-large">empty</p>
       }
+      <div
+        style="
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 10px 0px;
+          flex-wrap: wrap;
+        "
+      >
+        @for (project of myProject; track $index) {
+
+        <!-- [routerLink]="'/canvas/' + project.id" -->
+        <app-preview-card
+          class="card"
+          style="overflow: hidden"
+          [style]="{ backgroundColor: 'dimgray' }"
+          [project]="project"
+          [id]="project.id"
+          [dimension]="{ width: 250, height: 150 }"
+          [admin_controls]="true"
+        />
+        } @empty {
+        <p style="align-self: flex-start; font-size: x-large">empty</p>
+        }
+      </div>
     </div>
   </section>
 </main>

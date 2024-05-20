@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanvasService } from '../canvas/canvas.service';
-import { Group, Object, Position } from '../../../types/app.types';
+import { Group, Fab_Objects, Position } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { IGroupOptions } from 'fabric/fabric-impl';
 import { v4 } from 'uuid';
@@ -16,8 +16,8 @@ export class LayerService {
   constructor(public canvasService: CanvasService) {}
 
   private traveseAndSetToAll(
-    objects: Object[],
-    property: keyof Object,
+    objects: Fab_Objects[],
+    property: keyof Fab_Objects,
     value: any
   ) {
     objects.forEach((obj) => {
@@ -28,7 +28,7 @@ export class LayerService {
     });
   }
 
-  toggleVisibility(obj: Object, arg?: boolean) {
+  toggleVisibility(obj: Fab_Objects, arg?: boolean) {
     obj.visible = arg !== undefined ? arg : !obj.visible;
     obj.evented = arg !== undefined ? arg : !obj.evented;
     if (obj.type === 'group') {
@@ -37,7 +37,7 @@ export class LayerService {
     // this.canvasService.reRender();
     this.canvasService.canvas?.requestRenderAll()
   }
-  toggleControllability(obj: Object, arg?: boolean) {
+  toggleControllability(obj: Fab_Objects, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
     obj.evented = arg !== undefined ? arg : !obj.evented;
     if (obj.type === 'group') {
@@ -47,7 +47,7 @@ export class LayerService {
     // this.canvasService.reRender();
   }
 
-  setActiveSelection(e: MouseEvent, object: Object) {
+  setActiveSelection(e: MouseEvent, object: Fab_Objects) {
     if (e.ctrlKey) {
       if (!this.canvasService.isSelected(object._id)) {
         const ids = CanvasService.extractIds([object]);
@@ -107,7 +107,7 @@ export class LayerService {
     this.canvasService.canvas?.requestRenderAll();
   }
 
-  onLeftClick(e: MouseEvent, data: Object, groupId: null | string) {
+  onLeftClick(e: MouseEvent, data: Fab_Objects, groupId: null | string) {
     if (e.ctrlKey && this.canvasService.isSelected(groupId || '')) {
       console.log(groupId);
       return;
@@ -119,7 +119,7 @@ export class LayerService {
   createGroup() {
     // Recursive function to find and remove elements from the root array
     function findAndRemoveElement(
-      array: Object[],
+      array: Fab_Objects[],
       elementId: string,
       group_id_to_ignore_removel: string
     ) {
@@ -152,8 +152,8 @@ export class LayerService {
 
     // Function to create and insert a group at the specified position
     const createAndInsertGroup = (
-      rootArray: Object[],
-      selectedElements: Object[]
+      rootArray: Fab_Objects[],
+      selectedElements: Fab_Objects[]
     ) => {
       if (!selectedElements.length) return rootArray;
       // Remove selected elements from their original positions
@@ -175,7 +175,7 @@ export class LayerService {
       } as IGroupOptions).setCoords() as Group;
       newGroup._objects = selectedElements;
       // Function to recursively insert the new group
-      const insertGroup = (array: Object[]): Object[] => {
+      const insertGroup = (array: Fab_Objects[]): Fab_Objects[] => {
         return array.flatMap((element) => {
           if (element.type === 'group' && element._objects) {
             element._objects = insertGroup(element._objects);
@@ -222,8 +222,8 @@ export class LayerService {
     // Function to find an element or group by ID in a nested structure
     function findElementById(
       id: string | null,
-      array: Object[]
-    ): Object | null {
+      array: Fab_Objects[]
+    ): Fab_Objects | null {
       for (const element of array) {
         if (element._id === id) {
           return element;
@@ -240,17 +240,17 @@ export class LayerService {
 
     // Function to move elements within the nested structure
     function moveElements(
-      data: Object[],
+      data: Fab_Objects[],
       sourceIds: string[],
       group_id: string | null,
       targetIndex: number
     ) {
       const sourceElements = sourceIds
         .map((id) => findElementById(id, data))
-        .filter((element): element is Object => element !== null);
+        .filter((element): element is Fab_Objects => element !== null);
 
       // Remove the source elements from their original positions
-      const removeElements = (array: Object[]) => {
+      const removeElements = (array: Fab_Objects[]) => {
         sourceIds.forEach((sourceId) => {
           const index = array.findIndex((element) => element._id === sourceId);
           if (index !== -1) {
@@ -293,7 +293,7 @@ export class LayerService {
       this.canvasService.updateObjects(updatedStack, 'reset');
     }
   }
-  onContextClickAtLayer(e: MouseEvent, obj: Object) {
+  onContextClickAtLayer(e: MouseEvent, obj: Fab_Objects) {
     e.preventDefault();
     this.context_menu = { x: e.clientX, y: e.clientY };
     if (this.canvasService.selectedObj.length) {

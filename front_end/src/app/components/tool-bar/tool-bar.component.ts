@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { Roles } from '../../../types/app.types';
 import { CommonModule } from '@angular/common';
-import { Object } from '../../../types/app.types';
+import { Fab_Objects } from '../../../types/app.types';
 import { v4 as uuidv4, v4 } from 'uuid';
 import { fabric } from 'fabric';
 import { CanvasService } from '../../services/canvas/canvas.service';
@@ -82,7 +82,7 @@ export class ToolBarComponent {
         reader.onload = () => {
           typeof reader.result === 'string' &&
             fabric.Image?.fromURL(reader.result, (imgObj) => {
-              const object = imgObj as Object;
+              const object = imgObj as Fab_Objects;
               object._id = uuidv4();
               this.canvasService.updateObjects(object, 'push');
             });

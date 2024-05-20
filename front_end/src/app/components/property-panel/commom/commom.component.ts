@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonProperty, Keys } from '../../../../types/app.types';
 import { CanvasService } from '../../../services/canvas/canvas.service';
+import { SocketService } from '../../../services/socket/socket.service';
 
 @Component({
   selector: 'app-commom',
@@ -10,7 +11,34 @@ import { CanvasService } from '../../../services/canvas/canvas.service';
   styleUrl: './commom.component.css',
 })
 export class CommomComponent {
-  constructor(public canvasService: CanvasService) {}
+  constructor(
+    public canvasService: CanvasService,
+    // private socketService: SocketService
+  ) {}
+
+  addBtn=(keys: Keys<fabric.Object>[])=>  {
+    for (let key of keys) {
+      this.addInitialValueToField(key.key);
+    }
+    console.log(keys)
+    this.canvasService.emitReplaceObjsEventToSocket()
+    this.canvasService.canvas?.requestRenderAll();
+    
+  }
+
+
+
+  removeBtn= (keys: Keys<fabric.Object>[]) => {
+    for (let key of keys) {
+      (this.canvasService.selectedObj[0] as fabric.Object).set(
+        key.key,
+        ''
+      );
+    }
+    this.canvasService.emitReplaceObjsEventToSocket()
+    this.canvasService.canvas?.requestRenderAll();
+  }
+
   commonFields: CommonProperty<fabric.Object>[] = [
     {
       title: 'Position',
@@ -113,20 +141,8 @@ export class CommomComponent {
         },
       ],
       buttons: {
-        add: (keys: Keys<fabric.Object>[]) => {
-          for (let key of keys) {
-            this.addInitialValueToField(key.key);
-          }
-        },
-        remove: (keys: Keys<fabric.Object>[]) => {
-          for (let key of keys) {
-            (this.canvasService.selectedObj[0] as fabric.Object).set(
-              key.key,
-              ''
-            );
-          }
-          this.canvasService.canvas?.requestRenderAll();
-        },
+        add:this. addBtn,
+        remove: this.removeBtn,
       },
     },
     {
@@ -143,20 +159,8 @@ export class CommomComponent {
         },
       ],
       buttons: {
-        add: (keys: Keys<fabric.Object>[]) => {
-          for (let key of keys) {
-            this.addInitialValueToField(key.key);
-          }
-        },
-        remove: (keys: Keys<fabric.Object>[]) => {
-          for (let key of keys) {
-            (this.canvasService.selectedObj[0] as fabric.Object).set(
-              key.key,
-              ''
-            );
-          }
-          this.canvasService.canvas?.requestRenderAll();
-        },
+        add:this. addBtn,
+        remove: this.removeBtn,
       },
     },
     {
@@ -234,23 +238,14 @@ export class CommomComponent {
         },
       ],
       buttons: {
-        add: (keys: Keys<fabric.Object>[]) => {
-          for (let key of keys) {
-            this.addInitialValueToField(key.key);
-          }
-        },
-        remove: (keys: Keys<fabric.Object>[]) => {
-          for (let key of keys) {
-            (this.canvasService.selectedObj[0] as fabric.Object).set(
-              key.key,
-              ''
-            );
-          }
-          this.canvasService.canvas?.requestRenderAll();
-        },
+        add:this. addBtn,
+        remove: this.removeBtn,
       },
     },
   ];
+
+
+
 
   onChange(event: Event) {
     const target = event.target as HTMLInputElement;
@@ -263,12 +258,18 @@ export class CommomComponent {
     if (this.canvasService.selectedObj?.length === 1) {
       (this.canvasService.selectedObj[0] as fabric.Object).set(
         target.name as keyof fabric.Object,
-        value
+        value,
       );
+      // this.canvasService.projectId &&
+      //   this.socketService.emit.object_modified(
+      //     this.canvasService.projectId,
+      //     this.canvasService.selectedObj,
+      //     'replace'
+      //   );
+      this.canvasService.emitReplaceObjsEventToSocket()
       this.canvasService.canvas?.requestRenderAll();
     }
   }
-
 
   extractValueFromTarget(target: HTMLInputElement) {
     if (
@@ -300,11 +301,10 @@ export class CommomComponent {
       );
     } else if (['strokewidth'].includes(field.toLowerCase())) {
       (this.canvasService.selectedObj[0] as fabric.Object).set(field, 1);
-    } else if(['rx','ry'].includes(field.toLowerCase())){
+    } else if (['rx', 'ry'].includes(field.toLowerCase())) {
       (this.canvasService.selectedObj[0] as fabric.Object).set(field, 10);
-
     }
-    this.canvasService.canvas?.requestRenderAll();
+    // this.canvasService.canvas?.requestRenderAll();
   }
 
   isThisKeyRequired(key: Keys<fabric.Object>) {
@@ -318,7 +318,9 @@ export class CommomComponent {
   }
 
   showElement(keys: Keys<fabric.Object>[], title: string) {
-    if (['stroke', 'fill','corners','rx','ry'].includes(title.toLowerCase())) {
+    if (
+      ['stroke', 'fill', 'corners', 'rx', 'ry'].includes(title.toLowerCase())
+    ) {
       return this.isValueExist(keys);
     }
     return true;
@@ -326,7 +328,7 @@ export class CommomComponent {
 
   isValueExist(key: Keys<fabric.Object>[]) {
     for (const item of key) {
-      if (this.canvasService.selectedObj[0][item.key].toString().length) {
+      if (this.canvasService.selectedObj[0][item.key]!=null&& this.canvasService.selectedObj[0][item.key].toString().length) {
         return true;
       }
     }

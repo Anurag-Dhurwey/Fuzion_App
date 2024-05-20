@@ -7,7 +7,7 @@ import {
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ToolBarComponent } from '../tool-bar/tool-bar.component';
-import { Roles, Object } from '../../../types/app.types';
+import { Roles, Fab_Objects } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
 import { Presense, SocketService } from '../../services/socket/socket.service';
@@ -116,13 +116,13 @@ export class CanvasComponent implements OnInit {
         .then((data: any[]) => {
           if (!data.length) return;
           this.canvasService.enliveProject(data[0], () => {}, true);
-          this.canvasService.members = data[0].members;
-          this.canvasService.adminId = data[0].user;
-          this.canvasService.background = data[0].background;
-          this.canvasService.version = data[0].version;
-          this.canvasService.currentDrawingObject = undefined;
-          this.canvasService.frame.x = data[0].width;
-          this.canvasService.frame.y = data[0].height;
+          // this.canvasService.members = data[0].members;
+          // this.canvasService.adminId = data[0].user;
+          // this.canvasService.background = data[0].background;
+          // this.canvasService.version = data[0].version;
+          // this.canvasService.currentDrawingObject = undefined;
+          // this.canvasService.frame.x = data[0].width;
+          // this.canvasService.frame.y = data[0].height;
           if (
             (this.authService.auth.currentUser?.uid === data[0].user ||
               data[0].members.includes(
@@ -149,18 +149,22 @@ export class CanvasComponent implements OnInit {
               } else {
                 this.socketService.presense.push(
                   new fabric.Rect({
-                    width:10,
-                    height:10,
-                    selectable:false,
-                    perPixelTargetFind:false,
-                    evented:false,
+                    width: 10,
+                    height: 10,
+                    selectable: false,
+                    perPixelTargetFind: false,
+                    evented: false,
                     top: data.position.y,
                     left: data.position.x,
                     expiry: Date.now(),
                     _id: data._id,
                   } as any) as Presense
                 );
-                this.canvasService.canvas?.add(this.socketService.presense[this.socketService.presense.length-1])
+                this.canvasService.canvas?.add(
+                  this.socketService.presense[
+                    this.socketService.presense.length - 1
+                  ]
+                );
               }
               // this.socketService.presense = data.filter(
               //   (pre) => pre.id !== this.socketService.socket?.id
@@ -201,7 +205,7 @@ export class CanvasComponent implements OnInit {
       // targetFindTolerance:5,
       // perPixelTargetFind:true
     });
-   
+
     this.canvasService.canvas.on('mouse:down', (event) => {
       this.canvasService.preview_scence_stop();
       this.onMouseDown(event);
@@ -220,11 +224,12 @@ export class CanvasComponent implements OnInit {
     this.canvasService.canvas?.on('selection:created', (event) => {
       if (!event.selected) return;
       event.selected.forEach((obj: any) => {
+        // console.log(obj.calcTransformMatrix())
         if (!this.canvasService.isSelected(obj._id)) {
           this.canvasService.selectedObj.push(obj);
         }
       });
-    });
+   });
     this.canvasService.canvas?.on('selection:updated', (event) => {
       if (!event.selected) return;
       if (!event.e.ctrlKey) this.canvasService.selectedObj = [];
@@ -236,27 +241,27 @@ export class CanvasComponent implements OnInit {
       this.canvasService.selectedObj = [];
     });
     this.canvasService.canvas?.on('object:moving', () => {
-      this.emitModifyEvent();
+      this.canvasService.emitReplaceObjsEventToSocket()
     });
     this.canvasService.canvas?.on('object:resizing', () => {
-      this.emitModifyEvent();
+      this.canvasService.emitReplaceObjsEventToSocket()
     });
     this.canvasService.canvas?.on('object:rotating', () => {
-      this.emitModifyEvent();
+      this.canvasService.emitReplaceObjsEventToSocket()
     });
     this.canvasService.canvas?.on('object:scaling', () => {
-      this.emitModifyEvent();
+      this.canvasService.emitReplaceObjsEventToSocket()
     });
   }
 
-  emitModifyEvent() {
-    this.canvasService.projectId &&
-      this.socketService.emit.object_modified(
-        this.canvasService.projectId,
-        this.canvasService.selectedObj,
-        'replace'
-      );
-  }
+  // emitModifyEvent() {
+  //   this.canvasService.projectId &&
+  //     this.socketService.emit.object_modified(
+  //       this.canvasService.projectId,
+  //       this.canvasService.selectedObj,
+  //       'replace'
+  //     );
+  // }
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
@@ -380,8 +385,8 @@ export class CanvasComponent implements OnInit {
       event.pointer?.y
     ) {
       this.socketService.emit.mouse_move(this.canvasService.projectId, {
-        x: event.pointer.x/this.canvasService.zoom,
-        y: event.pointer.y/this.canvasService.zoom,
+        x: event.pointer.x / this.canvasService.zoom,
+        y: event.pointer.y / this.canvasService.zoom,
       });
     }
     // if (this.isDrawing) this.canvasService.canvas!.selection = false;
@@ -514,7 +519,7 @@ export class CanvasComponent implements OnInit {
 
   onPathCreated(e: { path: fabric.Path }): void {
     if (this.canvasService?.role !== 'pencil') return;
-    const path = e.path as Object;
+    const path = e.path as Fab_Objects;
     path._id = uuidv4();
     this.canvasService.updateObjects(path);
   }
@@ -527,7 +532,7 @@ export class CanvasComponent implements OnInit {
       return new fabric.Line([x, y, x + 100, y], {
         stroke: '#81868a',
         fill: '',
-      }) as Object;
+      }) as Fab_Objects;
     } else if (role === 'rectangle') {
       return new fabric.Rect({
         top: y,
@@ -536,7 +541,7 @@ export class CanvasComponent implements OnInit {
         stroke: '#81868a',
         width: 100,
         height: 100,
-      }) as Object;
+      }) as Fab_Objects;
     } else if (role === 'circle') {
       return new fabric.Circle({
         top: y,
@@ -546,7 +551,7 @@ export class CanvasComponent implements OnInit {
         radius: 50,
         stroke: '#81868a',
         fill: '',
-      }) as Object;
+      }) as Fab_Objects;
     } else if (role === 'pen') {
       const quadraticCurve = new fabric.Path(`M ${x} ${y}`, {
         fill: '',
@@ -556,7 +561,7 @@ export class CanvasComponent implements OnInit {
         selectable: false,
       });
       // const quadratic_curve_group = new fabric.Group();
-      return quadraticCurve as Object;
+      return quadraticCurve as Fab_Objects;
     } else if (role === 'text') {
       const text = new fabric.IText('', {
         top: y,
@@ -566,7 +571,7 @@ export class CanvasComponent implements OnInit {
         editable: true,
         selected: true,
       });
-      return text as Object;
+      return text as Fab_Objects;
     } else {
       return;
     }
@@ -579,41 +584,19 @@ export class CanvasComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    // const project={id:}
-    if (
-      this.canvasService.background &&
-      this.canvasService.adminId &&
-      this.canvasService.projectId &&
-      this.canvasService.objects.length &&
-      this.canvasService.version
-    ) {
-      this.dbService.setProjects(
-        {
-          id: this.canvasService.projectId,
-          user: this.canvasService.adminId,
-          objects: JSON.stringify(
-            this.canvasService.canvas?.toJSON(['_id', 'name']).objects || []
-          ),
-          version: this.canvasService.version,
-          background: this.canvasService.background,
-          height: this.canvasService.frame.y,
-          width: this.canvasService.frame.x,
-        },
-        'replace'
-      );
-    }
     if (this.canvasService.projectId) {
       this.socketService.emit.room_leave(this.canvasService.projectId);
     }
-    this.canvasService.updateObjects([], 'reset');
-    this.canvasService.members = [];
-    this.canvasService.projectId = null;
-    this.canvasService.background = undefined;
-    this.canvasService.version = undefined;
-    this.canvasService.adminId = undefined;
-    this.canvasService.currentDrawingObject = undefined;
+    // this.canvasService.updateObjects([], 'reset', false);
+    // this.canvasService.members = [];
+    // this.canvasService.projectId = null;
+    // this.canvasService.background = undefined;
+    // this.canvasService.version = undefined;
+    // this.canvasService.adminId = undefined;
+    // this.canvasService.currentDrawingObject = undefined;
     this.socketService.socket?.disconnect();
     this.socketService.socket?.off();
+    this.canvasService.unMountProject();
   }
 
   private lastDistance = 0;

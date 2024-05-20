@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import {
-  Object,
+  Fab_Objects,
   Position,
   // Project,
   // SocketEmitEvents,
@@ -47,7 +47,7 @@ export class SocketService {
     },
     object_modified: (
       callback: (
-        data: Object | string | Object[],
+        data: Fab_Objects | string | Fab_Objects[],
         method: object_modified_method
       ) => void
     ) => {
@@ -61,11 +61,22 @@ export class SocketService {
     },
     object_modified: (
       roomId: string,
-      objects: Object | Object[],
+      objects: Fab_Objects | Fab_Objects[],
       method: object_modified_method
     ) => {
-      this.socket?.emit('objects:modified', { roomId, objects, method });
-      console.log('jj');
+      if (!Array.isArray(objects)) {
+        objects = [objects];
+      }
+      const toObj = objects.map((obj) => obj.toObject(['_id', 'type']));
+      toObj.length > 1 &&
+        toObj.forEach((obj) => {
+          const found = (objects as Fab_Objects[]).find(
+            (fo) => fo._id === obj._id
+          );
+          obj.left = found?.calcTransformMatrix()[4];
+          obj.top = found?.calcTransformMatrix()[5];
+        }); 
+      this.socket?.emit('objects:modified', { roomId, objects:toObj, method });
     },
     mouse_move: (roomId: string, position: Position) => {
       this.socket?.emit('mouse:move', { position, roomId });

@@ -15,6 +15,7 @@ export class FrameSelectionPanelComponent {
   y = new FormControl<number>(this._canvasService.frame.y||1080);
   applyFrame() {
     if (!this.x.value || !this.y.value) return;
+    this._canvasService.preview_scence_stop()
     this._canvasService.frame = { x: this.x.value, y: this.y.value };
     this._canvasService.canvas?.setWidth(this.x.value*this._canvasService.zoom);
     this._canvasService.canvas?.setHeight(this.y.value*this._canvasService.zoom);

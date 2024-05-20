@@ -16,5 +16,5 @@ export const routes: Routes = [
   { path: 'canvas', component: CanvasComponent},
   { path: 'canvas/demo/:id', component: CanvasComponent},
   { path: 'welcome', component: WelcomeComponent},
-  { path: '', redirectTo: 'canvas', pathMatch: 'full' },
+  { path: '', redirectTo: 'welcome', pathMatch: 'full' },
 ];

@@ -119,7 +119,6 @@ io.on("connection", async (socket) => {
         await client.hSet(`room:${roomId}`, {
           objects: JSON.stringify(data),
         });
-
         socket.to(roomId).emit("objects:modified", objects, method);
       } catch (error) {
         console.error(error);

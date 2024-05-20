@@ -19,6 +19,7 @@ import {
   where,
   documentId,
   getDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 // import { getAnalytics } from 'firebase/analytics';
 import { environment } from '../../../../environment';
@@ -37,7 +38,7 @@ export class DbService {
   auth;
   storage;
   private _projects: Project[] = [];
-  demo_projects: Project[] = [];
+  promotional_projects: Project[] = [];
   constructor(
     private socketService: SocketService,
     private canvasService: CanvasService
@@ -53,24 +54,42 @@ export class DbService {
   async createProject() {
     if (!this.auth.currentUser) return;
     try {
-      const docRef = await addDoc(collection(this.store, 'projects'), {
-        version: '',
+      const pro = {
+        version: '1.0.0',
         background: '',
         objects: '[]',
         user: this.auth.currentUser?.uid,
         members: [],
         width: this.canvasService.frame.x,
         height: this.canvasService.frame.y,
-      });
+      };
+      const docRef = await addDoc(collection(this.store, 'projects'), pro);
 
-      this.socketService.emit.room_join( docRef.id);
+      this._projects.push({ ...pro, id: docRef.id });
+      this.socketService.emit.room_join(docRef.id);
       return docRef.id;
     } catch (error) {
       console.error(error);
       return;
     }
   }
-
+  async togglePromotional(pro: Project) {
+    try {
+      await updateDoc(doc(this.store, 'projects', pro.id), {
+        promotional: !pro.promotional,
+      });
+      pro.promotional = !pro.promotional;
+      if (!pro.promotional) {
+        this.promotional_projects = this.promotional_projects.filter(
+          (obj) => obj.id != pro.id
+        );
+      } else {
+        this.promotional_projects.push(pro);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
   async getProjects() {
     if (!this.auth.currentUser || this.projects.length) return this.projects;
     // const projects: Project[] = [];
@@ -87,13 +106,16 @@ export class DbService {
     // this.projects=projects
     return this.projects;
   }
-  async getDemoProjects() {
-    if (!this.demo_projects.length && environment.demo_project_ids.length) {
-      this.demo_projects = (await this.getProjectsByIds(
-        environment.demo_project_ids
+  async getPromotional_projects() {
+    if (
+      !this.promotional_projects.length &&
+      environment.promotional_projects_ids.length
+    ) {
+      this.promotional_projects = (await this.getProjectsByIds(
+        environment.promotional_projects_ids
       )) as Project[];
     }
-    return this.demo_projects;
+    return this.promotional_projects;
   }
   async getProjectsByIds(ids: string[] | string) {
     if (typeof ids === 'string') {
@@ -154,5 +176,12 @@ export class DbService {
         return pro;
       });
     }
+  }
+
+  async deleteProject(id: string) {
+    try {
+      await deleteDoc(doc(this.store, 'projects', id));
+      this._projects = this.projects.filter((pro) => pro.id != id);
+    } catch (error) {}
   }
 }

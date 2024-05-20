@@ -12,13 +12,13 @@ export type Roles =
   | 'text';
 
 export type Group = fabric.Group & {
-  _objects: Object[];
+  _objects: Fab_Objects[];
   type: 'group';
   isMinimized?: boolean;
   _id: string;
 };
 
-export type Object = (
+export type Fab_Objects = (
   | (fabric.Path & { isPathClosed?: boolean; type: 'path' })
   | (fabric.Line & { type: 'line' })
   | (fabric.Rect & { type: 'rect' })
@@ -61,6 +61,8 @@ export type Project = {
   user: string;
   width: number;
   height: number;
+  members:string[];
+  promotional?:boolean
 };
 
 export type SocketEmitEvents =

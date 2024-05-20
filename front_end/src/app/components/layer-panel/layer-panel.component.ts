@@ -1,5 +1,5 @@
 import { Component, HostListener, Input, OnInit } from '@angular/core';
-import { Object } from '../../../types/app.types';
+import { Fab_Objects } from '../../../types/app.types';
 import { LayerPanelContextMenuComponent } from './layer-panel-context-menu/layer-panel-context-menu.component';
 
 import { CanvasService } from '../../services/canvas/canvas.service';
@@ -14,7 +14,7 @@ import { LayerService } from '../../services/layer/layer.service';
 })
 export class LayerPanelComponent implements OnInit {
   @Input() projectId: string | null = null;
-  @Input() layers: Object[] | undefined;
+  @Input() layers: Fab_Objects[] | undefined;
   @Input() group_id: string | null = null;
   constructor(
     public canvasService: CanvasService,

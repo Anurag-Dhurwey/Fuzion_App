@@ -22,25 +22,21 @@ import { environment } from '../../../../environment';
 })
 export class WelcomeComponent implements OnInit {
   // app$: appState | undefined;
-  private store = inject(Store);
-  demo_projects: Project[] = [];
+  // private store = inject(Store);
+  // demo_projects: Project[] = [];
 
   constructor(
     public authService: AuthService,
     private router: Router,
     public canvasService: CanvasService,
-    private dbService: DbService
+    public dbService: DbService
   ) {
     // this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
 
   async ngOnInit() {
     try {
-      if (!environment.demo_project_ids.length) return;
-
-      this.demo_projects = (await this.dbService.getProjectsByIds(
-        environment.demo_project_ids
-      )) as Project[];
+      await this.dbService.getPromotional_projects()
     } catch (error) {
       console.error(error);
     }

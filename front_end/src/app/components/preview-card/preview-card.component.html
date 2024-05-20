@@ -1,3 +1,8 @@
+<style>
+  .material-symbols-outlined:hover {
+    color: white;
+  }
+</style>
 <div
   style="
     width: fit-content;
@@ -6,6 +11,41 @@
     position: relative;
   "
 >
+  @if(admin_controls){
+  <span
+    style="
+      position: absolute;
+      top: 0%;
+      right: 0%;
+      width: 100%;
+      height: fit-content;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 5px;
+    "
+  >
+    <span
+      (click)="deleteProject()"
+      class="material-symbols-outlined"
+      style="cursor: pointer; z-index: 3"
+    >
+      delete
+    </span>
+    @if (authService.isDeveloper) {
+
+    <span
+      (click)="markPromotional()"
+      class="material-symbols-outlined"
+      style="cursor: pointer; z-index: 3"
+      [style]="{ color: project?.promotional ? 'yellow' : '' }"
+    >
+      public
+    </span>
+    }
+  </span>
+  }
   <div
     style="
       position: absolute;
@@ -15,7 +55,10 @@
       width: 100%;
       z-index: 2;
       background: transparent;
+      cursor: pointer;
     "
+    [routerLink]="admin_controls?'/canvas/' + id:'/canvas/demo/' + id"
+    
   ></div>
   <canvas style="z-index: 0" [id]="id"></canvas>
 </div>
