@@ -38,7 +38,7 @@ export class DbService {
   auth;
   storage;
   private _projects: Project[] = [];
-  promotional_projects: Project[] = [];
+  private _promotional_projects: Project[] = [];
   constructor(
     private socketService: SocketService,
     private canvasService: CanvasService
@@ -50,6 +50,9 @@ export class DbService {
   }
   get projects() {
     return this._projects;
+  }
+  get promotional_projects() {
+    return this._promotional_projects;
   }
   async createProject() {
     if (!this.auth.currentUser) return;
@@ -80,11 +83,11 @@ export class DbService {
       });
       pro.promotional = !pro.promotional;
       if (!pro.promotional) {
-        this.promotional_projects = this.promotional_projects.filter(
+        this._promotional_projects = this.promotional_projects.filter(
           (obj) => obj.id != pro.id
         );
       } else {
-        this.promotional_projects.push(pro);
+        this._promotional_projects.push(pro);
       }
     } catch (error) {
       console.error(error);
@@ -111,7 +114,7 @@ export class DbService {
       !this.promotional_projects.length &&
       environment.promotional_projects_ids.length
     ) {
-      this.promotional_projects = (await this.getProjectsByIds(
+      this._promotional_projects = (await this.getProjectsByIds(
         environment.promotional_projects_ids
       )) as Project[];
     }
@@ -121,6 +124,26 @@ export class DbService {
     if (typeof ids === 'string') {
       ids = [ids];
     }
+
+    const res: Project[] = [];
+    for (const id of ids) {
+      const found = this.projects.find((pro) => pro.id === id);
+      if (found) {
+        res.push(found);
+        ids = ids.filter((i) => i !== id);
+      } else {
+        const found = this.promotional_projects.find((pro) => pro.id === id);
+        if (found) {
+          res.push(found);
+          ids = ids.filter((i) => i !== id);
+        }
+      }
+    }
+
+    if (!ids.length) {
+      return res;
+    }
+
     try {
       const q = query(
         collection(this.store, 'projects'),
@@ -128,16 +151,15 @@ export class DbService {
       );
       const querySnapshot = await getDocs(q);
 
-      const data = await querySnapshot.docs.map((doc) => {
-        const fot = doc.data();
+      await querySnapshot.docs.forEach((doc) => {
+        const fot = doc.data() as Project;
         fot['id'] = doc.id;
-        return fot;
+        res.push(fot);
       });
-      return data;
     } catch (error) {
       console.error('Error getting documents:', error);
     }
-    return [];
+    return res;
   }
 
   async updateObjects(objects: string, id: string) {

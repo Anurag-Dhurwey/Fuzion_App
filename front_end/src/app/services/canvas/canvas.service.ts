@@ -7,7 +7,7 @@ import {
 // import { Observable, Subscriber } from 'rxjs';
 import { Group, Fab_Objects, Project, Roles } from '../../../types/app.types';
 import { v4 } from 'uuid';
-import { IGroupOptions} from 'fabric/fabric-impl';
+import { IGroupOptions } from 'fabric/fabric-impl';
 import { v4 as uuidv4 } from 'uuid';
 // import { AuthService } from '../auth/auth.service';
 @Injectable({
@@ -58,6 +58,10 @@ export class CanvasService {
   constructor(
     private socketService: SocketService // private authService: AuthService
   ) {}
+
+  // get projectId(){
+  //   return this._projectId
+  // }
   get zoom() {
     return this._zoom;
   }
@@ -74,14 +78,13 @@ export class CanvasService {
     return this._viewport_refs;
   }
 
-
-  emitReplaceObjsEventToSocket(){
+  emitReplaceObjsEventToSocket() {
     this.projectId &&
-    this.socketService.emit.object_modified(
-      this.projectId,
-      this.selectedObj,
-      'replace'
-    );
+      this.socketService.emit.object_modified(
+        this.projectId,
+        this.selectedObj,
+        'replace'
+      );
   }
 
   preview_scence_start() {
@@ -297,7 +300,7 @@ export class CanvasService {
   mountProject(project: Omit<Project, 'objects'> & { objects: Fab_Objects[] }) {
     this._objects = project.objects;
     this.members = project.members;
-    this.projectId=project.id
+    this.projectId = project.id;
     this.adminId = project.user;
     this.background = project.background;
     this.version = project.version;
@@ -306,11 +309,11 @@ export class CanvasService {
     this.frame.y = project.height;
   }
 
-  unMountProject(){
+  unMountProject() {
     this._objects = [];
     this.members = [];
     this.adminId = undefined;
-    this.projectId=null
+    this.projectId = null;
     this.background = undefined;
     this.version = undefined;
     this.currentDrawingObject = undefined;
@@ -333,17 +336,15 @@ export class CanvasService {
     fabric.util.enlivenObjects(
       objs,
       (createdObjs: Fab_Objects[]) => {
-        method &&
-          createdObjs.forEach((item) => {
-            // const i = this.objects.findIndex((obj) => obj._id == item._id);
-            // if (i >= 0) {
-            this.updateObjects(item, method, false);
-            // } else {
-            // this.updateObjects(item, 'push');
-            // }
-          });
         cb(createdObjs);
-        console.log(method);
+        if (!method) return;
+        if (method == 'reset') {
+          this.updateObjects(createdObjs, method, false);
+        } else {
+          createdObjs.forEach((item) => {
+            this.updateObjects(item, method, false);
+          });
+        }
       },
       'fabric'
     );
@@ -394,7 +395,7 @@ export class CanvasService {
     } else if (method === 'push') {
       objs.forEach((obj) => {
         this._objects.push(obj);
-        this.canvas?.add(this._objects[this._objects.length-1]);
+        this.canvas?.add(this._objects[this._objects.length - 1]);
       });
     } else if (method === 'popAndPush') {
       this.canvas?.remove(this._objects[this._objects.length - 1]);
@@ -627,7 +628,7 @@ export class CanvasService {
     if (format == 'jpeg' || format == 'png') {
       return exportable_canvas.toDataURL({ format });
     } else if (format == 'json') {
-      return exportable_canvas.toJSON(['_id','type']);
+      return exportable_canvas.toJSON(['_id', 'type']);
     } else {
       return;
     }

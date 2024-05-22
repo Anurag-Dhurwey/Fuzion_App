@@ -4,6 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import {
   Fab_Objects,
   Position,
+  Project,
   // Project,
   // SocketEmitEvents,
   // SocketOnEvents,
@@ -21,25 +22,39 @@ export class SocketService {
   };
   constructor() {}
 
-  connect(id: string, email?: string | null) {
+  connect(
+    id: string,
+    email: string,
+    cbs?: {
+      onConnect?: () => void;
+      onProject?: (data: Project) => void;
+    }
+  ) {
     if (!this.socket?.connected && environment?.socket_url) {
       this.socket = io(environment.socket_url, { query: { id, email } });
+      this.socket.on('connect', () => {
+        this.emit.project(id);
+        cbs?.onConnect && cbs?.onConnect();
+      });
+      this.socket.on('project', (data: Project) => {
+        cbs?.onProject && cbs?.onProject(data);
+      });
     } else if (!environment?.socket_url) {
       console.error('environment.socket_url is undefind');
     }
   }
 
-  // Emit an event to the server
-  // emit(event: SocketEmitEvents, data: any) {
-  //   this.socket?.emit(event, data);
-  // }
-
-  // Listen for events from the server
-  // on(event: SocketOnEvents, callback: (data: any) => void) {
-  //   this.socket?.on(event, callback);
-  // }
 
   on = {
+    // connect:(cb:()=>void)=>{
+    //   this.socket?.on('connect',cb)
+    // },
+    objects: (cb: (data: string) => void) => {
+      this.socket?.on('objects', cb);
+    },
+    // project:(cb:(data:Project)=>void)=>{
+    //   this.socket?.on('project', cb);
+    // },
     mouse_move: (
       callback: (data: { _id: string; position: Position }) => void
     ) => {
@@ -59,6 +74,15 @@ export class SocketService {
     room_join: (roomId: string) => {
       this.socket?.emit('room:join', roomId);
     },
+    room_leave: (roomId: string) => {
+      this.socket?.emit('room:leave', roomId);
+    },
+    objects: (projectId: string) => {
+      this.socket?.emit('objects', projectId);
+    },
+    project: (projectId: string) => {
+      this.socket?.emit('project', projectId);
+    },
     object_modified: (
       roomId: string,
       objects: Fab_Objects | Fab_Objects[],
@@ -75,14 +99,12 @@ export class SocketService {
           );
           obj.left = found?.calcTransformMatrix()[4];
           obj.top = found?.calcTransformMatrix()[5];
-        }); 
-      this.socket?.emit('objects:modified', { roomId, objects:toObj, method });
+        });
+      this.socket?.emit('objects:modified', { roomId, objects: toObj, method });
+      console.log('emit-modi',method)
     },
     mouse_move: (roomId: string, position: Position) => {
       this.socket?.emit('mouse:move', { position, roomId });
-    },
-    room_leave: (roomId: string) => {
-      this.socket?.emit('room:leave', roomId);
     },
   };
 }

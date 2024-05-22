@@ -6,7 +6,7 @@ import { client } from "./redis.config";
 import { routes } from "./routes/routes";
 import { admin, db } from "./firebase.config";
 import { socket_middleware } from "./middleware/socket_middleware";
-import { IObjectOptions } from "../types";
+import { IObjectOptions, Project } from "../types";
 require("dotenv").config();
 
 const app = express();
@@ -51,6 +51,27 @@ io.on("connection", async (socket) => {
     console.log("left" + " " + roomId);
   });
 
+  socket.on("project", async (roomId: string) => {
+    if (!roomId) return;
+    try {
+      const doc = await db.collection("projects").doc(roomId).get();
+
+      const pro = doc.data() as Project | undefined;
+      if (pro) {
+        pro.id = doc.id;
+        let objects = await client.hGet(`room:${roomId}`, "objects");
+
+        if (objects) {
+          pro.objects = objects;
+        }
+        socket.emit("project", pro);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    console.log("project");
+  });
   socket.on("objects", async (roomId: string) => {
     if (!roomId) return;
     try {
@@ -66,7 +87,7 @@ io.on("connection", async (socket) => {
         }
       }
 
-      socket.emit("objects", JSON.parse(objects || "[]"));
+      socket.emit("objects", objects);
     } catch (error) {
       console.error(error);
     }
@@ -95,26 +116,25 @@ io.on("connection", async (socket) => {
         let data: IObjectOptions[] = JSON.parse(
           (await client.hGet(`room:${roomId}`, "objects")) || "[]"
         );
-        if(method=='push'){
-          objects.forEach(obj=>{
-
-            data.push(obj)
-          })
-        }else if(method==='popAndPush'){
-          data[data.length-1]=objects[0]
-        }else if(method==='replace'){
+        if (method == "push") {
+          objects.forEach((obj) => {
+            data.push(obj);
+          });
+        } else if (method === "popAndPush") {
+          data[data.length - 1] = objects[0];
+        } else if (method === "replace") {
           objects.forEach((item) => {
             const i = data.findIndex((obj) => obj._id == item._id);
             if (i >= 0) {
               data[i] = item;
-            } 
+            }
           });
-        }else if(method=="delete"){
-         objects.forEach(obj=>{
-          data=data.filter(item=>item._id!=obj._id)
-         })
-        }else if(method==='reset'){
-          data=objects
+        } else if (method == "delete") {
+          objects.forEach((obj) => {
+            data = data.filter((item) => item._id != obj._id);
+          });
+        } else if (method === "reset") {
+          data = objects;
         }
         await client.hSet(`room:${roomId}`, {
           objects: JSON.stringify(data),
@@ -131,7 +151,7 @@ io.on("connection", async (socket) => {
     async (data: { position: position; roomId: string }) => {
       const { position, roomId } = data;
       if (!position || !roomId) return;
-      socket.to(roomId).emit("mouse:move",{_id:socket.id,position})
+      socket.to(roomId).emit("mouse:move", { _id: socket.id, position });
       // try {
       //   const presenseStr = await client.hGet(`room:${roomId}`, "presense");
       //   if (!presenseStr) {
@@ -178,7 +198,7 @@ io.on("connection", async (socket) => {
           .collection("projects")
           .doc(docId)
           .update({ objects: objects || "[]" });
-        await client.del(`room:${docId}`);
+        // await client.del(`room:${docId}`);
       } catch (error) {
         console.error(error);
       }

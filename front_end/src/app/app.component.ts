@@ -16,7 +16,7 @@ import { AuthService } from './services/auth/auth.service';
   styleUrl: './app.component.css',
 })
 export class AppComponent implements OnInit {
-  title = 'fabric app';
+  title = 'Fuzion';
   constructor(private router: Router, private authService: AuthService) {}
 
   ngOnInit(): void {

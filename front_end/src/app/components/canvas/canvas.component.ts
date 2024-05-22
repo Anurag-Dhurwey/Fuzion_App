@@ -7,7 +7,7 @@ import {
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ToolBarComponent } from '../tool-bar/tool-bar.component';
-import { Roles, Fab_Objects } from '../../../types/app.types';
+import { Roles, Fab_Objects, Project } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
 import { Presense, SocketService } from '../../services/socket/socket.service';
@@ -42,7 +42,7 @@ import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-sel
   styleUrl: './canvas.component.css',
 })
 export class CanvasComponent implements OnInit {
-  title = 'fabric app';
+  title = 'Fuzion';
   // canvasService: appState | undefined;
   private _recentRole: Roles | undefined;
   isDrawing: boolean = false;
@@ -53,9 +53,12 @@ export class CanvasComponent implements OnInit {
   // private store = inject(Store);
   // targetObjectStroke: string | undefined = '';
   isDragging: boolean = false;
-  lastPosX: undefined | number;
-  lastPosY: undefined | number;
+  private lastPosX: undefined | number;
+  private lastPosY: undefined | number;
   // window = window;
+
+  projectResFromServer: boolean = false;
+
   constructor(
     public socketService: SocketService,
     public canvasService: CanvasService,
@@ -108,89 +111,65 @@ export class CanvasComponent implements OnInit {
     return window;
   }
 
-  ngOnInit(): void {
-    this.canvasService.projectId = this.route.snapshot.paramMap.get('id');
-    if (this.authService.auth.currentUser && this.canvasService.projectId) {
-      this.dbService
-        .getProjectsByIds(this.canvasService.projectId)
-        .then((data: any[]) => {
-          if (!data.length) return;
-          this.canvasService.enliveProject(data[0], () => {}, true);
-          // this.canvasService.members = data[0].members;
-          // this.canvasService.adminId = data[0].user;
-          // this.canvasService.background = data[0].background;
-          // this.canvasService.version = data[0].version;
-          // this.canvasService.currentDrawingObject = undefined;
-          // this.canvasService.frame.x = data[0].width;
-          // this.canvasService.frame.y = data[0].height;
-          if (
-            (this.authService.auth.currentUser?.uid === data[0].user ||
-              data[0].members.includes(
-                this.authService.auth.currentUser!.uid
-              )) &&
-            this.canvasService.projectId &&
-            !this.window.location.pathname.includes('demo') &&
-            !this.canvasService.isMobile()
-          ) {
-            this.socketService.connect(
-              this.canvasService.projectId,
-              this.authService.auth.currentUser?.email
-            );
-            this.socketService.on.mouse_move((data) => {
-              if (data._id === this.socketService.socket?.id) return;
-              const i = this.socketService.presense.findIndex(
-                (rect) => rect._id === data._id
-              );
-              if (i >= 0) {
-                this.socketService.presense[i].set('top', data.position.y);
-                this.socketService.presense[i].set('left', data.position.x);
-                this.socketService.presense[i].set('expiry', Date.now());
-                this.canvasService.canvas?.requestRenderAll();
-              } else {
-                this.socketService.presense.push(
-                  new fabric.Rect({
-                    width: 10,
-                    height: 10,
-                    selectable: false,
-                    perPixelTargetFind: false,
-                    evented: false,
-                    top: data.position.y,
-                    left: data.position.x,
-                    expiry: Date.now(),
-                    _id: data._id,
-                  } as any) as Presense
-                );
-                this.canvasService.canvas?.add(
-                  this.socketService.presense[
-                    this.socketService.presense.length - 1
-                  ]
-                );
-              }
-              // this.socketService.presense = data.filter(
-              //   (pre) => pre.id !== this.socketService.socket?.id
-              // );
-            });
-            this.socketService.on.object_modified((new_objects, method) => {
-              if (typeof new_objects === 'string') {
-                let parsed = JSON.parse(new_objects);
-                new_objects = Array.isArray(parsed) ? parsed : [parsed];
-              }
-              if (!Array.isArray(new_objects)) {
-                new_objects = [new_objects];
-              }
-              this.canvasService.enliveObjs(
-                new_objects,
-                (obj) => {
-                  // console.log(obj)
-                },
-                method
-              );
-            });
-            this.socketService.emit.room_join(this.canvasService.projectId);
-          }
-        });
-    }
+  private onProjectEvent = (data: Project) => {
+    console.log('onProject');
+    this.projectResFromServer = true;
+    this.initializeCanvasSetup(data);
 
+    this.socketService.on.mouse_move((data) => {
+      if (data._id === this.socketService.socket?.id) return;
+      const i = this.socketService.presense.findIndex(
+        (rect) => rect._id === data._id
+      );
+      if (i >= 0) {
+        this.socketService.presense[i].set('top', data.position.y);
+        this.socketService.presense[i].set('left', data.position.x);
+        this.socketService.presense[i].set('expiry', Date.now());
+        this.canvasService.canvas?.requestRenderAll();
+      } else {
+        this.socketService.presense.push(
+          new fabric.Rect({
+            width: 10,
+            height: 10,
+            selectable: false,
+            perPixelTargetFind: false,
+            evented: false,
+            top: data.position.y,
+            left: data.position.x,
+            expiry: Date.now(),
+            _id: data._id,
+          } as any) as Presense
+        );
+        this.canvasService.canvas?.add(
+          this.socketService.presense[this.socketService.presense.length - 1]
+        );
+      }
+      // this.socketService.presense = data.filter(
+      //   (pre) => pre.id !== this.socketService.socket?.id
+      // );
+    });
+    this.socketService.on.object_modified((new_objects, method) => {
+      if (typeof new_objects === 'string') {
+        let parsed = JSON.parse(new_objects);
+        new_objects = Array.isArray(parsed) ? parsed : [parsed];
+      }
+      if (!Array.isArray(new_objects)) {
+        new_objects = [new_objects];
+      }
+      this.canvasService.enliveObjs(
+        new_objects,
+        (obj) => {
+          // console.log(obj)
+        },
+        method
+      );
+    });
+
+    this.canvasService.projectId &&
+      this.socketService.emit.room_join(this.canvasService.projectId);
+  };
+
+  private initializeCanvasSetup(project?: Project) {
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = this.canvasService.frame.x;
     board.height = this.canvasService.frame.y;
@@ -229,7 +208,7 @@ export class CanvasComponent implements OnInit {
           this.canvasService.selectedObj.push(obj);
         }
       });
-   });
+    });
     this.canvasService.canvas?.on('selection:updated', (event) => {
       if (!event.selected) return;
       if (!event.e.ctrlKey) this.canvasService.selectedObj = [];
@@ -241,27 +220,146 @@ export class CanvasComponent implements OnInit {
       this.canvasService.selectedObj = [];
     });
     this.canvasService.canvas?.on('object:moving', () => {
-      this.canvasService.emitReplaceObjsEventToSocket()
+      this.canvasService.emitReplaceObjsEventToSocket();
+      console.log('move');
     });
     this.canvasService.canvas?.on('object:resizing', () => {
-      this.canvasService.emitReplaceObjsEventToSocket()
+      this.canvasService.emitReplaceObjsEventToSocket();
+      console.log('resize');
     });
     this.canvasService.canvas?.on('object:rotating', () => {
-      this.canvasService.emitReplaceObjsEventToSocket()
+      this.canvasService.emitReplaceObjsEventToSocket();
+      console.log('rotate');
     });
     this.canvasService.canvas?.on('object:scaling', () => {
-      this.canvasService.emitReplaceObjsEventToSocket()
+      this.canvasService.emitReplaceObjsEventToSocket();
+      console.log('scale');
     });
+
+    project && this.canvasService.enliveProject(project, () => {}, true);
   }
 
-  // emitModifyEvent() {
-  //   this.canvasService.projectId &&
-  //     this.socketService.emit.object_modified(
-  //       this.canvasService.projectId,
-  //       this.canvasService.selectedObj,
-  //       'replace'
-  //     );
-  // }
+  get is_goodToGo() {
+    return (
+      (this.authService.auth.currentUser &&
+        this.canvasService.projectId &&
+        this.projectResFromServer &&
+        this.socketService.socket?.connected) ||
+      (this.canvasService.projectId &&
+        window.location.pathname.includes('demo')) ||
+      !this.canvasService.projectId
+    );
+  }
+
+  ngOnInit(): void {
+    this.canvasService.projectId = this.route.snapshot.paramMap.get('id');
+    if (this.canvasService.projectId) {
+      this.dbService
+        .getProjectsByIds(this.canvasService.projectId)
+        .then((data) => {
+          if (
+            (this.authService.auth.currentUser?.uid === data[0].user ||
+              data[0].members.includes(
+                this.authService.auth.currentUser!.uid
+              )) &&
+            this.canvasService.projectId &&
+            !this.window.location.pathname.includes('demo') &&
+            this.authService.auth.currentUser?.email
+          ) {
+            this.socketService.connect(
+              this.canvasService.projectId,
+              this.authService.auth.currentUser.email,
+              {
+                onProject: this.onProjectEvent,
+              }
+            );
+          } else if (this.window.location.pathname.includes('demo')) {
+            this.initializeCanvasSetup(data[0]);
+          }
+        });
+
+      // this.socketService.on.connect(() => {
+      //   this.canvasService.projectId &&
+      //     this.socketService.emit.project(this.canvasService.projectId);
+      //     console.log('connected__')
+      // });
+
+      // this.socketService.on.project();
+
+      // this.dbService
+      //   .getProjectsByIds(this.canvasService.projectId)
+      //   .then((data: any[]) => {
+      //     if (!data.length) return;
+      //     this.canvasService.enliveProject(data[0], () => {}, true);
+      //     if (
+      //       (this.authService.auth.currentUser?.uid === data[0].user ||
+      //         data[0].members.includes(
+      //           this.authService.auth.currentUser!.uid
+      //         )) &&
+      //       this.canvasService.projectId &&
+      //       !this.window.location.pathname.includes('demo')
+      //     ) {
+      //       this.socketService.connect(
+      //         this.canvasService.projectId,
+      //         this.authService.auth.currentUser?.email
+      //       );
+      //       this.socketService.on.mouse_move((data) => {
+      //         if (data._id === this.socketService.socket?.id) return;
+      //         const i = this.socketService.presense.findIndex(
+      //           (rect) => rect._id === data._id
+      //         );
+      //         if (i >= 0) {
+      //           this.socketService.presense[i].set('top', data.position.y);
+      //           this.socketService.presense[i].set('left', data.position.x);
+      //           this.socketService.presense[i].set('expiry', Date.now());
+      //           this.canvasService.canvas?.requestRenderAll();
+      //         } else {
+      //           this.socketService.presense.push(
+      //             new fabric.Rect({
+      //               width: 10,
+      //               height: 10,
+      //               selectable: false,
+      //               perPixelTargetFind: false,
+      //               evented: false,
+      //               top: data.position.y,
+      //               left: data.position.x,
+      //               expiry: Date.now(),
+      //               _id: data._id,
+      //             } as any) as Presense
+      //           );
+      //           this.canvasService.canvas?.add(
+      //             this.socketService.presense[
+      //               this.socketService.presense.length - 1
+      //             ]
+      //           );
+      //         }
+      //         // this.socketService.presense = data.filter(
+      //         //   (pre) => pre.id !== this.socketService.socket?.id
+      //         // );
+      //       });
+      //       this.socketService.on.object_modified((new_objects, method) => {
+      //         if (typeof new_objects === 'string') {
+      //           let parsed = JSON.parse(new_objects);
+      //           new_objects = Array.isArray(parsed) ? parsed : [parsed];
+      //         }
+      //         if (!Array.isArray(new_objects)) {
+      //           new_objects = [new_objects];
+      //         }
+      //         this.canvasService.enliveObjs(
+      //           new_objects,
+      //           (obj) => {
+      //             // console.log(obj)
+      //           },
+      //           method
+      //         );
+      //       });
+      //       this.socketService.emit.room_join(this.canvasService.projectId);
+      //     }
+      //   });
+    } else {
+      this.initializeCanvasSetup();
+    }
+  }
 
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
@@ -583,22 +681,6 @@ export class CanvasComponent implements OnInit {
     );
   }
 
-  ngOnDestroy() {
-    if (this.canvasService.projectId) {
-      this.socketService.emit.room_leave(this.canvasService.projectId);
-    }
-    // this.canvasService.updateObjects([], 'reset', false);
-    // this.canvasService.members = [];
-    // this.canvasService.projectId = null;
-    // this.canvasService.background = undefined;
-    // this.canvasService.version = undefined;
-    // this.canvasService.adminId = undefined;
-    // this.canvasService.currentDrawingObject = undefined;
-    this.socketService.socket?.disconnect();
-    this.socketService.socket?.off();
-    this.canvasService.unMountProject();
-  }
-
   private lastDistance = 0;
   onTouchStart(event: TouchEvent) {
     if (this.canvasService.role == 'pan' && event.touches.length === 1) {
@@ -671,5 +753,14 @@ export class CanvasComponent implements OnInit {
       this.canvasService.canvas!.selection = true;
       // this.canvasService.canvas.renderAll()
     }
+  }
+
+  ngOnDestroy() {
+    if (this.canvasService.projectId) {
+      this.socketService.emit.room_leave(this.canvasService.projectId);
+    }
+    this.socketService.socket?.disconnect();
+    this.socketService.socket?.off();
+    this.canvasService.unMountProject();
   }
 }

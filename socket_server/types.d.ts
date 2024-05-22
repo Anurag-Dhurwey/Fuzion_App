@@ -83,3 +83,15 @@ export interface IObjectOptions {
     cornerSize?: number | undefined;
 
 }
+
+export type Project = {
+    id: string;
+    background: string;
+    objects: string;
+    version: string;
+    user: string;
+    width: number;
+    height: number;
+    members:string[];
+    promotional?:boolean
+  };

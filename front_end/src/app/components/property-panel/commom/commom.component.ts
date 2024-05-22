@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonProperty, Keys } from '../../../../types/app.types';
 import { CanvasService } from '../../../services/canvas/canvas.service';
-import { SocketService } from '../../../services/socket/socket.service';
+// import { SocketService } from '../../../services/socket/socket.service';
 
 @Component({
   selector: 'app-commom',

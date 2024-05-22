@@ -13,8 +13,8 @@
     position: absolute;
     top: 0px;
     left: 0px;
-    height: 100%;
-    width: 100%;
+    width: 100vw;
+    height: 100vh;
     z-index: 100;
     color: white;
     background-color: rgba(1, 116, 142, 0.616);
@@ -88,10 +88,13 @@
   }
 </style>
 
+
+
+
 <main class="main">
-  @if(canvasService.layout.visibility.export_panel){
+  @if(is_goodToGo&& canvasService.layout.visibility.export_panel){
   <app-export />
-  } @if(canvasService.layout.visibility.layer_panel){
+  } @if( is_goodToGo&& canvasService.layout.visibility.layer_panel){
   <app-layer-panel
     [layers]="canvasService.objects"
     [group_id]="null"
@@ -149,33 +152,10 @@
         arrow_forward_ios
       </button>
       }@else {
-      <!-- <div
-        style="
-          width: 100%;
-          height: 30px;
-          background-color: rgb(83, 137, 177);
-          position: relative;
-        "
-      >
-        <button
-          class="material-symbols-outlined"
-          style="
-            position: absolute;
-            right: 0;
-            cursor: pointer;
-            outline: none;
-            border: none;
-            background: none;
-          "
-          (click)="canvasService.toggleLayoutVisibility(['layer_panel'], false)"
-        >
-          arrow_back_ios
-        </button>
-      </div> -->
-      } @if(canvasService.layout.visibility.tool_panel){
+     
+      } @if(is_goodToGo&& canvasService.layout.visibility.tool_panel){
       <app-tool-bar />
       }
-      <!-- <div style=""> -->
       <button
         class="material-symbols-outlined"
         style="cursor: pointer; outline: none; border: none; background: none"
@@ -187,7 +167,6 @@
             : "expand_more"
         }}
       </button>
-      <!-- </div> -->
       @if(!canvasService.layout.visibility.property_panel){
       <button
         class="material-symbols-outlined"
@@ -207,21 +186,10 @@
     </div>
     <canvas id="canvas"></canvas>
   </section>
-  @if(canvasService.layout.visibility.property_panel){
+  @if(is_goodToGo&& canvasService.layout.visibility.property_panel){
   <app-property-panel />
-  } @if(canvasService.projectId&&authService.auth.currentUser&&
-  !socketService.socket?.connected &&
-  !window.location.pathname.includes('demo')&&!canvasService.isMobile()){
-  <div class="loader">
-    <h3>Connecting to server</h3>
-  </div>
   }
-   <!-- @for (item of socketService.presense; track $index) {
-  <div
-    [style]="{ top: item.mouse.y + 'px', left: item.mouse.x + 'px' }"
-    id="mouse"
-  ></div>
-  } -->
+  
   @if(canvasService.layout.visibility.setting_panel||canvasService.layout.visibility.menu_panel||canvasService.layout.visibility.frame_selection_panel){
   <section
     style="
@@ -259,3 +227,8 @@
   </section>
   }
 </main>
+@if (!is_goodToGo) {
+  <div class="loader">
+    <h3>Connecting to server</h3>
+  </div>
+}
