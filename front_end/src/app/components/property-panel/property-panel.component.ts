@@ -14,7 +14,7 @@ export class PropertyPanelComponent {
 
   onDeleteClick() {
     this.canvasService.updateObjects([
-      ...this.canvasService.selectedObj
+      ...this.canvasService.oneDarrayOfSelectedObj
     ],'delete');
   }
 

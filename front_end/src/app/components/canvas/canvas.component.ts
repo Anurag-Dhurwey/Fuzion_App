@@ -21,6 +21,7 @@ import { LayerService } from '../../services/layer/layer.service';
 import { MenuPanelComponent } from './menu-panel/menu-panel.component';
 import { SettingPanelComponent } from './setting-panel/setting-panel.component';
 import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-selection-panel.component';
+import { ActiveSelection } from 'fabric/fabric-impl';
 
 @Component({
   selector: 'app-canvas',
@@ -149,6 +150,7 @@ export class CanvasComponent implements OnInit {
       // );
     });
     this.socketService.on.object_modified((new_objects, method) => {
+      console.log('come')
       if (typeof new_objects === 'string') {
         let parsed = JSON.parse(new_objects);
         new_objects = Array.isArray(parsed) ? parsed : [parsed];
@@ -158,8 +160,7 @@ export class CanvasComponent implements OnInit {
       }
       this.canvasService.enliveObjs(
         new_objects,
-        (obj) => {
-          // console.log(obj)
+        () => {
         },
         method
       );
@@ -201,39 +202,45 @@ export class CanvasComponent implements OnInit {
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
     this.canvasService.canvas?.on('selection:created', (event) => {
-      if (!event.selected) return;
-      event.selected.forEach((obj: any) => {
-        // console.log(obj.calcTransformMatrix())
-        if (!this.canvasService.isSelected(obj._id)) {
-          this.canvasService.selectedObj.push(obj);
-        }
-      });
+      // if (!event.selected) return;
+      // event.selected.forEach((obj: any) => {
+      //   // console.log(obj.calcTransformMatrix())
+      //   if (!this.canvasService.isSelected(obj._id)) {
+      //     this.canvasService.selectedObj.push(obj);
+      //   }
+      // });
     });
     this.canvasService.canvas?.on('selection:updated', (event) => {
-      if (!event.selected) return;
-      if (!event.e.ctrlKey) this.canvasService.selectedObj = [];
-      event.selected.forEach((obj: any) => {
-        this.canvasService.selectedObj.push(obj);
-      });
+      // if (!event.selected) return;
+      // if (!event.e.ctrlKey) this.canvasService.selectedObj = [];
+      // event.selected.forEach((obj: any) => {
+      //   this.canvasService.selectedObj.push(obj);
+      // });
     });
-    this.canvasService.canvas?.on('selection:cleared', () => {
-      this.canvasService.selectedObj = [];
+    this.canvasService.canvas?.on('before:selection:cleared', (e) => {
+      // this.canvasService.selectedObj = [];
+      // console.log((this.canvasService.activeObjects as any).angleOfset)
+      // (e.target as ActiveSelection).
+    });
+    this.canvasService.canvas?.on('selection:cleared', (e) => {
+      // this.canvasService.selectedObj = [];
+      // (e.target as ActiveSelection).
     });
     this.canvasService.canvas?.on('object:moving', () => {
-      this.canvasService.emitReplaceObjsEventToSocket();
-      console.log('move');
+      // this.canvasService.emitReplaceObjsEventToSocket();
     });
     this.canvasService.canvas?.on('object:resizing', () => {
-      this.canvasService.emitReplaceObjsEventToSocket();
-      console.log('resize');
+      // this.canvasService.emitReplaceObjsEventToSocket();
     });
-    this.canvasService.canvas?.on('object:rotating', () => {
-      this.canvasService.emitReplaceObjsEventToSocket();
-      console.log('rotate');
+    this.canvasService.canvas?.on('object:rotating', (e) => {
+      // this.canvasService.emitReplaceObjsEventToSocket();
     });
     this.canvasService.canvas?.on('object:scaling', () => {
+      // this.canvasService.emitReplaceObjsEventToSocket();
+    });
+    this.canvasService.canvas?.on('object:modified', (e) => {
       this.canvasService.emitReplaceObjsEventToSocket();
-      console.log('scale');
+      console.log('modified')
     });
 
     project && this.canvasService.enliveProject(project, () => {}, true);

@@ -7,13 +7,14 @@ import {
 // import { Observable, Subscriber } from 'rxjs';
 import { Group, Fab_Objects, Project, Roles } from '../../../types/app.types';
 import { v4 } from 'uuid';
-import { IGroupOptions } from 'fabric/fabric-impl';
+import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
 import { v4 as uuidv4 } from 'uuid';
 // import { AuthService } from '../auth/auth.service';
 @Injectable({
   providedIn: 'root',
 })
 export class CanvasService {
+  propertiesToInclude = ['_id', 'type'];
   private _role: Roles = 'select';
   private _objects: Fab_Objects[] = [];
   canvas: fabric.Canvas | undefined;
@@ -41,7 +42,7 @@ export class CanvasService {
 
   currentDrawingObject: Fab_Objects | undefined;
 
-  selectedObj: Fab_Objects[] = [];
+  // selectedObj: Fab_Objects[] = [];
   private _zoom = 1;
   frame = { x: 1920, y: 1080 };
   layout = {
@@ -72,19 +73,49 @@ export class CanvasService {
     return this._objects;
   }
   get activeObjects() {
-    return this.canvas?._activeObject;
+    return this.canvas?.getActiveObject();
   }
   get viewport_refs() {
     return this._viewport_refs;
   }
 
   emitReplaceObjsEventToSocket() {
-    this.projectId &&
-      this.socketService.emit.object_modified(
-        this.projectId,
-        this.selectedObj,
-        'replace'
+    if (!this.projectId) return;
+    this.clonedObjsFromActiveObjs((objs) => {
+      if (!this.projectId) return;
+      this.socketService.emit.object_modified(this.projectId, objs, 'replace');
+    });
+  }
+
+  clonedObjsFromActiveObjs(cb: (objs: any[]) => void) {
+    if (!this.activeObjects) {
+      return;
+    }
+    if (this.activeObjects.type == 'activeSelection') {
+      const activeSe = (this.activeObjects as ActiveSelection).toObject(
+        this.propertiesToInclude
       );
+
+      this.enliveObjs(activeSe.objects, (objs) => {
+        this.canvas?.discardActiveObject();
+        const emitableObjs = this.objects.filter((ob) =>
+          activeSe.objects.some((active: Fab_Objects) => active._id == ob._id)
+        );
+        cb(emitableObjs)
+        this.updateObjects(activeSe.objects, 'delete', false);
+        this.updateObjects(objs, 'push',false);
+        const se = new fabric.ActiveSelection(objs, {
+          ...activeSe,
+          canvas: this.canvas,
+        });
+        this.canvas?.setActiveObject(se);
+        this.canvas?.requestRenderAll();
+      });
+      return;
+    } else {
+      cb([this.activeObjects]);
+      return;
+    }
   }
 
   preview_scence_start() {
@@ -180,7 +211,14 @@ export class CanvasService {
       });
     }
 
-    return traverse(this.selectedObj);
+    if (!this.activeObjects) return [];
+    if (this.activeObjects.type === 'activeSelection') {
+      return traverse(
+        (this.activeObjects as ActiveSelection)._objects as Fab_Objects[]
+      );
+    } else {
+      return traverse([this.activeObjects] as Fab_Objects[]);
+    }
   }
 
   getOneDarray(obj: Fab_Objects[]) {
@@ -202,7 +240,14 @@ export class CanvasService {
   }
 
   get oneDarrayOfSelectedObj() {
-    return this.getOneDarray(this.selectedObj);
+    if (!this.activeObjects) return [];
+    if (this.activeObjects?.type === 'activeSelection') {
+      return this.getOneDarray(
+        (this.activeObjects as ActiveSelection)._objects as Fab_Objects[]
+      );
+    } else {
+      return this.getOneDarray([this.activeObjects] as Fab_Objects[]);
+    }
   }
 
   static extractIds(objects: Fab_Objects[]) {
@@ -220,6 +265,7 @@ export class CanvasService {
   }
 
   isSelected(id: string): boolean {
+    if (!this.activeObjects) return false;
     function isExist(obj: Fab_Objects): boolean {
       if (obj._id === id) {
         return true;
@@ -235,8 +281,10 @@ export class CanvasService {
       return false;
     }
 
-    for (const obj of this.selectedObj) {
-      const res = isExist(obj);
+    for (const obj of this.activeObjects.type === 'activeSelection'
+      ? (this.activeObjects as ActiveSelection)._objects
+      : [this.activeObjects]) {
+      const res = isExist(obj as Fab_Objects);
       if (res) {
         return true;
       }
@@ -326,13 +374,6 @@ export class CanvasService {
     cb: (obj: Fab_Objects[]) => void,
     method?: object_modified_method
   ): void {
-    // if (typeof objs === 'string') {
-    //   let parsed = JSON.parse(objs);
-    //   objs = Array.isArray(parsed) ? parsed : [parsed];
-    // }
-    // if (!Array.isArray(objs)) {
-    //   objs = [objs];
-    // }
     fabric.util.enlivenObjects(
       objs,
       (createdObjs: Fab_Objects[]) => {
@@ -400,19 +441,8 @@ export class CanvasService {
     } else if (method === 'popAndPush') {
       this.canvas?.remove(this._objects[this._objects.length - 1]);
       this._objects[this._objects.length - 1] = objs[0];
-      // this.canvas?.add(objs[0]);
       this.canvas?.add(this._objects[this._objects.length - 1]);
     } else if (method === 'replace') {
-      // this._objects = this._objects.map((obj) => {
-      //   for (const its of objs as Fab_Objects[]) {
-      //     if (its._id == obj._id) {
-      //       this.canvas?.remove(obj);
-      //       this.canvas?.add(its);
-      //       return its;
-      //     }
-      //   }
-      //   return obj;
-      // });
       objs.forEach((item) => {
         const i = this.objects.findIndex((obj) => obj._id == item._id);
         if (i >= 0) {
@@ -420,9 +450,6 @@ export class CanvasService {
           this._objects[i] = item;
           this.canvas?.add(this._objects[i]);
         }
-        // else{
-        //   data.unshift(item)
-        // }
       });
     } else if (method === 'delete') {
       objs.forEach((obj) => {
@@ -433,10 +460,12 @@ export class CanvasService {
           this.canvas?.remove(this._objects[index]);
           this._objects.splice(index, 1);
         }
-        // this._objects=this._objects.filter(item=>item._id!=obj._id)
       });
+      this.canvas?.discardActiveObject()
     }
     this.canvas?.renderAll();
+
+
     this.projectId &&
       emit_event &&
       this.socketService.emit.object_modified(this.projectId, objs, method);
@@ -457,10 +486,9 @@ export class CanvasService {
     }
   };
 
-  filterSelectedObjByIds(ids: string[]) {
-    this.removeElements(this.selectedObj, ids);
-    console.log(this.selectedObj);
-  }
+  // filterSelectedObjByIds(ids: string[]) {
+  //   this.removeElements(this.selectedObj, ids);
+  // }
 
   // filterObjectsByIds(ids: string[]) {
   //   // there is problem neet to delete from other user

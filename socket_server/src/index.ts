@@ -111,7 +111,6 @@ io.on("connection", async (socket) => {
       if (!Array.isArray(objects)) {
         objects = [objects];
       }
-
       try {
         let data: IObjectOptions[] = JSON.parse(
           (await client.hGet(`room:${roomId}`, "objects")) || "[]"

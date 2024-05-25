@@ -51,12 +51,12 @@
   </span>
 </div>
 <div class="propertyBar">
-  @if(canvasService.selectedObj.length){
+  @if(canvasService.oneDarrayOfSelectedObj.length){
   <h4 style="margin: 0px">
     <span style="padding: 0px 5px">{{
-      canvasService.selectedObj.length > 1
+      canvasService.oneDarrayOfSelectedObj.length > 1
         ? "Group"
-        : canvasService.selectedObj[0].type
+        : canvasService.oneDarrayOfSelectedObj[0].type
     }}</span>
   </h4>
   <app-commom />

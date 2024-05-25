@@ -1,6 +1,7 @@
 // socket.service.ts
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
+import { fabric } from 'fabric';
 import {
   Fab_Objects,
   Position,
@@ -43,7 +44,6 @@ export class SocketService {
       console.error('environment.socket_url is undefind');
     }
   }
-
 
   on = {
     // connect:(cb:()=>void)=>{
@@ -91,17 +91,9 @@ export class SocketService {
       if (!Array.isArray(objects)) {
         objects = [objects];
       }
-      const toObj = objects.map((obj) => obj.toObject(['_id', 'type']));
-      toObj.length > 1 &&
-        toObj.forEach((obj) => {
-          const found = (objects as Fab_Objects[]).find(
-            (fo) => fo._id === obj._id
-          );
-          obj.left = found?.calcTransformMatrix()[4];
-          obj.top = found?.calcTransformMatrix()[5];
-        });
-      this.socket?.emit('objects:modified', { roomId, objects: toObj, method });
-      console.log('emit-modi',method)
+      console.log('emit')
+      objects = objects.map((obj) => obj.toObject(['_id','type']));
+      this.socket?.emit('objects:modified', { roomId, objects, method });
     },
     mouse_move: (roomId: string, position: Position) => {
       this.socket?.emit('mouse:move', { position, roomId });

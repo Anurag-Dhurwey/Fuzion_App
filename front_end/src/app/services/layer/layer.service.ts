@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { CanvasService } from '../canvas/canvas.service';
 import { Group, Fab_Objects, Position } from '../../../types/app.types';
 import { fabric } from 'fabric';
-import { IGroupOptions } from 'fabric/fabric-impl';
+import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
 import { v4 } from 'uuid';
 @Injectable({
   providedIn: 'root',
@@ -35,7 +35,7 @@ export class LayerService {
       this.traveseAndSetToAll(obj._objects, 'visible', obj.visible);
     }
     // this.canvasService.reRender();
-    this.canvasService.canvas?.requestRenderAll()
+    this.canvasService.canvas?.requestRenderAll();
   }
   toggleControllability(obj: Fab_Objects, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
@@ -43,59 +43,120 @@ export class LayerService {
     if (obj.type === 'group') {
       this.traveseAndSetToAll(obj._objects, 'selectable', obj.selectable);
     }
-    this.canvasService.canvas?.requestRenderAll()
+    this.canvasService.canvas?.requestRenderAll();
     // this.canvasService.reRender();
   }
 
   setActiveSelection(e: MouseEvent, object: Fab_Objects) {
-    if (e.ctrlKey) {
-      if (!this.canvasService.isSelected(object._id)) {
-        const ids = CanvasService.extractIds([object]);
-        this.canvasService.filterSelectedObjByIds(ids);
-        let pre = [...this.canvasService.selectedObj];
-        pre = this.canvasService.removeEmptyGroups(pre);
-        this.canvasService.canvas?.discardActiveObject();
-        this.canvasService.selectedObj = [object, ...pre];
+    if (object.type === 'group') {
+      if (e.ctrlKey) {
+        if (this.canvasService.activeObjects) {
+          if (
+            object._objects.some((obj) =>
+              this.canvasService.isSelected((obj as Fab_Objects)._id)
+            )
+          ) {
+            object._objects.forEach((obj) =>
+              (
+                this.canvasService.activeObjects as ActiveSelection
+              ).removeWithUpdate(obj)
+            );
+          } else {
+            (object._objects as Fab_Objects[]).forEach((obj) => {
+              if (!this.canvasService.isSelected(obj._id)) {
+                if (
+                  this.canvasService.activeObjects?.type === 'activeSelection'
+                ) {
+                  (
+                    this.canvasService.activeObjects as ActiveSelection
+                  ).addWithUpdate(obj);
+                } else {
+                  const select = new fabric.ActiveSelection(
+                    [...this.canvasService.oneDarrayOfSelectedObj, obj],
+                    {
+                      canvas: this.canvasService.canvas,
+                    }
+                  );
+                  this.canvasService.canvas?.setActiveObject(select);
+                }
+              }
+            });
+          }
+        } else {
+          if (object._objects.length === 1) {
+            this.canvasService.canvas?.setActiveObject(object._objects[0]);
+          } else if (object._objects.length > 1) {
+            const select = new fabric.ActiveSelection(object._objects, {
+              canvas: this.canvasService.canvas,
+            });
+            this.canvasService.canvas?.setActiveObject(select);
+          }
+        }
       } else {
-        this.canvasService.filterSelectedObjByIds([object._id]);
-        let pre = [...this.canvasService.selectedObj];
-        pre = this.canvasService.removeEmptyGroups(pre);
         this.canvasService.canvas?.discardActiveObject();
-        this.canvasService.selectedObj = [...pre];
-        // this.canvasService.canvas?.discardActiveObject();
+        if (object._objects.length === 1) {
+          this.canvasService.canvas?.setActiveObject(object._objects[0]);
+        } else if (object._objects.length > 1) {
+          const select = new fabric.ActiveSelection(object._objects, {
+            canvas: this.canvasService.canvas,
+          });
+          this.canvasService.canvas?.setActiveObject(select);
+        }
       }
     } else {
-      this.canvasService.canvas?.discardActiveObject();
-      this.canvasService.selectedObj = [object];
-    }
-    if (this.canvasService.oneDarrayOfSelectedObj.length === 1) {
-      const select = this.canvasService.oneDarrayOfSelectedObj[0];
-      this.canvasService.canvas?.setActiveObject(select);
-      // this.canvasService.canvas?.requestRenderAll();
-    } else if (this.canvasService.oneDarrayOfSelectedObj.length > 1) {
-      const select = new fabric.ActiveSelection(
-        this.canvasService.oneDarrayOfSelectedObj,
-        {
-          canvas: this.canvasService.canvas,
+      if (e.ctrlKey) {
+        if (this.canvasService.isSelected(object._id)) {
+          if (this.canvasService.activeObjects?.type === 'activeSelection') {
+            (
+              this.canvasService.activeObjects as ActiveSelection
+            ).removeWithUpdate(object);
+          } else {
+            this.canvasService.canvas?.discardActiveObject();
+          }
+        } else {
+          if (this.canvasService.activeObjects) {
+            if (this.canvasService.activeObjects.type === 'activeSelection') {
+              (
+                this.canvasService.activeObjects as ActiveSelection
+              ).addWithUpdate(object);
+            } else {
+              const select = new fabric.ActiveSelection(
+                [...this.canvasService.oneDarrayOfSelectedObj, object],
+                {
+                  canvas: this.canvasService.canvas,
+                }
+              );
+              this.canvasService.canvas?.setActiveObject(select);
+            }
+          } else {
+            this.canvasService.canvas?.setActiveObject(object);
+          }
         }
-      );
-      this.canvasService.canvas?.setActiveObject(select);
-      // this.canvasService.canvas?.requestRenderAll();
-    } else {
-      this.canvasService.canvas?.discardActiveObject();
+      } else {
+        this.canvasService.canvas?.discardActiveObject();
+        // this.canvasService.selectedObj = [object];
+        this.canvasService.canvas?.setActiveObject(object);
+      }
     }
+
+    if (this.canvasService.oneDarrayOfSelectedObj.length === 1) {
+      this.canvasService.canvas?.setActiveObject(
+        this.canvasService.oneDarrayOfSelectedObj[0]
+      );
+    }
+
     this.canvasService.canvas?.requestRenderAll();
-    console.log(this.canvasService.selectedObj);
+
   }
 
   setAllObjsToActiveSelection() {
     this.canvasService.canvas?.discardActiveObject();
-    this.canvasService.selectedObj = [...this.canvasService.oneDarrayOfObjects];
-    if (this.canvasService.oneDarrayOfSelectedObj.length === 1) {
+    // this.canvasService.selectedObj = [...this.canvasService.oneDarrayOfObjects];
+    if (this.canvasService.oneDarrayOfObjects.length === 1) {
       const select = this.canvasService.oneDarrayOfSelectedObj[0];
       this.canvasService.canvas?.setActiveObject(select);
       // this.canvasService.canvas?.requestRenderAll();
-    } else if (this.canvasService.oneDarrayOfSelectedObj.length > 1) {
+    } else if (this.canvasService.oneDarrayOfObjects.length > 1) {
       const select = new fabric.ActiveSelection(
         this.canvasService.oneDarrayOfSelectedObj,
         {
@@ -109,7 +170,6 @@ export class LayerService {
 
   onLeftClick(e: MouseEvent, data: Fab_Objects, groupId: null | string) {
     if (e.ctrlKey && this.canvasService.isSelected(groupId || '')) {
-      console.log(groupId);
       return;
     } else {
       this.setActiveSelection(e, data);
@@ -200,7 +260,7 @@ export class LayerService {
     if (!this.canvasService.objects) return;
     const updatedStack = createAndInsertGroup(
       [...this.canvasService.objects],
-      [...this.canvasService.selectedObj]
+      [...this.canvasService.oneDarrayOfSelectedObj]
     );
 
     this.canvasService.updateObjects(updatedStack, 'reset');
@@ -296,7 +356,7 @@ export class LayerService {
   onContextClickAtLayer(e: MouseEvent, obj: Fab_Objects) {
     e.preventDefault();
     this.context_menu = { x: e.clientX, y: e.clientY };
-    if (this.canvasService.selectedObj.length) {
+    if (this.canvasService.oneDarrayOfSelectedObj.length) {
       if (!this.canvasService.idsOfSelectedObj.includes(obj._id)) {
         this.setActiveSelection(e, obj);
       }

@@ -30,7 +30,7 @@ export class CommomComponent {
 
   removeBtn= (keys: Keys<fabric.Object>[]) => {
     for (let key of keys) {
-      (this.canvasService.selectedObj[0] as fabric.Object).set(
+      (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.Object).set(
         key.key,
         ''
       );
@@ -251,12 +251,12 @@ export class CommomComponent {
     const target = event.target as HTMLInputElement;
     if (!target.value.length) {
       target.value =
-        this.canvasService.selectedObj[0][target.name as keyof fabric.Object];
+        this.canvasService.oneDarrayOfSelectedObj[0][target.name as keyof fabric.Object];
       return;
     }
     const value = this.extractValueFromTarget(target);
-    if (this.canvasService.selectedObj?.length === 1) {
-      (this.canvasService.selectedObj[0] as fabric.Object).set(
+    if (this.canvasService.oneDarrayOfSelectedObj?.length === 1) {
+      (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.Object).set(
         target.name as keyof fabric.Object,
         value,
       );
@@ -295,21 +295,21 @@ export class CommomComponent {
 
   addInitialValueToField(field: keyof fabric.Object) {
     if (['stroke', 'fill'].includes(field.toLowerCase())) {
-      (this.canvasService.selectedObj[0] as fabric.Object).set(
+      (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.Object).set(
         field,
         '#07a4b0'
       );
     } else if (['strokewidth'].includes(field.toLowerCase())) {
-      (this.canvasService.selectedObj[0] as fabric.Object).set(field, 1);
+      (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.Object).set(field, 1);
     } else if (['rx', 'ry'].includes(field.toLowerCase())) {
-      (this.canvasService.selectedObj[0] as fabric.Object).set(field, 10);
+      (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.Object).set(field, 10);
     }
     // this.canvasService.canvas?.requestRenderAll();
   }
 
   isThisKeyRequired(key: Keys<fabric.Object>) {
     if (
-      this.canvasService.selectedObj[0].type == 'line' &&
+      this.canvasService.oneDarrayOfSelectedObj[0].type == 'line' &&
       key.key == 'height'
     ) {
       return false;
@@ -328,7 +328,7 @@ export class CommomComponent {
 
   isValueExist(key: Keys<fabric.Object>[]) {
     for (const item of key) {
-      if (this.canvasService.selectedObj[0][item.key]!=null&& this.canvasService.selectedObj[0][item.key].toString().length) {
+      if (this.canvasService.oneDarrayOfSelectedObj[0][item.key]!=null&& this.canvasService.oneDarrayOfSelectedObj[0][item.key].toString().length) {
         return true;
       }
     }
