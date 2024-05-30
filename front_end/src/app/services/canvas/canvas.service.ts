@@ -9,6 +9,7 @@ import { Group, Fab_Objects, Project, Roles } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
 import { v4 as uuidv4 } from 'uuid';
+import { Layout, Visibility } from '../../../types/canvas.service.types';
 // import { AuthService } from '../auth/auth.service';
 @Injectable({
   providedIn: 'root',
@@ -45,16 +46,8 @@ export class CanvasService {
   // selectedObj: Fab_Objects[] = [];
   private _zoom = 1;
   frame = { x: 1920, y: 1080 };
-  layout = {
-    visibility: {
-      layer_panel: !this.isMobile() && window.innerWidth > 1050,
-      property_panel: !this.isMobile() && window.innerWidth > 1050,
-      tool_panel: true,
-      setting_panel: false,
-      menu_panel: false,
-      export_panel: false,
-      frame_selection_panel: !this.frame.x && !this.frame.x,
-    },
+  layout: Layout = {
+    visibility: this.resetLaoutVisibility(),
   };
   constructor(
     private socketService: SocketService // private authService: AuthService
@@ -101,9 +94,9 @@ export class CanvasService {
         const emitableObjs = this.objects.filter((ob) =>
           activeSe.objects.some((active: Fab_Objects) => active._id == ob._id)
         );
-        cb(emitableObjs)
+        cb(emitableObjs);
         this.updateObjects(activeSe.objects, 'delete', false);
-        this.updateObjects(objs, 'push',false);
+        this.updateObjects(objs, 'push', false);
         const se = new fabric.ActiveSelection(objs, {
           ...activeSe,
           canvas: this.canvas,
@@ -158,6 +151,18 @@ export class CanvasService {
     } else {
       this.preview_scence_start();
     }
+  }
+
+  resetLaoutVisibility() {
+   return this.layout.visibility = {
+      layer_panel: !this.isMobile() && window.innerWidth > 1050,
+      property_panel: !this.isMobile() && window.innerWidth > 1050,
+      tool_panel: true,
+      setting_panel: false,
+      menu_panel: false,
+      export_panel: false,
+      frame_selection_panel: !this.frame.x && !this.frame.x,
+    };
   }
 
   removeEmptyGroups(objects: Fab_Objects[]) {
@@ -355,6 +360,7 @@ export class CanvasService {
     this.currentDrawingObject = undefined;
     this.frame.x = project.width;
     this.frame.y = project.height;
+    this._zoom = 1;
   }
 
   unMountProject() {
@@ -367,6 +373,8 @@ export class CanvasService {
     this.currentDrawingObject = undefined;
     this.frame.x = 1920;
     this.frame.y = 1080;
+    this._zoom = 1;
+    this.resetLaoutVisibility();
   }
 
   enliveObjs(
@@ -461,10 +469,9 @@ export class CanvasService {
           this._objects.splice(index, 1);
         }
       });
-      this.canvas?.discardActiveObject()
+      this.canvas?.discardActiveObject();
     }
     this.canvas?.renderAll();
-
 
     this.projectId &&
       emit_event &&
@@ -656,7 +663,7 @@ export class CanvasService {
     if (format == 'jpeg' || format == 'png') {
       return exportable_canvas.toDataURL({ format });
     } else if (format == 'json') {
-      return exportable_canvas.toJSON(['_id', 'type']);
+      return exportable_canvas.toJSON(this.propertiesToInclude);
     } else {
       return;
     }

@@ -35,10 +35,10 @@ export class SocketService {
       this.socket = io(environment.socket_url, { query: { id, email } });
       this.socket.on('connect', () => {
         this.emit.project(id);
-        cbs?.onConnect && cbs?.onConnect();
+        cbs?.onConnect && cbs.onConnect();
       });
       this.socket.on('project', (data: Project) => {
-        cbs?.onProject && cbs?.onProject(data);
+        cbs?.onProject && cbs.onProject(data);
       });
     } else if (!environment?.socket_url) {
       console.error('environment.socket_url is undefind');
@@ -91,8 +91,7 @@ export class SocketService {
       if (!Array.isArray(objects)) {
         objects = [objects];
       }
-      console.log('emit')
-      objects = objects.map((obj) => obj.toObject(['_id','type']));
+      objects = objects.map((obj) => obj.toObject(['_id', 'type']));
       this.socket?.emit('objects:modified', { roomId, objects, method });
     },
     mouse_move: (roomId: string, position: Position) => {

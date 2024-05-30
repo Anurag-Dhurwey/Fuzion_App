@@ -30,21 +30,24 @@ export type Fab_Objects = (
   _id: string;
 };
 
+export type possibleShapeType='path'|'line'|'rect'|'circle'|'image'|'i-text'
+
 export type Position = { x: number; y: number };
 // export type Presense = { id: string; mouse: Position; expire: number };
 
-export type CommonProperty<Type> = {
+export type CommonProperty = {
   title: 'Position'|'Stroke' | 'Size' | 'Fill' | 'Flip' | 'Others'|'Corners';
-  keys: Keys<Type>[];
+  keys: Keys[];
   buttons?: {
-    add: (keys: Keys<fabric.Object>[]) => void;
-    remove: (keys: Keys<fabric.Object>[]) => void;
+    add: (keys: Keys[]) => void;
+    remove: (keys: Keys[]) => void;
   };
 };
+export type  PossibleKeysOfObject= keyof fabric.Object|'rx'|'ry'|'radius'
 
-export interface Keys<Type> {
+export interface Keys {
   lable: string;
-  key: keyof Type;
+  key:PossibleKeysOfObject;
   val_type: string;
   inputBox_type: string;
   pipe: (val: any) => any;

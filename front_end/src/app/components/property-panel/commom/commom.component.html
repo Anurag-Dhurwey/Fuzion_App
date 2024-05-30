@@ -60,7 +60,7 @@
   }
 </style>
  
-@for (common of commonFields; track $index) {
+@for (common of getFieldsList(); track $index) {
 <div class="propertyCard">
   <h6
     style="
@@ -109,14 +109,14 @@
         [name]="key.key"
         [id]="key.key"
         (input)="onChange($event)"
-        [value]="key.pipe(canvasService.oneDarrayOfSelectedObj[0][key.key])"
-        [checked]="canvasService.oneDarrayOfSelectedObj[0][key.key]"
+        [value]="key.pipe(getValue(key.key))"
+        [checked]="getValue(key.key)"
       />
     </span>
     } } }
   </div>
 </div>
-@if(canvasService.oneDarrayOfSelectedObj[0].type=='rect' &&
+<!-- @if(canvasService.oneDarrayOfSelectedObj[0].type=='rect' &&
 common.title.toLowerCase()=='stroke' ){ @for (field of rectFields; track $index)
 {
 <div class="propertyCard">
@@ -173,4 +173,6 @@ common.title.toLowerCase()=='stroke' ){ @for (field of rectFields; track $index)
     } } }
   </div>
 </div>
-} } }
+} } -->
+
+}
