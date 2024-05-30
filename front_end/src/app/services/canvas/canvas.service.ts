@@ -47,7 +47,15 @@ export class CanvasService {
   private _zoom = 1;
   frame = { x: 1920, y: 1080 };
   layout: Layout = {
-    visibility: this.resetLaoutVisibility(),
+    visibility:{
+      layer_panel: !this.isMobile() && window.innerWidth > 1050,
+      property_panel: !this.isMobile() && window.innerWidth > 1050,
+      tool_panel: true,
+      setting_panel: false,
+      menu_panel: false,
+      export_panel: false,
+      frame_selection_panel: !this.frame.x && !this.frame.x,
+    },
   };
   constructor(
     private socketService: SocketService // private authService: AuthService
@@ -154,7 +162,7 @@ export class CanvasService {
   }
 
   resetLaoutVisibility() {
-   return this.layout.visibility = {
+    this.layout.visibility = {
       layer_panel: !this.isMobile() && window.innerWidth > 1050,
       property_panel: !this.isMobile() && window.innerWidth > 1050,
       tool_panel: true,
