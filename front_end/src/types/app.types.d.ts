@@ -36,24 +36,31 @@ export type Position = { x: number; y: number };
 // export type Presense = { id: string; mouse: Position; expire: number };
 
 export type CommonProperty = {
-  title: 'Position'|'Stroke' | 'Size' | 'Fill' | 'Flip' | 'Others'|'Corners';
+  title: 'Position'|'Stroke' | 'Size' | 'Fill' | 'Flip' | 'Others'|'Corners'|''|'Align'|'Font';
   keys: Keys[];
   buttons?: {
     add: (keys: Keys[]) => void;
     remove: (keys: Keys[]) => void;
   };
 };
-export type  PossibleKeysOfObject= keyof fabric.Object|'rx'|'ry'|'radius'
+export type  PossibleKeysOfObject= keyof fabric.Object|'rx'|'ry'|'radius'|'textAlign'|'underline'|'pathAlign'|'fontWeight'|'fontStyle'|'fontSize'|'fontFamily'
 
-export interface Keys {
+export type Keys ={
   lable: string;
   key:PossibleKeysOfObject;
-  val_type: string;
-  inputBox_type: string;
+  val_type: 'string'|'number'|'boolean';
+  inputBox_type: 'number'|'color'|'checkbox';
   pipe: (val: any) => any;
   min?: number;
   max?: number;
   step?: number;
+}|{
+  lable: string;
+  key:PossibleKeysOfObject;
+  val_type: 'string';
+  inputBox_type: 'choose';
+  options:string[]
+  pipe: (val: any) => any;
 }
 
 export type Project = {

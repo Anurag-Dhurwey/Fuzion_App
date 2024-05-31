@@ -424,6 +424,150 @@ export class CommomComponent {
       keys: [this.fields.opacity],
     },
   ];
+  textFields: CommonProperty[] = [
+    {
+      title: 'Position',
+      keys: [this.fields.top, this.fields.left],
+    },
+    {
+      title: 'Size',
+      keys: [
+        this.fields.width,
+        this.fields.height,
+        this.fields.scaleX,
+        this.fields.scaleY,
+        this.fields.angle,
+      ],
+    },
+    {
+      title: 'Font',
+      keys: [
+        {
+          lable: 'Weight',
+          key: 'fontWeight',
+          val_type: 'string',
+          inputBox_type: 'choose',
+          options: ['200', '400', '600', '800', '1000', '1200'],
+          pipe(val: string) {
+            return val;
+          },
+        },
+        {
+          lable: 'Style',
+          key: 'fontStyle',
+          val_type: 'string',
+          inputBox_type: 'choose',
+          options: ['normal', 'italic', 'oblique'],
+          pipe(val: string) {
+            return val;
+          },
+        },
+        {
+          lable: 'Family',
+          key: 'fontFamily',
+          val_type: 'string',
+          inputBox_type: 'choose',
+          options: [
+            'Times New Roman',
+            'serif',
+            'sans-serif',
+            'monospace',
+            'cursive',
+            'fantasy',
+            'system-ui',
+            'ui-serif',
+            'Roboto',
+            'Teko',
+          ],
+          pipe(val: string) {
+            return val;
+          },
+        },
+        {
+          lable: 'Size',
+          key: 'fontSize',
+          val_type: 'number',
+          inputBox_type: 'number',
+          pipe(val) {
+            return val;
+          },
+          min: 2,
+        },
+      ],
+    },
+    {
+      title: 'Align',
+      keys: [
+        {
+          lable: 'Hor',
+          key: 'textAlign',
+          val_type: 'string',
+          inputBox_type: 'choose',
+          options: [
+            'left',
+            'right',
+            'center',
+            // 'justify',
+            // 'justify-left',
+            // 'justify-center',
+            // 'justify-right',
+          ],
+          pipe(val: string) {
+            return val;
+          },
+        },
+        // {
+        //   lable: 'Ver',
+        //   key: 'pathAlign',
+        //   val_type: 'string',
+        //   inputBox_type: 'choose',
+        //   options: [
+        //     "baseline", "center", "ascender", "descender"
+        //   ],
+        //   pipe(val: string) {
+        //     return val;
+        //   },
+        // },
+      ],
+    },
+
+    {
+      title: 'Stroke',
+      keys: [this.fields.stroke, this.fields.strokeWidth],
+      buttons: {
+        add: this.addBtn,
+        remove: this.removeBtn,
+      },
+    },
+    {
+      title: 'Fill',
+      keys: [this.fields.fill],
+      buttons: {
+        add: this.addBtn,
+        remove: this.removeBtn,
+      },
+    },
+    {
+      title: 'Flip',
+      keys: [
+        this.fields.flipX,
+        this.fields.flipY,
+        {
+          lable: 'UnderLine',
+          key: 'underline',
+          val_type: 'boolean',
+          inputBox_type: 'checkbox',
+          pipe(val) {
+            return val;
+          },
+        },
+      ],
+    },
+    {
+      title: 'Others',
+      keys: [this.fields.opacity],
+    },
+  ];
 
   circleFields: CommonProperty[] = [
     {
@@ -483,23 +627,17 @@ export class CommomComponent {
     }
     if (type == 'circle') {
       return this.circleFields;
-    }
-     else if (type == 'line') {
+    } else if (type == 'line') {
       return this.commonFields;
-    }
-    else if (type == 'rect') {
+    } else if (type == 'rect') {
       return this.rectFields;
-    }
-    else if (type == 'path') {
+    } else if (type == 'path') {
       return this.commonFields;
-    }
-    else if (type == 'image') {
+    } else if (type == 'image') {
       return this.commonFields;
-    }
-     else if (type == 'i-text') {
-      return this.commonFields;
-    }
-    else {
+    } else if (type == 'i-text') {
+      return this.textFields;
+    } else {
       return [];
     }
   }
@@ -539,7 +677,7 @@ export class CommomComponent {
       ].includes(target.name)
     ) {
       return parseFloat(target.value);
-    } else if (['flipX', 'flipY'].includes(target.name)) {
+    } else if (['flipX', 'flipY', 'underline'].includes(target.name)) {
       return target.checked;
     } else {
       return target.value;
@@ -601,8 +739,9 @@ export class CommomComponent {
     return false;
   }
 
-  getValue(key:PossibleKeysOfObject){
-    return this.canvasService.oneDarrayOfSelectedObj[0][key as keyof fabric.Object]
+  getValue(key: PossibleKeysOfObject) {
+    return this.canvasService.oneDarrayOfSelectedObj[0][
+      key as keyof fabric.Object
+    ];
   }
-
 }

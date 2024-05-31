@@ -12,22 +12,16 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
+    row-gap: 5px;
+    column-gap: 4px;
   }
   .propertyCard > div > span {
-    width: 49%;
+    min-width: 49%;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
-  /* .propertyCard button {
-    font-size: larger;
-    background: none;
-    border: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  } */
 
   .propertyCard span label {
     font-size: small;
@@ -59,7 +53,7 @@
     cursor: pointer;
   }
 </style>
- 
+
 @for (common of getFieldsList(); track $index) {
 <div class="propertyCard">
   <h6
@@ -73,7 +67,8 @@
   >
     <span>{{ common.title }}</span>
 
-    @if (common.buttons &&canvasService.oneDarrayOfSelectedObj.length===1) { @if(isValueExist(common.keys)){
+    @if (common.buttons &&canvasService.oneDarrayOfSelectedObj.length===1) {
+    @if(isValueExist(common.keys)){
     <span
       style="cursor: pointer; font-size: large; padding-right: 10px"
       (click)="common.buttons.remove(common.keys)"
@@ -93,13 +88,31 @@
     } }
   </h6>
   <div>
-    @if(canvasService.oneDarrayOfSelectedObj.length===1){ @for (key of common.keys; track
-    $index) { @if(isThisKeyRequired(key) &&
+    @if(canvasService.oneDarrayOfSelectedObj.length===1){ @for (key of
+    common.keys; track $index) { @if(isThisKeyRequired(key) &&
     showElement(common.keys,common.title)){
     <span>
       <label [for]="key.key">
         {{ key.lable }}
       </label>
+      @if (key.inputBox_type==='choose') {
+      <select
+        [name]="key.key"
+        [id]="key.key"
+        (input)="onChange($event)"
+        [value]="key.pipe(getValue(key.key))"
+        style="
+          background: #aeacac;
+          outline: none;
+          border: none;
+          border-radius: 4px;
+        "
+      >
+        @for (option of key.options; track $index) {
+        <option [value]="option">{{ option }}</option>
+        }
+      </select>
+      }@else {
       <input
         [max]="key.max"
         [min]="key.min"
@@ -112,6 +125,7 @@
         [value]="key.pipe(getValue(key.key))"
         [checked]="getValue(key.key)"
       />
+      }
     </span>
     } } }
   </div>
