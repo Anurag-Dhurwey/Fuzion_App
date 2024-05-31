@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import {
-  CommonProperty,
+  Fields,
   Keys,
   PossibleKeysOfObject,
   possibleShapeType,
@@ -40,7 +40,7 @@ export class CommomComponent {
     this.canvasService.canvas?.requestRenderAll();
   };
 
-  commonFields: CommonProperty[] = [
+  commonFields: Fields[] = [
     {
       title: 'Position',
       keys: [
@@ -356,7 +356,7 @@ export class CommomComponent {
     },
   };
 
-  rectFields: CommonProperty[] = [
+  rectFields: Fields[] = [
     {
       title: 'Position',
       keys: [this.fields.top, this.fields.left],
@@ -424,7 +424,7 @@ export class CommomComponent {
       keys: [this.fields.opacity],
     },
   ];
-  textFields: CommonProperty[] = [
+  textFields: Fields[] = [
     {
       title: 'Position',
       keys: [this.fields.top, this.fields.left],
@@ -569,7 +569,7 @@ export class CommomComponent {
     },
   ];
 
-  circleFields: CommonProperty[] = [
+  circleFields: Fields[] = [
     {
       title: 'Position',
       keys: [this.fields.left, this.fields.top],

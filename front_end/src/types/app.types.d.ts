@@ -35,7 +35,7 @@ export type possibleShapeType='path'|'line'|'rect'|'circle'|'image'|'i-text'
 export type Position = { x: number; y: number };
 // export type Presense = { id: string; mouse: Position; expire: number };
 
-export type CommonProperty = {
+export type Fields = {
   title: 'Position'|'Stroke' | 'Size' | 'Fill' | 'Flip' | 'Others'|'Corners'|''|'Align'|'Font';
   keys: Keys[];
   buttons?: {
