@@ -5,11 +5,20 @@ import {
   object_modified_method,
 } from '../socket/socket.service';
 // import { Observable, Subscriber } from 'rxjs';
-import { Group, Fab_Objects, Project, Roles } from '../../../types/app.types';
+import {
+  Group,
+  Fab_Objects,
+  Project,
+  Roles,
+  Fab_PathArray,
+  Fab_Path,
+  PropertiesToInclude,
+  QuadraticCurveControlPoint,
+} from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
 import { v4 as uuidv4 } from 'uuid';
-import { Layout, Visibility } from '../../../types/canvas.service.types';
+import { Layout, UpdateObjectsMethods, Visibility } from '../../../types/canvas.service.types';
 // import { AuthService } from '../auth/auth.service';
 @Injectable({
   providedIn: 'root',
@@ -42,12 +51,14 @@ export class CanvasService {
   };
 
   currentDrawingObject: Fab_Objects | undefined;
-
+  editingPath: Fab_Path | null = null;
+  quadraticCurveRefLine: fabric.Line | null = null;
+  quadraticCurveControlPoints: QuadraticCurveControlPoint[] = [];
   // selectedObj: Fab_Objects[] = [];
   private _zoom = 1;
   frame = { x: 1920, y: 1080 };
   layout: Layout = {
-    visibility:{
+    visibility: {
       layer_panel: !this.isMobile() && window.innerWidth > 1050,
       property_panel: !this.isMobile() && window.innerWidth > 1050,
       tool_panel: true,
@@ -86,6 +97,137 @@ export class CanvasService {
       if (!this.projectId) return;
       this.socketService.emit.object_modified(this.projectId, objs, 'replace');
     });
+  }
+
+  absolutePoint(x: number, y: number, matrix: any[]) {
+    return fabric.util.transformPoint(
+      { x, y } as fabric.Point,
+      fabric.util.multiplyTransformMatrices(
+        this.canvas!.viewportTransform!,
+        matrix
+      )
+    );
+  }
+
+  addQuadraticCurveControlPoints(path: Fab_Path) {
+    this.quadraticCurveControlPoints = [];
+    this.getTransformedPoints(path).forEach((point, i) => {
+      if(i==(path.path!.length-1)){
+        return
+      }
+      if (point[0] === 'M' || point[0] === 'L') {
+        const circle = new fabric.Circle({
+          left: point[1],
+          top: point[2],
+          radius: 10,
+          fill: 'blue',
+          hasControls: false,
+          hasBorders: false,
+          excludeFromExport:true
+        }) as QuadraticCurveControlPoint;
+        circle.name = 'node';
+        circle.index = i;
+        circle.ctrlOf = path._id;
+
+        this.quadraticCurveControlPoints.push(circle);
+      } else if (point[0] === 'Q') {
+        const circle = new fabric.Circle({
+          left: point[1],
+          top: point[2],
+          radius: 10,
+          fill: 'blue',
+          hasControls: false,
+          hasBorders: false,
+          excludeFromExport:true
+        }) as QuadraticCurveControlPoint;
+        circle.name = 'curve';
+        circle.index = i;
+        circle.ctrlOf = path._id;
+
+        this.quadraticCurveControlPoints.push(circle);
+        const circle2 = new fabric.Circle({
+          left: point[3],
+          top: point[4],
+          radius: 10,
+          fill: 'blue',
+          hasControls: false,
+          hasBorders: false,
+          excludeFromExport:true
+        }) as QuadraticCurveControlPoint;
+        circle2.name = 'node';
+        circle2.index = i;
+        circle2.ctrlOf = path._id;
+
+        this.quadraticCurveControlPoints.push(circle2);
+      }
+    });
+    this.quadraticCurveControlPoints.forEach((ctrl) => {
+      this.canvas?.add(ctrl);
+    });
+    this.editingPath = path;
+    path.selectable = false;
+    path.hasBorders = false;
+    path.hasControls = false;
+  }
+  removeQuadraticCurveControlPoints() {
+    this.quadraticCurveControlPoints.forEach((ctrl) => {
+      this.canvas?.remove(ctrl);
+    });
+    this.quadraticCurveControlPoints = [];
+    if (!this.editingPath) return;
+    this.editingPath.selectable = true;
+    this.editingPath.hasBorders = true;
+    this.editingPath.hasControls = true;
+    this.editingPath = null;
+  }
+
+  getTransformedPoints(path: Fab_Path) {
+    // Get the transformation matrix of the object
+    var matrix = path.calcTransformMatrix();
+
+    // Initialize an array to hold the transformed points
+    var transformedPoints: Fab_PathArray[] = [];
+
+    (path.path as unknown as Fab_PathArray[]).forEach((command) => {
+      if (['M', 'L', 'C', 'Q'].includes(command[0])) {
+        // var points:number[][] = [];
+
+        // Depending on the command, the number of points varies
+        if (command[0] === 'M' || command[0] === 'L') {
+          const point = this.absolutePoint(
+            command[1] - path.pathOffset.x,
+            command[2] - path.pathOffset.y,
+            matrix
+          );
+          transformedPoints.push([
+            command[0],
+            point.x,
+            point.y,
+          ] as unknown as Fab_PathArray);
+        } else if (command[0] === 'C') {
+          // points.push([command[1], command[2]], [command[3], command[4]], [command[5], command[6]]);
+        } else if (command[0] === 'Q') {
+          const point_1 = this.absolutePoint(
+            command[1] - path.pathOffset.x,
+            command[2] - path.pathOffset.y,
+            matrix
+          );
+          const point_2 = this.absolutePoint(
+            command[3] - path.pathOffset.x,
+            command[4] - path.pathOffset.y,
+            matrix
+          );
+          transformedPoints.push([
+            command[0],
+            point_1.x,
+            point_1.y,
+            point_2.x,
+            point_2.y,
+          ] as unknown as Fab_PathArray);
+        }
+      }
+    });
+    return transformedPoints;
   }
 
   clonedObjsFromActiveObjs(cb: (objs: any[]) => void) {
@@ -442,7 +584,7 @@ export class CanvasService {
 
   updateObjects(
     objs: Fab_Objects | Fab_Objects[],
-    method: 'push' | 'reset' | 'popAndPush' | 'replace' | 'delete' = 'push',
+    method: UpdateObjectsMethods = 'push',
     emit_event: boolean = true
   ) {
     if (!Array.isArray(objs)) objs = [objs];
@@ -574,9 +716,15 @@ export class CanvasService {
   setRole(role: Roles) {
     if (!this.canvas) return;
     this.preview_scence_stop();
+    if (this.editingPath) {
+      this.removeQuadraticCurveControlPoints();
+    }
     this._role = role;
     if (this.currentDrawingObject?.type === 'path') {
-      this.loadSVGFromString(this.currentDrawingObject);
+      this.loadSVGFromString(this.currentDrawingObject, {
+        _id: this.currentDrawingObject._id,
+        pathType: this.currentDrawingObject.pathType,
+      },'popAndPush');
     } else if (this.currentDrawingObject?.type == 'i-text') {
       (this.currentDrawingObject as fabric.IText).exitEditing();
       !(this.currentDrawingObject as fabric.IText).text &&
@@ -645,13 +793,21 @@ export class CanvasService {
     this.canvas?.renderAll();
   }
 
-  loadSVGFromString(data: Fab_Objects) {
+  loadSVGFromString(
+    data: Fab_Objects,
+    propertiesToInclude: PropertiesToInclude,method:UpdateObjectsMethods
+  ) {
     fabric.loadSVGFromString(data.toSVG(), (str) => {
       const newPath = str[0] as Fab_Objects;
-      newPath._id = uuidv4();
-      this.updateObjects(newPath, 'popAndPush');
+      for (const key in propertiesToInclude) {
+        newPath[key as keyof Fab_Objects] =
+          propertiesToInclude[key as keyof PropertiesToInclude];
+      }
+      // newPath._id = uuidv4();
+
+      this.updateObjects(newPath, method);
       this.currentDrawingObject = undefined;
-      this.setRole('select');
+      
     });
   }
 

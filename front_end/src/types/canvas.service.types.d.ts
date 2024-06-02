@@ -11,3 +11,5 @@ export interface Visibility {
 export interface Layout{
     visibility:Visibility
 }
+
+export type UpdateObjectsMethods='push' | 'reset' | 'popAndPush' | 'replace' | 'delete'

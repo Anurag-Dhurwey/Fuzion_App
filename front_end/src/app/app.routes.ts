@@ -6,6 +6,7 @@ import { SignUpComponent } from './components/auth/sign-up/sign-up.component';
 import { authGuard } from './guard/auth.guard';
 import { WelcomeComponent } from './components/welcome/welcome.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
+import { ExperimentalCanvasComponent } from './experimental-canvas/experimental-canvas.component';
 
 export const routes: Routes = [
   { path: 'sign-in', component: SignInComponent ,canActivate:[authGuard]},
@@ -14,6 +15,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent,canActivate:[authGuard] },
   { path: 'canvas/:id', component: CanvasComponent},
   { path: 'canvas', component: CanvasComponent},
+  { path: 'experimaental/canvas', component: ExperimentalCanvasComponent},
   { path: 'canvas/demo/:id', component: CanvasComponent},
   { path: 'welcome', component: WelcomeComponent},
   { path: '', redirectTo: 'canvas', pathMatch: 'full' },

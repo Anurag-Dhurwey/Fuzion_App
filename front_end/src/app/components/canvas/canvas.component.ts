@@ -7,7 +7,14 @@ import {
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ToolBarComponent } from '../tool-bar/tool-bar.component';
-import { Roles, Fab_Objects, Project } from '../../../types/app.types';
+import {
+  Roles,
+  Fab_Objects,
+  Project,
+  Fab_Path,
+  QuadraticCurveControlPoint,
+  Fab_PathArray,
+} from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
 import { Presense, SocketService } from '../../services/socket/socket.service';
@@ -48,6 +55,7 @@ export class CanvasComponent implements OnInit {
   private _recentRole: Roles | undefined;
   isDrawing: boolean = false;
   isPathControlPointMoving: boolean = false;
+
   pathPointToAdjust:
     | { _refTo: fabric.Path; points: [number, number] }
     | undefined;
@@ -112,6 +120,12 @@ export class CanvasComponent implements OnInit {
     return window;
   }
 
+  // onRoleChange() {
+  //   if (this.canvasService.editingPath) {
+  //     this.canvasService.removeQuadraticCurveControlPoints();
+  //   }
+  // }
+
   private onProjectEvent = (data: Project) => {
     console.log('onProject');
     this.projectResFromServer = true;
@@ -150,7 +164,7 @@ export class CanvasComponent implements OnInit {
       // );
     });
     this.socketService.on.object_modified((new_objects, method) => {
-      console.log('come')
+      console.log('come');
       if (typeof new_objects === 'string') {
         let parsed = JSON.parse(new_objects);
         new_objects = Array.isArray(parsed) ? parsed : [parsed];
@@ -158,12 +172,7 @@ export class CanvasComponent implements OnInit {
       if (!Array.isArray(new_objects)) {
         new_objects = [new_objects];
       }
-      this.canvasService.enliveObjs(
-        new_objects,
-        () => {
-        },
-        method
-      );
+      this.canvasService.enliveObjs(new_objects, () => {}, method);
     });
 
     this.canvasService.projectId &&
@@ -174,6 +183,12 @@ export class CanvasComponent implements OnInit {
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = this.canvasService.frame.x;
     board.height = this.canvasService.frame.y;
+    // fabric.Object.prototype.toObject = function (additionalProperties) {
+    //   return fabric.Object.prototype.toObject.call(
+    //     this,
+    //     ['_id', 'pathType'].concat(additionalProperties || [])
+    //   );
+    // };
     this.canvasService.canvas = new fabric.Canvas(board, {
       backgroundColor: this.canvasService.background || '#282829',
       stopContextMenu: true,
@@ -188,6 +203,15 @@ export class CanvasComponent implements OnInit {
 
     this.canvasService.canvas.on('mouse:down', (event) => {
       this.canvasService.preview_scence_stop();
+      if (
+        this.canvasService.editingPath &&
+        (!event.target || !(event.target as QuadraticCurveControlPoint).ctrlOf)
+      ) {
+        this.canvasService.removeQuadraticCurveControlPoints();
+      }
+      // if(this.quadraticCurveControlPoints.length&& !event.target||!(event.target as QuadraticCurveControlPoint).ctrlOf){
+
+      // }
       this.onMouseDown(event);
     });
     this.canvasService.canvas.on('mouse:dblclick', (event) =>
@@ -202,6 +226,7 @@ export class CanvasComponent implements OnInit {
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
     this.canvasService.canvas?.on('selection:created', (event) => {
+      console.log(this.canvasService.editingPath?.path![0]);
       // if (!event.selected) return;
       // event.selected.forEach((obj: any) => {
       //   // console.log(obj.calcTransformMatrix())
@@ -211,6 +236,13 @@ export class CanvasComponent implements OnInit {
       // });
     });
     this.canvasService.canvas?.on('selection:updated', (event) => {
+      if (
+        this.canvasService.editingPath &&
+        (!event.selected ||
+          !(event.selected[0] as QuadraticCurveControlPoint).ctrlOf)
+      ) {
+        this.canvasService.removeQuadraticCurveControlPoints();
+      }
       // if (!event.selected) return;
       // if (!event.e.ctrlKey) this.canvasService.selectedObj = [];
       // event.selected.forEach((obj: any) => {
@@ -223,11 +255,21 @@ export class CanvasComponent implements OnInit {
       // (e.target as ActiveSelection).
     });
     this.canvasService.canvas?.on('selection:cleared', (e) => {
+      if (this.canvasService.editingPath) {
+        this.canvasService.removeQuadraticCurveControlPoints();
+      }
       // this.canvasService.selectedObj = [];
       // (e.target as ActiveSelection).
     });
-    this.canvasService.canvas?.on('object:moving', () => {
+    this.canvasService.canvas?.on('object:moving', (e) => {
       // this.canvasService.emitReplaceObjsEventToSocket();
+      if ((e.target! as QuadraticCurveControlPoint).ctrlOf) {
+        this.onQuadraticCurveControlPointMoving(
+          e.target as QuadraticCurveControlPoint,
+          e.e.movementX,
+          e.e.movementY
+        );
+      }
     });
     this.canvasService.canvas?.on('object:resizing', () => {
       // this.canvasService.emitReplaceObjsEventToSocket();
@@ -240,7 +282,8 @@ export class CanvasComponent implements OnInit {
     });
     this.canvasService.canvas?.on('object:modified', (e) => {
       this.canvasService.emitReplaceObjsEventToSocket();
-      console.log('modified')
+      // console.log('modified');
+      console.log(this.canvasService.editingPath?.path![0], 'M');
     });
 
     project && this.canvasService.enliveProject(project, () => {}, true);
@@ -284,87 +327,60 @@ export class CanvasComponent implements OnInit {
             this.initializeCanvasSetup(data[0]);
           }
         });
-
-      // this.socketService.on.connect(() => {
-      //   this.canvasService.projectId &&
-      //     this.socketService.emit.project(this.canvasService.projectId);
-      //     console.log('connected__')
-      // });
-
-      // this.socketService.on.project();
-
-      // this.dbService
-      //   .getProjectsByIds(this.canvasService.projectId)
-      //   .then((data: any[]) => {
-      //     if (!data.length) return;
-      //     this.canvasService.enliveProject(data[0], () => {}, true);
-      //     if (
-      //       (this.authService.auth.currentUser?.uid === data[0].user ||
-      //         data[0].members.includes(
-      //           this.authService.auth.currentUser!.uid
-      //         )) &&
-      //       this.canvasService.projectId &&
-      //       !this.window.location.pathname.includes('demo')
-      //     ) {
-      //       this.socketService.connect(
-      //         this.canvasService.projectId,
-      //         this.authService.auth.currentUser?.email
-      //       );
-      //       this.socketService.on.mouse_move((data) => {
-      //         if (data._id === this.socketService.socket?.id) return;
-      //         const i = this.socketService.presense.findIndex(
-      //           (rect) => rect._id === data._id
-      //         );
-      //         if (i >= 0) {
-      //           this.socketService.presense[i].set('top', data.position.y);
-      //           this.socketService.presense[i].set('left', data.position.x);
-      //           this.socketService.presense[i].set('expiry', Date.now());
-      //           this.canvasService.canvas?.requestRenderAll();
-      //         } else {
-      //           this.socketService.presense.push(
-      //             new fabric.Rect({
-      //               width: 10,
-      //               height: 10,
-      //               selectable: false,
-      //               perPixelTargetFind: false,
-      //               evented: false,
-      //               top: data.position.y,
-      //               left: data.position.x,
-      //               expiry: Date.now(),
-      //               _id: data._id,
-      //             } as any) as Presense
-      //           );
-      //           this.canvasService.canvas?.add(
-      //             this.socketService.presense[
-      //               this.socketService.presense.length - 1
-      //             ]
-      //           );
-      //         }
-      //         // this.socketService.presense = data.filter(
-      //         //   (pre) => pre.id !== this.socketService.socket?.id
-      //         // );
-      //       });
-      //       this.socketService.on.object_modified((new_objects, method) => {
-      //         if (typeof new_objects === 'string') {
-      //           let parsed = JSON.parse(new_objects);
-      //           new_objects = Array.isArray(parsed) ? parsed : [parsed];
-      //         }
-      //         if (!Array.isArray(new_objects)) {
-      //           new_objects = [new_objects];
-      //         }
-      //         this.canvasService.enliveObjs(
-      //           new_objects,
-      //           (obj) => {
-      //             // console.log(obj)
-      //           },
-      //           method
-      //         );
-      //       });
-      //       this.socketService.emit.room_join(this.canvasService.projectId);
-      //     }
-      //   });
     } else {
       this.initializeCanvasSetup();
+    }
+  }
+
+  onQuadraticCurveControlPointMoving(
+    point: QuadraticCurveControlPoint,
+    x: number,
+    y: number
+  ) {
+    // const curve = this.canvasService.oneDarrayOfObjects.find(
+    //   (ob) => ob._id === point.ctrlOf
+    // ) as Fab_Path;
+    if (!this.canvasService.editingPath) return;
+    const path = this.canvasService.editingPath
+      .path as unknown as Fab_PathArray;
+    if (path) {
+      if (point.index == 0) {
+        const start1 = (path[point.index] as unknown as number[])[1];
+        const start2 = (path[point.index] as unknown as number[])[2];
+        (path[point.index] as unknown as number[])[1] = start1 + x;
+        (path[point.index] as unknown as number[])[2] = start2 + y;
+        const end1 = (path[path.length - 1] as unknown as number[])[3];
+        const end2 = (path[path.length - 1] as unknown as number[])[4];
+        (path[path.length - 1] as unknown as number[])[3] = end1 + x;
+        (path[path.length - 1] as unknown as number[])[4] = end2 + y;
+      }
+       else if(point.index===path.length-1){
+        return
+      }
+      else {
+        if (point.name == 'node') {
+          const p1 = (path[point.index] as unknown as number[])[3];
+          const p2 = (path[point.index] as unknown as number[])[4];
+          (path[point.index] as unknown as number[])[3] = p1 + x;
+          (path[point.index] as unknown as number[])[4] = p2 + y;
+        } else if (point.name == 'curve') {
+          const p1 = (path[point.index] as unknown as number[])[1];
+          const p2 = (path[point.index] as unknown as number[])[2];
+          (path[point.index] as unknown as number[])[1] = p1 + x;
+          (path[point.index] as unknown as number[])[2] = p2 + y;
+        }
+      }
+      this.canvasService.loadSVGFromString(
+        this.canvasService.editingPath,
+        {
+          _id: this.canvasService.editingPath._id,
+          pathType: this.canvasService.editingPath.pathType,
+        },
+        'replace'
+      );
+      this.canvasService.quadraticCurveControlPoints.forEach((point) =>
+        this.canvasService.canvas?.bringToFront(point)
+      );
     }
   }
 
@@ -409,15 +425,31 @@ export class CanvasComponent implements OnInit {
           .currentDrawingObject as unknown as fabric.Path;
         if (!pen.path) return;
         const toEdit = pen.path as unknown as (number | string)[][];
-        toEdit.push(['Q', x, y, x, y]);
-        this.canvasService.updateObjects(
-          this.canvasService.currentDrawingObject,
-          'popAndPush'
-        );
+        const midX =
+          x -
+          (x -
+            (toEdit[toEdit.length - 1][toEdit.length == 1 ? 1 : 3] as number)) /
+            2;
+        const midY =
+          y -
+          (y -
+            (toEdit[toEdit.length - 1][toEdit.length == 1 ? 2 : 4] as number)) /
+            2;
+        toEdit.push(['Q', midX, midY, x, y]);
+        pen.set('path', toEdit as any[]);
+        // console.log((this.canvasService.currentDrawingObject as any).pathType)
+        // this.canvasService.updateObjects(
+        //   this.canvasService.currentDrawingObject,
+        //   'popAndPush'
+        // );
       } else {
-        const obj = this.createObjects(event, this.canvasService.role);
+        const obj = this.createObjects(
+          event,
+          this.canvasService.role
+        ) as Fab_Path;
         if (obj) {
           obj._id = uuidv4();
+          obj.pathType = 'quadratic_curve';
           this.canvasService.currentDrawingObject = obj;
           this.canvasService.updateObjects(obj);
         }
@@ -439,47 +471,13 @@ export class CanvasComponent implements OnInit {
   onMouseDoubleClick(event: fabric.IEvent<MouseEvent>): void {
     if (
       this.canvasService?.role === 'select' &&
-      event.target?.type === 'path'
+      event.target?.type === 'path' &&
+      (event.target as Fab_Path).pathType == 'quadratic_curve'
     ) {
-      const path = event.target as fabric.Path & { _id: string };
-      this.canvasService.tempRefObj = [];
-      path.path?.forEach((points, i) => {
-        const arrPoint = points as unknown as number[];
-        let ctrlOne = new fabric.Circle({
-          left: Math.floor(arrPoint[1]),
-          top: Math.floor(arrPoint[2]),
-          radius: 5,
-          fill: 'blue',
-        }) as fabric.Circle & {
-          _refTo: fabric.Path;
-          _refIndex: [number, number];
-        };
-
-        ctrlOne._refTo = path;
-        ctrlOne._refIndex = [i, 1];
-        let ctrlTwo =
-          path.path &&
-          i < path.path?.length - 1 &&
-          arrPoint[3] &&
-          arrPoint[4] &&
-          (new fabric.Circle({
-            left: arrPoint[3],
-            top: arrPoint[4],
-            radius: 5,
-            fill: 'blue',
-          }) as unknown as fabric.Circle & {
-            _refTo: fabric.Path;
-            _refIndex: [number, number];
-          });
-        this.canvasService.canvas?.add(ctrlOne);
-        this.canvasService.tempRefObj.push(ctrlOne as any);
-        if (ctrlTwo) {
-          ctrlTwo._refTo = path;
-          ctrlTwo._refIndex = [i, 2];
-          this.canvasService.canvas?.add(ctrlTwo);
-          this.canvasService.tempRefObj.push(ctrlTwo as any);
-        }
-      });
+      this.canvasService.addQuadraticCurveControlPoints(
+        event.target as Fab_Path
+      );
+      // this.editingPath=event.target as Fab_Path
     }
   }
   onMouseMove(event: fabric.IEvent<MouseEvent>): void {
@@ -550,14 +548,41 @@ export class CanvasComponent implements OnInit {
       };
       if (!pen?.path || pen.isPathClosed) return;
       const { x, y } = this.canvasService.canvas!.getPointer(event.e, false);
-      this.canvasService.reRender();
       const start = pen.path[pen.path.length - 1] as unknown as number[];
-      this.canvasService.canvas?.add(
-        new fabric.Line([start[3] || start[1], start[4] || start[2], x, y], {
-          stroke: '#81868a',
-          strokeWidth: 1,
-        })
-      );
+      // this.canvasService.reRender();
+      // this.canvasService.canvas?.add(
+      //   new fabric.Line([start[3] || start[1], start[4] || start[2], x, y], {
+      //     stroke: '#81868a',
+      //     strokeWidth: 1,
+      //   })
+      // );
+      if (this.canvasService.quadraticCurveRefLine) {
+        this.canvasService.canvas?.remove(
+          this.canvasService.quadraticCurveRefLine
+        );
+        this.canvasService.quadraticCurveRefLine =
+          this.canvasService.quadraticCurveRefLine = new fabric.Line(
+            [start[3] || start[1], start[4] || start[2], x, y],
+            {
+              stroke: '#81868a',
+              strokeWidth: 1,
+            }
+          );
+        this.canvasService.canvas?.add(
+          this.canvasService.quadraticCurveRefLine
+        );
+      } else {
+        this.canvasService.quadraticCurveRefLine = new fabric.Line(
+          [start[3] || start[1], start[4] || start[2], x, y],
+          {
+            stroke: '#81868a',
+            strokeWidth: 1,
+          }
+        );
+        this.canvasService.canvas?.add(
+          this.canvasService.quadraticCurveRefLine
+        );
+      }
     }
 
     if (
@@ -585,19 +610,28 @@ export class CanvasComponent implements OnInit {
         this.canvasService.currentDrawingObject &&
         this.canvasService.currentDrawingObject.type === 'path'
       ) {
-        const penPath = this.canvasService
-          .currentDrawingObject as fabric.Path & {
-          isPathClosed?: boolean;
-          _id: string;
-          type: 'path';
-        };
+        const penPath = this.canvasService.currentDrawingObject as Fab_Path;
         const path = penPath.path as unknown as number[][];
 
         if (
           Math.abs(path[0][1] - path[path.length - 1][3]) < 5 &&
           Math.abs(path[0][2] - path[path.length - 1][4]) < 5
         ) {
-          this.canvasService.loadSVGFromString(penPath);
+          path[path.length - 1][3] = path[0][1];
+          path[path.length - 1][4] = path[0][2];
+          this.canvasService.loadSVGFromString(
+            penPath,
+            {
+              _id: penPath._id,
+              pathType: 'quadratic_curve',
+            },
+            'popAndPush'
+          );
+          this.canvasService.canvas.remove(
+            this.canvasService.quadraticCurveRefLine!
+          );
+          this.canvasService.quadraticCurveRefLine = null;
+          this.canvasService.setRole('select');
         }
       }
     }
@@ -624,8 +658,9 @@ export class CanvasComponent implements OnInit {
 
   onPathCreated(e: { path: fabric.Path }): void {
     if (this.canvasService?.role !== 'pencil') return;
-    const path = e.path as Fab_Objects;
+    const path = e.path as Fab_Path;
     path._id = uuidv4();
+    path.pathType = 'free_hand';
     this.canvasService.updateObjects(path);
   }
 
