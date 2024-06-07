@@ -3,6 +3,7 @@ import {
   Fields,
   Keys,
   PossibleKeysOfObject,
+  QuadraticCurveControlPoint,
   possibleShapeType,
 } from '../../../../types/app.types';
 import { CanvasService } from '../../../services/canvas/canvas.service';
@@ -24,8 +25,10 @@ export class CommomComponent {
     for (let key of keys) {
       this.addInitialValueToField(key.key as keyof fabric.Object);
     }
-    console.log(keys);
     this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.oneDarrayOfObjects.forEach((ob) =>
+      this.canvasService.totalChanges.add(ob._id)
+    );
     this.canvasService.canvas?.requestRenderAll();
   };
 
@@ -37,193 +40,26 @@ export class CommomComponent {
       );
     }
     this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.oneDarrayOfObjects.forEach((ob) =>
+      this.canvasService.totalChanges.add(ob._id)
+    );
     this.canvasService.canvas?.requestRenderAll();
   };
-
-  commonFields: Fields[] = [
-    {
-      title: 'Position',
-      keys: [
-        {
-          lable: 'Top',
-          key: 'top',
-          val_type: 'number',
-          inputBox_type: 'number',
-          pipe(num: number) {
-            return num.toFixed();
-          },
-        },
-        {
-          lable: 'Left',
-          key: 'left',
-          val_type: 'number',
-          inputBox_type: 'number',
-          pipe(num: number) {
-            return num.toFixed();
-          },
-        },
-      ],
-    },
-    {
-      title: 'Size',
-      keys: [
-        {
-          lable: 'W',
-          key: 'width',
-          val_type: 'number',
-          inputBox_type: 'number',
-          pipe(val: number) {
-            return val.toFixed();
-          },
-        },
-        {
-          lable: 'H',
-          key: 'height',
-          val_type: 'number',
-          inputBox_type: 'number',
-          pipe(val: number) {
-            return val.toFixed();
-          },
-        },
-        {
-          lable: 'ScaleX',
-          key: 'scaleX',
-          val_type: 'number',
-          inputBox_type: 'number',
-          step: 0.1,
-          pipe(val: number) {
-            return val.toFixed(3);
-          },
-        },
-        {
-          lable: 'ScaleY',
-          key: 'scaleY',
-          val_type: 'number',
-          inputBox_type: 'number',
-          step: 0.1,
-          pipe(val: number) {
-            return val.toFixed(3);
-          },
-        },
-        {
-          lable: 'Angle',
-          key: 'angle',
-          val_type: 'number',
-          inputBox_type: 'number',
-          step: 1,
-          pipe(val: number) {
-            return val.toFixed();
-          },
-        },
-      ],
-    },
-
-    {
-      title: 'Stroke',
-      keys: [
-        {
-          lable: 'Color',
-          key: 'stroke',
-          val_type: 'string',
-          inputBox_type: 'color',
-          pipe(val: string) {
-            return val;
-          },
-        },
-        {
-          lable: 'Size',
-          key: 'strokeWidth',
-          val_type: 'number',
-          inputBox_type: 'number',
-          min: 0,
-          pipe(val: number) {
-            return val;
-          },
-        },
-      ],
-      buttons: {
-        add: this.addBtn,
-        remove: this.removeBtn,
-      },
-    },
-    {
-      title: 'Fill',
-      keys: [
-        {
-          lable: 'color',
-          key: 'fill',
-          val_type: 'string',
-          inputBox_type: 'color',
-          pipe(val: string) {
-            return val;
-          },
-        },
-      ],
-      buttons: {
-        add: this.addBtn,
-        remove: this.removeBtn,
-      },
-    },
-    {
-      title: 'Flip',
-      keys: [
-        {
-          lable: 'X',
-          key: 'flipX',
-          val_type: 'boolean',
-          inputBox_type: 'checkbox',
-          pipe(val: boolean) {
-            return val;
-          },
-        },
-        {
-          lable: 'Y',
-          key: 'flipY',
-          val_type: 'boolean',
-          inputBox_type: 'checkbox',
-          pipe(val: boolean) {
-            return val;
-          },
-        },
-      ],
-    },
-    {
-      title: 'Others',
-      keys: [
-        {
-          lable: 'Opacity',
-          key: 'opacity',
-          val_type: 'number',
-          inputBox_type: 'number',
-          step: 0.1,
-          min: 0,
-          max: 1,
-          pipe(val: number) {
-            return val;
-          },
-        },
-        // {
-        //   lable: 'Background',
-        //   key: 'backgroundColor',
-        //   val_type: 'string',
-        //   inputBox_type: 'color',
-        //   pipe(val: string) {
-        //     return val;
-        //   },
-        // },
-      ],
-    },
-  ];
 
   fields: {
     top: Keys;
     left: Keys;
+    // lockMovementX: Keys;
+    // lockMovementY: Keys;
     opacity: Keys;
     width: Keys;
     height: Keys;
     scaleX: Keys;
     scaleY: Keys;
     angle: Keys;
+    // lockRotation: Keys;
+    // lockScalingX: Keys;
+    // lockScalingY: Keys;
     stroke: Keys;
     strokeWidth: Keys;
     fill: Keys;
@@ -238,6 +74,10 @@ export class CommomComponent {
       pipe(num: number) {
         return num.toFixed();
       },
+      lock: {
+        key: 'lockMovementY',
+        val: false,
+      },
     },
     left: {
       lable: 'Left',
@@ -247,7 +87,30 @@ export class CommomComponent {
       pipe(num: number) {
         return num.toFixed();
       },
+      lock: {
+        key: 'lockMovementX',
+        val: false,
+      },
     },
+    // lockMovementX: {
+    //   lable: 'MovementX',
+    //   key: 'lockMovementX',
+    //   val_type: 'boolean',
+    //   inputBox_type: 'checkbox',
+    //   pipe(val: boolean) {
+    //     return val;
+    //   },
+    // },
+    // lockMovementY: {
+    //   lable: 'MovementY',
+    //   key: 'lockMovementY',
+    //   val_type: 'boolean',
+    //   inputBox_type: 'checkbox',
+    //   pipe(val: boolean) {
+    //     return val;
+    //   },
+    // },
+
     opacity: {
       lable: 'Opacity',
       key: 'opacity',
@@ -287,6 +150,10 @@ export class CommomComponent {
       pipe(val: number) {
         return val.toFixed(3);
       },
+      lock: {
+        key: 'lockScalingX',
+        val: false,
+      },
     },
     scaleY: {
       lable: 'ScaleY',
@@ -296,6 +163,10 @@ export class CommomComponent {
       step: 0.1,
       pipe(val: number) {
         return val.toFixed(3);
+      },
+      lock: {
+        key: 'lockScalingY',
+        val: false,
       },
     },
     angle: {
@@ -307,7 +178,38 @@ export class CommomComponent {
       pipe(val: number) {
         return val.toFixed();
       },
+      lock: {
+        key: 'lockRotation',
+        val: false,
+      },
     },
+    // lockRotation: {
+    //   lable: 'Rotation',
+    //   key: 'lockRotation',
+    //   val_type: 'boolean',
+    //   inputBox_type: 'checkbox',
+    //   pipe(val: boolean) {
+    //     return val;
+    //   },
+    // },
+    // lockScalingX: {
+    //   lable: 'ScalingX',
+    //   key: 'lockScalingX',
+    //   val_type: 'boolean',
+    //   inputBox_type: 'checkbox',
+    //   pipe(val: boolean) {
+    //     return val;
+    //   },
+    // },
+    // lockScalingY: {
+    //   lable: 'ScalingY',
+    //   key: 'lockScalingY',
+    //   val_type: 'boolean',
+    //   inputBox_type: 'checkbox',
+    //   pipe(val: boolean) {
+    //     return val;
+    //   },
+    // },
     stroke: {
       lable: 'Color',
       key: 'stroke',
@@ -355,6 +257,60 @@ export class CommomComponent {
       },
     },
   };
+
+  // lockFields: { title: 'Lock'; keys: Keys[] } = {
+  //   title: 'Lock',
+  //   keys: [
+  //     this.fields.lockMovementX,
+  //     this.fields.lockMovementY,
+  //     this.fields.lockScalingX,
+  //     this.fields.lockScalingY,
+  //     this.fields.lockRotation,
+  //   ],
+  // };
+
+  commonFields: Fields[] = [
+    {
+      title: 'Position',
+      keys: [this.fields.top, this.fields.left],
+    },
+    {
+      title: 'Size',
+      keys: [
+        this.fields.width,
+        this.fields.height,
+        this.fields.scaleX,
+        this.fields.scaleY,
+        this.fields.angle,
+      ],
+    },
+
+    {
+      title: 'Stroke',
+      keys: [this.fields.stroke, this.fields.strokeWidth],
+      buttons: {
+        add: this.addBtn,
+        remove: this.removeBtn,
+      },
+    },
+    {
+      title: 'Fill',
+      keys: [this.fields.fill],
+      buttons: {
+        add: this.addBtn,
+        remove: this.removeBtn,
+      },
+    },
+    {
+      title: 'Flip',
+      keys: [this.fields.flipX, this.fields.flipY],
+    },
+    {
+      title: 'Others',
+      keys: [this.fields.opacity],
+    },
+    // this.lockFields,
+  ];
 
   rectFields: Fields[] = [
     {
@@ -423,6 +379,7 @@ export class CommomComponent {
       title: 'Others',
       keys: [this.fields.opacity],
     },
+    // this.lockFields,
   ];
   textFields: Fields[] = [
     {
@@ -567,6 +524,7 @@ export class CommomComponent {
       title: 'Others',
       keys: [this.fields.opacity],
     },
+    // this.lockFields,
   ];
 
   circleFields: Fields[] = [
@@ -619,11 +577,18 @@ export class CommomComponent {
       title: 'Others',
       keys: [this.fields.opacity],
     },
+    // this.lockFields,
   ];
 
   getFieldsList(type?: possibleShapeType | 'activeSelection') {
     if (!type) {
-      type = this.canvasService.activeObjects?.type as possibleShapeType;
+      if (
+        !(this.canvasService.activeObjects as QuadraticCurveControlPoint).ctrlOf
+      ) {
+        type = this.canvasService.activeObjects?.type as possibleShapeType;
+      } else {
+        return [];
+      }
     }
     if (type == 'circle') {
       return this.circleFields;
@@ -645,10 +610,10 @@ export class CommomComponent {
   onChange(event: Event) {
     const target = event.target as HTMLInputElement;
     if (!target.value.length) {
-      target.value =
-        this.canvasService.oneDarrayOfSelectedObj[0][
-          target.name as keyof fabric.Object
-        ];
+      // target.value =
+      //   this.canvasService.oneDarrayOfSelectedObj[0][
+      //     target.name as keyof fabric.Object
+      //   ];
       return;
     }
     const value = this.extractValueFromTarget(target);
@@ -677,7 +642,18 @@ export class CommomComponent {
       ].includes(target.name)
     ) {
       return parseFloat(target.value);
-    } else if (['flipX', 'flipY', 'underline'].includes(target.name)) {
+    } else if (
+      [
+        'flipX',
+        'flipY',
+        'underline',
+        'lockMovementX',
+        'lockMovementY',
+        'lockScalingX',
+        'lockScalingY',
+        'lockRotation',
+      ].includes(target.name)
+    ) {
       return target.checked;
     } else {
       return target.value;
@@ -743,5 +719,24 @@ export class CommomComponent {
     return this.canvasService.oneDarrayOfSelectedObj[0][
       key as keyof fabric.Object
     ];
+  }
+
+  lockProperty(
+    key:
+      | 'lockMovementX'
+      | 'lockMovementY'
+      | 'lockScalingX'
+      | 'lockScalingY'
+      | 'lockRotation',
+    val: boolean
+  ) {
+    if (this.canvasService.oneDarrayOfSelectedObj?.length === 1) {
+      (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.Object).set(
+        key,
+        val
+      );
+      // this.canvasService.emitReplaceObjsEventToSocket();
+      // this.canvasService.canvas?.requestRenderAll();
+    }
   }
 }

@@ -36,7 +36,7 @@ export class WelcomeComponent implements OnInit {
 
   async ngOnInit() {
     try {
-      await this.dbService.getPromotional_projects()
+      await this.dbService.getPromotional_projects();
     } catch (error) {
       console.error(error);
     }
@@ -53,7 +53,10 @@ export class WelcomeComponent implements OnInit {
 
   async createProject() {
     try {
-      const id = await this.dbService.createProject();
+      const id = await this.dbService.createProject(
+        this.canvasService.frame.x,
+        this.canvasService.frame.y
+      );
       this.router.navigate([`/canvas/${id}`]);
     } catch (error) {
       console.error(error);

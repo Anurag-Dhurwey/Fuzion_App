@@ -30,14 +30,19 @@ export type Fab_Objects = (
   _id: string;
 };
 
-export type Fab_Path = fabric.Path & {_id:string, isPathClosed?: boolean; type: 'path',pathType:'free_hand'|'quadratic_curve'};
-export  type Fab_PathArray = [string, number, number, number, number]
+export type Fab_Path = fabric.Path & {
+  _id: string;
+  isPathClosed?: boolean;
+  type: 'path';
+  pathType: 'free_hand' | 'quadratic_curve';
+};
+export type Fab_PathArray = [string, number, number, number, number];
 
-export type QuadraticCurveControlPoint= (fabric.Circle & {
+export type QuadraticCurveControlPoint = fabric.Circle & {
   name: 'curve' | 'node';
   index: number;
   ctrlOf: string;
-})
+};
 
 export type possibleShapeType =
   | 'path'
@@ -50,8 +55,7 @@ export type possibleShapeType =
 export type Position = { x: number; y: number };
 // export type Presense = { id: string; mouse: Position; expire: number };
 
-export type PropertiesToInclude={_id:string,pathType?:string}
-
+export type PropertiesToInclude = { _id: string; pathType?: string };
 
 export type Fields = {
   title:
@@ -64,13 +68,37 @@ export type Fields = {
     | 'Corners'
     | ''
     | 'Align'
-    | 'Font';
+    | 'Font'
+    | 'Lock';
   keys: Keys[];
   buttons?: {
     add: (keys: Keys[]) => void;
     remove: (keys: Keys[]) => void;
   };
 };
+
+// export type NumberTypePossibleKeysOfObject =
+//   | 'top'
+//   | 'left'
+//   | 'angle'
+//   | 'rx'
+//   | 'ry'
+//   | 'width'
+//   | 'height'
+//   | 'radius'
+//   | 'scaleX'
+//   | 'scaleY'
+//   | 'strokeWidth'
+//   | 'opacity'
+//   | 'fontWeight'
+//   | 'fontSize';
+// export type BooleanTypePossibleKeysOfObject =
+// | 'lockMovementX'
+// | 'lockMovementY'
+// | 'lockScalingX'
+// | 'lockScalingY'
+// | 'lockRotation';
+
 export type PossibleKeysOfObject =
   | keyof fabric.Object
   | 'rx'
@@ -79,10 +107,15 @@ export type PossibleKeysOfObject =
   | 'textAlign'
   | 'underline'
   | 'pathAlign'
-  | 'fontWeight'
   | 'fontStyle'
+  | 'fontWeight'
   | 'fontSize'
-  | 'fontFamily';
+  | 'fontFamily'
+  | 'lockMovementX'
+  | 'lockMovementY'
+  | 'lockScalingX'
+  | 'lockScalingY'
+  | 'lockRotation';
 
 export type Keys =
   | {
@@ -94,6 +127,15 @@ export type Keys =
       min?: number;
       max?: number;
       step?: number;
+      lock?: {
+        key:
+          | 'lockMovementX'
+          | 'lockMovementY'
+          | 'lockScalingX'
+          | 'lockScalingY'
+          | 'lockRotation';
+        val: boolean;
+      };
     }
   | {
       lable: string;
@@ -102,6 +144,10 @@ export type Keys =
       inputBox_type: 'choose';
       options: string[];
       pipe: (val: any) => any;
+      // lock?: {
+      //   key: string;
+      //   val: boolean;
+      // };
     };
 
 export type Project = {

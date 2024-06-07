@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
 import { Fab_Objects } from '../../../types/app.types';
 import { LayerPanelContextMenuComponent } from './layer-panel-context-menu/layer-panel-context-menu.component';
 
@@ -16,6 +16,9 @@ export class LayerPanelComponent implements OnInit {
   @Input() projectId: string | null = null;
   @Input() layers: Fab_Objects[] | undefined;
   @Input() group_id: string | null = null;
+  @Output() saveObjectsToDB = new EventEmitter<void>();
+
+
   constructor(
     public canvasService: CanvasService,
     public layerService: LayerService

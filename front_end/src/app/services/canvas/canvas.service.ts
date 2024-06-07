@@ -18,7 +18,13 @@ import {
 import { v4 } from 'uuid';
 import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
 import { v4 as uuidv4 } from 'uuid';
-import { Layout, UpdateObjectsMethods, Visibility } from '../../../types/canvas.service.types';
+import {
+  Layout,
+  UpdateObjectsMethods,
+  Visibility,
+} from '../../../types/canvas.service.types';
+import { doc, updateDoc } from 'firebase/firestore';
+import { DbService } from '../db/db.service';
 // import { AuthService } from '../auth/auth.service';
 @Injectable({
   providedIn: 'root',
@@ -55,6 +61,9 @@ export class CanvasService {
   quadraticCurveRefLine: fabric.Line | null = null;
   quadraticCurveControlPoints: QuadraticCurveControlPoint[] = [];
   // selectedObj: Fab_Objects[] = [];
+
+  totalChanges = new Set<string>();
+
   private _zoom = 1;
   frame = { x: 1920, y: 1080 };
   layout: Layout = {
@@ -99,21 +108,66 @@ export class CanvasService {
     });
   }
 
+  grid: fabric.Line[] = [];
+
+  // removeGrid() {
+  //   this.grid.forEach((line) => {
+  //     this.canvas?.remove(line);
+  //   });
+  //   this.grid = [];
+  // }
+  // addGrid() {
+  //   this.removeGrid();
+  //   this.generateGrid();
+  //   for (const line of this.grid) {
+  //     this.canvas?.add(line);
+  //   }
+  // }
+
+  // generateGrid() {
+  //   this.grid = [];
+  //   const distance = 100;
+  //   for (
+  //     let index = 0;
+  //     index < Math.max(this.frame.x || 1920, this.frame.y || 1080) + distance;
+  //     // index < 500+ 20;
+  //     index += distance
+  //   ) {
+  //     if (index < this.frame.x) {
+  //       const lineV = new fabric.Line([index, 0, index, this.frame.y], {
+  //         evented: false,
+  //         selectable: false,
+  //         strokeWidth: 1,
+  //         stroke: 'gray',
+  //         hasControls: false,
+  //         hasBorders: false,
+  //       });
+  //       this.grid.push(lineV);
+  //     }
+  //     if (index < this.frame.y) {
+  //       const lineH = new fabric.Line([0, index, this.frame.x, index], {
+  //         evented: false,
+  //         selectable: false,
+  //         strokeWidth: 1,
+  //         stroke: 'gray',
+  //         hasControls: false,
+  //         hasBorders: false,
+  //       });
+  //       this.grid.push(lineH);
+  //     }
+  //     // console.log(index)
+  //   }
+  // }
+
   absolutePoint(x: number, y: number, matrix: any[]) {
-    return fabric.util.transformPoint(
-      { x, y } as fabric.Point,
-      fabric.util.multiplyTransformMatrices(
-        this.canvas!.viewportTransform!,
-        matrix
-      )
-    );
+    return fabric.util.transformPoint({ x, y } as fabric.Point, matrix);
   }
 
   addQuadraticCurveControlPoints(path: Fab_Path) {
     this.quadraticCurveControlPoints = [];
     this.getTransformedPoints(path).forEach((point, i) => {
-      if(i==(path.path!.length-1)){
-        return
+      if (i == path.path!.length - 1) {
+        return;
       }
       if (point[0] === 'M' || point[0] === 'L') {
         const circle = new fabric.Circle({
@@ -123,7 +177,7 @@ export class CanvasService {
           fill: 'blue',
           hasControls: false,
           hasBorders: false,
-          excludeFromExport:true
+          excludeFromExport: true,
         }) as QuadraticCurveControlPoint;
         circle.name = 'node';
         circle.index = i;
@@ -138,7 +192,7 @@ export class CanvasService {
           fill: 'blue',
           hasControls: false,
           hasBorders: false,
-          excludeFromExport:true
+          excludeFromExport: true,
         }) as QuadraticCurveControlPoint;
         circle.name = 'curve';
         circle.index = i;
@@ -152,7 +206,7 @@ export class CanvasService {
           fill: 'blue',
           hasControls: false,
           hasBorders: false,
-          excludeFromExport:true
+          excludeFromExport: true,
         }) as QuadraticCurveControlPoint;
         circle2.name = 'node';
         circle2.index = i;
@@ -582,12 +636,27 @@ export class CanvasService {
     );
   }
 
+  //  async saveObjectsToDb(){
+  // if(this.socketService.socket?.connected){
+  //  try {
+
+  //  } catch (error) {
+
+  //  }
+  // }else{
+
+  // }
+  //   }
+
   updateObjects(
     objs: Fab_Objects | Fab_Objects[],
     method: UpdateObjectsMethods = 'push',
     emit_event: boolean = true
   ) {
     if (!Array.isArray(objs)) objs = [objs];
+    objs.forEach((ob) => {
+      this.totalChanges.add(ob._id);
+    });
     if (method === 'reset') {
       this._objects = objs;
       this.reRender();
@@ -721,10 +790,14 @@ export class CanvasService {
     }
     this._role = role;
     if (this.currentDrawingObject?.type === 'path') {
-      this.loadSVGFromString(this.currentDrawingObject, {
-        _id: this.currentDrawingObject._id,
-        pathType: this.currentDrawingObject.pathType,
-      },'popAndPush');
+      this.loadSVGFromString(
+        this.currentDrawingObject,
+        {
+          _id: this.currentDrawingObject._id,
+          pathType: this.currentDrawingObject.pathType,
+        },
+        'popAndPush'
+      );
     } else if (this.currentDrawingObject?.type == 'i-text') {
       (this.currentDrawingObject as fabric.IText).exitEditing();
       !(this.currentDrawingObject as fabric.IText).text &&
@@ -795,7 +868,8 @@ export class CanvasService {
 
   loadSVGFromString(
     data: Fab_Objects,
-    propertiesToInclude: PropertiesToInclude,method:UpdateObjectsMethods
+    propertiesToInclude: PropertiesToInclude,
+    method: UpdateObjectsMethods
   ) {
     fabric.loadSVGFromString(data.toSVG(), (str) => {
       const newPath = str[0] as Fab_Objects;
@@ -807,11 +881,21 @@ export class CanvasService {
 
       this.updateObjects(newPath, method);
       this.currentDrawingObject = undefined;
-      
     });
   }
 
-  export(format: 'png' | 'jpeg' | 'json') {
+  export(
+    format: 'png' | 'jpeg' | 'json',
+    cb: (
+      data:
+        | string
+        | {
+            version: string;
+            objects: fabric.Object[];
+          }
+    ) => void
+  ) {
+    this.canvas?.discardActiveObject();
     const canvas = document.createElement('canvas');
     canvas.id = 'exportable_canvas';
     canvas.width = this.frame.x;
@@ -820,16 +904,27 @@ export class CanvasService {
       selection: false,
       perPixelTargetFind: false,
     });
-    this.objects.forEach((obj) => {
-      exportable_canvas.add(obj);
-    });
-    exportable_canvas.requestRenderAll();
-    if (format == 'jpeg' || format == 'png') {
-      return exportable_canvas.toDataURL({ format });
-    } else if (format == 'json') {
-      return exportable_canvas.toJSON(this.propertiesToInclude);
-    } else {
-      return;
-    }
+    const bojs = this.objects.map((ob) =>
+      ob.toObject(this.propertiesToInclude)
+    );
+    fabric.util.enlivenObjects(
+      bojs,
+      (res: fabric.Object[]) => {
+        res.forEach((re) => exportable_canvas.add(re));
+        exportable_canvas.requestRenderAll();
+        if (format == 'jpeg' || format == 'png') {
+          cb(exportable_canvas.toDataURL({ format }))
+        } else if (format == 'json') {
+          cb(exportable_canvas.toJSON(this.propertiesToInclude))
+        } else {
+          cb('unrecognized formate')
+        }
+      },
+      'fabric'
+    );
+    // this.objects.forEach((obj) => {
+    //   exportable_canvas.add(obj);
+    // });
+   
   }
 }

@@ -39,30 +39,43 @@ export class ExportComponent {
       link.href = imageDataURL;
       link.download = this.file_name.value || 'myDrawing';
       link.click();
+      this.canvasService.totalChanges.clear();
     };
     // const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    if (this.file_type.value === 'png') {
-      click(this.canvasService!.export('png') as string);
-    } else if (this.file_type.value === 'jpeg') {
-      click(this.canvasService.export('jpeg') as string);
-    } else if (this.file_type.value === 'pdf') {
+    if (this.file_type.value === 'png'||this.file_type.value === 'jpeg') {
+      this.canvasService!.export(this.file_type.value, (res) => {
+        if (typeof res != 'string') return;
+        click(res);
+      });
+    }
+    //  else if (this.file_type.value === 'jpeg') {
+    //   this.canvasService!.export('jpeg', (res) => {
+    //     if (typeof res != 'string') return;
+    //     click(res);
+    //   });
+    //   // click(this.canvasService.export('jpeg') as string);
+    // } 
+    else if (this.file_type.value === 'pdf') {
       const { width, height } = this.canvasService.canvas;
       const pdf = new jsPDF({
         orientation: width! > height! ? 'landscape' : 'portrait',
         unit: 'px',
         format: [width!, height!],
       });
-      const dataImg = this.canvasService.export('png') as string;
-      pdf.addImage(dataImg, 'PNG', 0, 0, width!, height!);
-      pdf.save(`${this.file_name.value || 'myDrawing'}`);
+      this.canvasService.export('png', (dataImg) => {
+        if (typeof dataImg != 'string') return;
+        pdf.addImage(dataImg, 'PNG', 0, 0, width!, height!);
+        pdf.save(`${this.file_name.value || 'myDrawing'}`);
+      });
     } else if (this.file_type.value === 'JSON') {
-      const blob = new Blob(
-        [JSON.stringify(this.canvasService.export('json'))],
-        { type: 'application/json' }
-      );
-      const url = URL.createObjectURL(blob);
-      click(url);
-      URL.revokeObjectURL(url);
+      this.canvasService.export('json', (res) => {
+        const blob = new Blob([JSON.stringify(res)], {
+          type: 'application/json',
+        });
+        const url = URL.createObjectURL(blob);
+        click(url);
+        URL.revokeObjectURL(url);
+      });
     } else {
       throw new Error('file type not recognized');
     }

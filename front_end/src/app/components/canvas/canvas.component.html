@@ -99,6 +99,7 @@
     [layers]="canvasService.objects"
     [group_id]="null"
     [projectId]="canvasService.projectId"
+    (saveObjectsToDB)="saveObjectsToDb()"
   />
   }
 
@@ -112,7 +113,7 @@
       flex: 1;
       width: 70vw;
       height: 100%;
-      background-color: yellowgreen;
+      background-color: rgb(49, 64, 75);
       display: flex;
       justify-content: center;
       align-items: center;

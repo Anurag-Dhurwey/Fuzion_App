@@ -28,7 +28,7 @@ import { LayerService } from '../../services/layer/layer.service';
 import { MenuPanelComponent } from './menu-panel/menu-panel.component';
 import { SettingPanelComponent } from './setting-panel/setting-panel.component';
 import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-selection-panel.component';
-import { ActiveSelection } from 'fabric/fabric-impl';
+// import { ActiveSelection } from 'fabric/fabric-impl';
 
 @Component({
   selector: 'app-canvas',
@@ -120,6 +120,31 @@ export class CanvasComponent implements OnInit {
     return window;
   }
 
+  async saveObjectsToDb() {
+    if (!this.canvasService.totalChanges.size) return;
+    if (this.socketService.socket?.connected && this.canvasService.projectId) {
+      // try {
+      const res = await this.dbService.updateObjects(
+        JSON.stringify(this.canvasService.objects),
+        this.canvasService.projectId
+      );
+      if (res) {
+        this.socketService.emit.saveObjectsToDB_succeeded(
+          this.canvasService.projectId
+        );
+        this.canvasService.totalChanges.clear();
+      } else {
+        console.error('failed to save');
+      }
+      // } catch (error) {
+
+      // }
+    } else {
+      this.canvasService.toggleLayoutVisibility(['export_panel'], true);
+      // this.canvasService.totalChanges.clear();
+    }
+  }
+
   // onRoleChange() {
   //   if (this.canvasService.editingPath) {
   //     this.canvasService.removeQuadraticCurveControlPoints();
@@ -174,7 +199,11 @@ export class CanvasComponent implements OnInit {
       }
       this.canvasService.enliveObjs(new_objects, () => {}, method);
     });
-
+    this.socketService.on.saveObjectsToDB_succeeded((roomId) => {
+      if (this.canvasService.projectId === roomId) {
+        this.canvasService.totalChanges.clear();
+      }
+    });
     this.canvasService.projectId &&
       this.socketService.emit.room_join(this.canvasService.projectId);
   };
@@ -195,6 +224,8 @@ export class CanvasComponent implements OnInit {
       preserveObjectStacking: true,
       // skipTargetFind: this.canvasService.isMobile(),
       selectionKey: 'ctrlKey',
+      // backgroundImage: '../../../assets/img/grid.jpg',
+      // backgroundVpt:false,
       // defaultCursor:'pointer',
       // hoverCursor:'pointer'
       // targetFindTolerance:5,
@@ -226,7 +257,7 @@ export class CanvasComponent implements OnInit {
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
     this.canvasService.canvas?.on('selection:created', (event) => {
-      console.log(this.canvasService.editingPath?.path![0]);
+      // console.log(event.selected[0].lo);
       // if (!event.selected) return;
       // event.selected.forEach((obj: any) => {
       //   // console.log(obj.calcTransformMatrix())
@@ -282,10 +313,14 @@ export class CanvasComponent implements OnInit {
     });
     this.canvasService.canvas?.on('object:modified', (e) => {
       this.canvasService.emitReplaceObjsEventToSocket();
+      this.canvasService.oneDarrayOfSelectedObj.forEach(ob=>{
+
+        this.canvasService.totalChanges.add(ob._id)
+      })
       // console.log('modified');
-      console.log(this.canvasService.editingPath?.path![0], 'M');
     });
 
+    // this.canvasService.addGrid()
     project && this.canvasService.enliveProject(project, () => {}, true);
   }
 
@@ -353,11 +388,9 @@ export class CanvasComponent implements OnInit {
         const end2 = (path[path.length - 1] as unknown as number[])[4];
         (path[path.length - 1] as unknown as number[])[3] = end1 + x;
         (path[path.length - 1] as unknown as number[])[4] = end2 + y;
-      }
-       else if(point.index===path.length-1){
-        return
-      }
-      else {
+      } else if (point.index === path.length - 1) {
+        return;
+      } else {
         if (point.name == 'node') {
           const p1 = (path[point.index] as unknown as number[])[3];
           const p2 = (path[point.index] as unknown as number[])[4];
@@ -664,13 +697,19 @@ export class CanvasComponent implements OnInit {
     this.canvasService.updateObjects(path);
   }
 
+  defaultProperties = {
+    stroke: '#81868a',
+    strokeWidth: 4,
+  };
+
   createObjects(e: fabric.IEvent<MouseEvent>, role: Roles) {
     if (!e.pointer) return;
     // const { x, y } = e.pointer;
     const { x, y } = this.canvasService.canvas!.getPointer(e.e, false);
     if (role === 'line') {
       return new fabric.Line([x, y, x + 100, y], {
-        stroke: '#81868a',
+        stroke: this.defaultProperties.stroke,
+        strokeWidth: this.defaultProperties.strokeWidth,
         fill: '',
       }) as Fab_Objects;
     } else if (role === 'rectangle') {
@@ -678,7 +717,8 @@ export class CanvasComponent implements OnInit {
         top: y,
         left: x,
         fill: '',
-        stroke: '#81868a',
+        stroke: this.defaultProperties.stroke,
+        strokeWidth: this.defaultProperties.strokeWidth,
         width: 100,
         height: 100,
       }) as Fab_Objects;
@@ -689,14 +729,15 @@ export class CanvasComponent implements OnInit {
         originX: 'center',
         originY: 'center',
         radius: 50,
-        stroke: '#81868a',
+        stroke: this.defaultProperties.stroke,
+        strokeWidth: this.defaultProperties.strokeWidth,
         fill: '',
       }) as Fab_Objects;
     } else if (role === 'pen') {
       const quadraticCurve = new fabric.Path(`M ${x} ${y}`, {
         fill: '',
-        stroke: 'red',
-        strokeWidth: 5,
+        stroke: this.defaultProperties.stroke,
+        strokeWidth: this.defaultProperties.strokeWidth,
         objectCaching: false,
         selectable: false,
       });
@@ -706,7 +747,7 @@ export class CanvasComponent implements OnInit {
       const text = new fabric.IText('', {
         top: y,
         left: x,
-        stroke: '#81868a',
+        stroke: this.defaultProperties.stroke,
         fill: '#81868a',
         editable: true,
         selected: true,

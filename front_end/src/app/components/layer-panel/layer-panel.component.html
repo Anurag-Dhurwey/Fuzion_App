@@ -67,31 +67,50 @@
   }
 </style>
 @if(group_id==null){
-  <div
+<div
   style="
     width: 100%;
     height: 30px;
     background-color: rgb(83, 137, 177);
-    position: relative;
+    /* position: relative; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
   "
 >
-  <button
+  <span
+    style="
+      width: 90%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    "
+  >
+    @if (canvasService.totalChanges.size) {
+
+    {{ canvasService.totalChanges.size }} changes done
+    <button (click)="saveObjectsToDB.emit()" style="margin: 0px 3px">
+      Save
+    </button>
+    }
+  </span>
+  <!-- <span> -->
+  <span
     class="material-symbols-outlined"
     style="
-      position: absolute;
-      right: 0;
+      width: 10%;
       cursor: pointer;
-      outline: none;
-      border: none;
-      background: none;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
     "
-    (click)="canvasService.toggleLayoutVisibility(['layer_panel'],false)"
+    (click)="canvasService.toggleLayoutVisibility(['layer_panel'], false)"
   >
     arrow_back_ios
-  </button>
+  </span>
+  <!-- </span> -->
 </div>
-}
-@if(layerService.context_menu){
+} @if(layerService.context_menu){
 <app-layer-panel-context-menu
   style="z-index: 2"
   (onGroup)="layerService.createGroup()"
@@ -139,13 +158,15 @@
     <span style="width: 25%">
       <button
         class="material-symbols-outlined"
-        (click)="$event.stopPropagation();layerService.toggleVisibility(obj)"
+        (click)="$event.stopPropagation(); layerService.toggleVisibility(obj)"
       >
         {{ obj.visible ? "visibility " : " visibility_off" }}
       </button>
       <button
         class="material-symbols-outlined"
-        (click)="$event.stopPropagation();layerService.toggleControllability(obj)"
+        (click)="
+          $event.stopPropagation(); layerService.toggleControllability(obj)
+        "
       >
         {{ obj.selectable ? "lock_open_right" : "lock" }}
       </button>
@@ -190,7 +211,9 @@
     </button>
     <button
       class="material-symbols-outlined"
-      (click)="$event.stopPropagation(); layerService.toggleControllability(obj)"
+      (click)="
+        $event.stopPropagation(); layerService.toggleControllability(obj)
+      "
     >
       {{ obj.selectable ? "lock_open_right" : "lock" }}
     </button>

@@ -51,7 +51,7 @@
   </span>
 </div>
 <div class="propertyBar">
-  @if(canvasService.oneDarrayOfSelectedObj.length){
+  @if(canvasService.oneDarrayOfSelectedObj.length&&canvasService.activeObjects?.name!='curve'&&canvasService.activeObjects?.name!='node'){
   <h4 style="margin: 0px">
     <span style="padding: 0px 5px">{{
       canvasService.oneDarrayOfSelectedObj.length > 1
@@ -78,14 +78,22 @@
     </button>
   </span>
   }@else {
- <div style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
-  <span
-  class="material-symbols-outlined"
-  style="cursor: pointer"
-  (click)="canvasService.setViewPortTransform(0, 0)"
->
-  transform
-</span>
- </div>
+  <div
+    style="
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    "
+  >
+    <span
+      class="material-symbols-outlined"
+      style="cursor: pointer"
+      (click)="canvasService.setViewPortTransform(0, 0)"
+    >
+      transform
+    </span>
+  </div>
   }
 </div>

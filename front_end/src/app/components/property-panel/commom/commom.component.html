@@ -22,7 +22,6 @@
     align-items: center;
   }
 
-
   .propertyCard span label {
     font-size: small;
   }
@@ -95,7 +94,15 @@
       <label [for]="key.key">
         {{ key.lable }}
       </label>
-      @if (key.inputBox_type==='choose') {
+      @if(key.inputBox_type!='choose'&& key.lock){
+      <span
+        class="material-symbols-outlined"
+        (click)="$event.stopPropagation(); lockProperty(key.lock.key,!getValue(key.lock.key))"
+        style="font-size: small; cursor: pointer;"
+      >
+        {{ !getValue(key.lock.key) ? "lock_open_right" : "lock" }}
+      </span>
+      } @if (key.inputBox_type==='choose') {
       <select
         [name]="key.key"
         [id]="key.key"

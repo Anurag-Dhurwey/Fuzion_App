@@ -40,8 +40,8 @@ export class DbService {
   private _projects: Project[] = [];
   private _promotional_projects: Project[] = [];
   constructor(
-    private socketService: SocketService,
-    private canvasService: CanvasService
+    // private socketService: SocketService,
+    // private canvasService: CanvasService
   ) {
     this.app = initializeApp(environment.firebaseConfig);
     this.store = getFirestore(this.app);
@@ -54,7 +54,7 @@ export class DbService {
   get promotional_projects() {
     return this._promotional_projects;
   }
-  async createProject() {
+  async createProject(width:number,height:number) {
     if (!this.auth.currentUser) return;
     try {
       const pro = {
@@ -63,19 +63,20 @@ export class DbService {
         objects: '[]',
         user: this.auth.currentUser?.uid,
         members: [],
-        width: this.canvasService.frame.x,
-        height: this.canvasService.frame.y,
+        width,
+        height,
       };
       const docRef = await addDoc(collection(this.store, 'projects'), pro);
 
       this._projects.push({ ...pro, id: docRef.id });
-      this.socketService.emit.room_join(docRef.id);
+      // this.socketService.emit.room_join(docRef.id);
       return docRef.id;
     } catch (error) {
       console.error(error);
       return;
     }
   }
+
   async togglePromotional(pro: Project) {
     try {
       await updateDoc(doc(this.store, 'projects', pro.id), {
@@ -167,8 +168,10 @@ export class DbService {
       await updateDoc(doc(this.store, 'projects', id), {
         objects,
       });
+      return true
     } catch (error) {
       console.error(error);
+      return false
     }
   }
   async uploadImage(img: File) {

@@ -1,12 +1,13 @@
 import express from "express";
 import { createServer } from "http";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import cors from "cors";
 import { client } from "./redis.config";
 import { routes } from "./routes/routes";
 import { admin, db } from "./firebase.config";
 import { socket_middleware } from "./middleware/socket_middleware";
 import { IObjectOptions, Project } from "../types";
+import { DefaultEventsMap } from "socket.io/dist/typed-events";
 require("dotenv").config();
 
 const app = express();
@@ -32,6 +33,27 @@ io.use(socket_middleware);
 
 type UserMap = Record<string, string[]>;
 let onlineUsers: UserMap = {};
+// let last_updation_of_objects: "updating" | null | number = null;
+
+async function saveObjsToDb(
+  docId: string,
+  socket?: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
+) {
+  try {
+    const objects = await client.hGet(`room:${docId}`, "objects");
+    if (!objects) return;
+    await db.collection("projects").doc(docId).update({ objects: objects });
+    if (socket) {
+      socket.emit("saveObjectsToDB:succeeded", docId);
+    }
+    return true;
+  } catch (error) {
+    if (socket) {
+      socket.emit("saveObjectsToDB:failed", docId);
+    }
+    return false;
+  }
+}
 
 io.on("connection", async (socket) => {
   onlineUsers[socket.id] = [];
@@ -145,6 +167,18 @@ io.on("connection", async (socket) => {
     }
   );
 
+  socket.on("saveObjectsToDB", (docId) => {
+    saveObjsToDb(docId, socket);
+  });
+
+  socket.on("saveObjectsToDB:succeeded", (docId) => {
+    socket.to(docId).emit("saveObjectsToDB:succeeded", docId);
+  });
+  
+  socket.on("saveObjectsToDB:failed", (docId) => {
+    socket.to(docId).emit("saveObjectsToDB:failed", docId);
+  });
+
   socket.on(
     "mouse:move",
     async (data: { position: position; roomId: string }) => {
@@ -191,13 +225,20 @@ io.on("connection", async (socket) => {
   socket.on("disconnect", async () => {
     onlineUsers[socket.id].forEach(async (docId) => {
       try {
-        const objects = await client.hGet(`room:${docId}`, "objects");
-        if (!objects) return;
-        await db
-          .collection("projects")
-          .doc(docId)
-          .update({ objects: objects || "[]" });
-        // await client.del(`room:${docId}`);
+        // const objects = await client.hGet(`room:${docId}`, "objects");
+        // if (!objects) return;
+        // await db
+        //   .collection("projects")
+        //   .doc(docId)
+        //   .update({ objects: objects || "[]" });
+        const res = await saveObjsToDb(docId, socket);
+        if (res) {
+          await client.del(`room:${docId}`);
+          // socket.emit("updation:succeeded",docId);
+        }
+        // else {
+        //   socket.emit("updation:failed",docId);
+        // }
       } catch (error) {
         console.error(error);
       }

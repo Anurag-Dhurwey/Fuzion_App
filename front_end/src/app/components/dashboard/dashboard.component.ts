@@ -28,23 +28,21 @@ import { CanvasService } from '../../services/canvas/canvas.service';
 })
 export class DashboardComponent implements OnInit {
   creatingNewProject: boolean = false;
-  projectType:'promotional'|'my' = 'my';
+  projectType: 'promotional' | 'my' = 'my';
   constructor(
     public authService: AuthService,
     private router: Router,
     public dbService: DbService,
-    public canvasService:CanvasService
-  ) {
-  }
+    public canvasService: CanvasService
+  ) {}
 
-
-  get myProject(){
-    if(this.projectType=='my'){
-      return this.dbService.projects.filter(pro=>!pro.promotional)
-    }else if(this.projectType=='promotional'){
-      return this.dbService.projects.filter(pro=>pro.promotional)
-    } else{
-      return []
+  get myProject() {
+    if (this.projectType == 'my') {
+      return this.dbService.projects.filter((pro) => !pro.promotional);
+    } else if (this.projectType == 'promotional') {
+      return this.dbService.projects.filter((pro) => pro.promotional);
+    } else {
+      return [];
     }
   }
 
@@ -62,7 +60,10 @@ export class DashboardComponent implements OnInit {
   }
 
   async createProject() {
-    const id = await this.dbService.createProject();
+    const id = await this.dbService.createProject(
+      this.canvasService.frame.x,
+      this.canvasService.frame.y
+    );
     this.router.navigate([`/canvas/${id}`]);
   }
 
