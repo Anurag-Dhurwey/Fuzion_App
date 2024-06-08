@@ -13,3 +13,6 @@ export interface Layout{
 }
 
 export type UpdateObjectsMethods='push' | 'reset' | 'popAndPush' | 'replace' | 'delete'
+
+
+export type PreviousCustomizationState={ _id: string; selectable: boolean; evented: boolean }

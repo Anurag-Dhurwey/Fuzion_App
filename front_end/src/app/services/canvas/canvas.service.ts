@@ -20,6 +20,7 @@ import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Layout,
+  PreviousCustomizationState,
   UpdateObjectsMethods,
   Visibility,
 } from '../../../types/canvas.service.types';
@@ -63,6 +64,12 @@ export class CanvasService {
   // selectedObj: Fab_Objects[] = [];
 
   totalChanges = new Set<string>();
+
+  recentStates: {
+    event_selectable: PreviousCustomizationState[];
+  } = {
+    event_selectable: [],
+  };
 
   private _zoom = 1;
   frame = { x: 1920, y: 1080 };
@@ -675,10 +682,11 @@ export class CanvasService {
         if (i >= 0) {
           this.canvas?.remove(this._objects[i]);
           this._objects[i] = item;
-          this.canvas?.add(this._objects[i]);
+          this.canvas?.insertAt(this._objects[i],i,false);
         }
       });
     } else if (method === 'delete') {
+      // this.canvas?.discardActiveObject();
       objs.forEach((obj) => {
         const index = this._objects.findIndex(
           (element) => element._id === obj._id
@@ -688,7 +696,7 @@ export class CanvasService {
           this._objects.splice(index, 1);
         }
       });
-      this.canvas?.discardActiveObject();
+      this.reRender()
     }
     this.canvas?.renderAll();
 
@@ -811,11 +819,15 @@ export class CanvasService {
       this.canvas.isDrawingMode = false;
     }
     if (role === 'select') {
-      this.objectCustomization(true);
+       this.objectCustomization('restore');
       this.canvas.selection = true;
+      this.recentStates.event_selectable=[]
     } else {
-      this.canvas.selection = false;
-      this.objectCustomization(false);
+       this.canvas.selection = false;
+       const state =this.objectCustomization('set', false);
+       if(!this.recentStates.event_selectable.length){
+        this.recentStates.event_selectable=state
+       }
     }
     this.tempRefObj = [];
     if (role != 'pan') {
@@ -857,13 +869,30 @@ export class CanvasService {
     );
   }
 
-  objectCustomization(arg: boolean) {
+  objectCustomization(method: 'restore' | 'set', arg?: boolean) {
+    const pre_state: PreviousCustomizationState[] = [];
     this.canvas?.getObjects().forEach((objs) => {
       // Prevent customization:
-      objs.selectable = arg;
-      objs.evented = arg;
+      if (method === 'set') {
+        pre_state.push({
+          _id: (objs as Fab_Objects)._id,
+          selectable: !!objs.selectable ,
+          evented: !!objs.evented ,
+        });
+        objs.selectable = !!arg;
+        objs.evented = !!arg;
+      } else if (method === 'restore') {
+        const recent = this.recentStates.event_selectable.find(
+          (re) => re._id === (objs as Fab_Objects)._id
+        );
+        if (recent!=undefined) {
+          objs.selectable = recent.selectable;
+          objs.evented = recent.evented;
+        }
+      }
     });
     this.canvas?.renderAll();
+    return pre_state;
   }
 
   loadSVGFromString(
@@ -913,11 +942,11 @@ export class CanvasService {
         res.forEach((re) => exportable_canvas.add(re));
         exportable_canvas.requestRenderAll();
         if (format == 'jpeg' || format == 'png') {
-          cb(exportable_canvas.toDataURL({ format }))
+          cb(exportable_canvas.toDataURL({ format }));
         } else if (format == 'json') {
-          cb(exportable_canvas.toJSON(this.propertiesToInclude))
+          cb(exportable_canvas.toJSON(this.propertiesToInclude));
         } else {
-          cb('unrecognized formate')
+          cb('unrecognized formate');
         }
       },
       'fabric'
@@ -925,6 +954,5 @@ export class CanvasService {
     // this.objects.forEach((obj) => {
     //   exportable_canvas.add(obj);
     // });
-   
   }
 }
