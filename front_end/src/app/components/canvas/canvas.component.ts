@@ -28,6 +28,7 @@ import { LayerService } from '../../services/layer/layer.service';
 import { MenuPanelComponent } from './menu-panel/menu-panel.component';
 import { SettingPanelComponent } from './setting-panel/setting-panel.component';
 import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-selection-panel.component';
+import { ImportImageComponent } from '../import-image/import-image.component';
 // import { ActiveSelection } from 'fabric/fabric-impl';
 
 @Component({
@@ -45,6 +46,7 @@ import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-sel
     MenuPanelComponent,
     SettingPanelComponent,
     FrameSelectionPanelComponent,
+    ImportImageComponent,
   ],
   templateUrl: './canvas.component.html',
   styleUrl: './canvas.component.css',
@@ -313,11 +315,10 @@ export class CanvasComponent implements OnInit {
     });
     this.canvasService.canvas?.on('object:modified', (e) => {
       this.canvasService.emitReplaceObjsEventToSocket();
-      this.canvasService.oneDarrayOfSelectedObj.forEach(ob=>{
-
-        this.canvasService.totalChanges.add(ob._id)
-      })
-      // console.log('modified');
+      this.canvasService.oneDarrayOfSelectedObj.forEach((ob) => {
+        this.canvasService.totalChanges.add(ob._id);
+      });
+      console.log('modified');
     });
 
     // this.canvasService.addGrid()
@@ -384,19 +385,54 @@ export class CanvasComponent implements OnInit {
         const start2 = (path[point.index] as unknown as number[])[2];
         (path[point.index] as unknown as number[])[1] = start1 + x;
         (path[point.index] as unknown as number[])[2] = start2 + y;
+        if (this.canvasService.editingPath.clipStartEndPoint) {
+          const end1 = (path[path.length - 1] as unknown as number[])[3];
+          const end2 = (path[path.length - 1] as unknown as number[])[4];
+          (path[path.length - 1] as unknown as number[])[3] = end1 + x;
+          (path[path.length - 1] as unknown as number[])[4] = end2 + y;
+          // const end_point =
+          //   this.canvasService.quadraticCurveControlPoints[path.length - 1];
+          // end_point.left &&
+          //   this.canvasService.quadraticCurveControlPoints[path.length - 1].set(
+          //     'top',
+          //     end_point.left + x
+          //   );
+          // end_point.top &&
+          //   this.canvasService.quadraticCurveControlPoints[path.length - 1].set(
+          //     'top',
+          //     end_point.top + y
+          //   );
+        }
+      } else if (point.index === path.length - 1 && point.ctrlType == 'node') {
         const end1 = (path[path.length - 1] as unknown as number[])[3];
         const end2 = (path[path.length - 1] as unknown as number[])[4];
         (path[path.length - 1] as unknown as number[])[3] = end1 + x;
         (path[path.length - 1] as unknown as number[])[4] = end2 + y;
-      } else if (point.index === path.length - 1) {
-        return;
+        if (this.canvasService.editingPath.clipStartEndPoint) {
+          const start1 = (path[0] as unknown as number[])[1];
+          const start2 = (path[0] as unknown as number[])[2];
+          (path[0] as unknown as number[])[1] = start1 + x;
+          (path[0] as unknown as number[])[2] = start2 + y;
+
+          // const start_point = this.canvasService.quadraticCurveControlPoints[0];
+          // start_point.left &&
+          //   this.canvasService.quadraticCurveControlPoints[0].set(
+          //     'top',
+          //     start_point.left + x
+          //   );
+          // start_point.top &&
+          //   this.canvasService.quadraticCurveControlPoints[0].set(
+          //     'top',
+          //     start_point.top + y
+          //   );
+        }
       } else {
-        if (point.name == 'node') {
+        if (point.ctrlType == 'node') {
           const p1 = (path[point.index] as unknown as number[])[3];
           const p2 = (path[point.index] as unknown as number[])[4];
           (path[point.index] as unknown as number[])[3] = p1 + x;
           (path[point.index] as unknown as number[])[4] = p2 + y;
-        } else if (point.name == 'curve') {
+        } else if (point.ctrlType == 'curve') {
           const p1 = (path[point.index] as unknown as number[])[1];
           const p2 = (path[point.index] as unknown as number[])[2];
           (path[point.index] as unknown as number[])[1] = p1 + x;
@@ -408,6 +444,7 @@ export class CanvasComponent implements OnInit {
         {
           _id: this.canvasService.editingPath._id,
           pathType: this.canvasService.editingPath.pathType,
+          clipStartEndPoint: this.canvasService.editingPath.clipStartEndPoint,
         },
         'replace'
       );
@@ -457,7 +494,7 @@ export class CanvasComponent implements OnInit {
         const pen = this.canvasService
           .currentDrawingObject as unknown as fabric.Path;
         if (!pen.path) return;
-        const toEdit = pen.path as unknown as (number | string)[][];
+        const toEdit = pen.path as unknown as Fab_PathArray[];
         const midX =
           x -
           (x -
@@ -526,8 +563,7 @@ export class CanvasComponent implements OnInit {
       });
     }
     // if (this.isDrawing) this.canvasService.canvas!.selection = false;
-    const obj =
-      this.canvasService.objects[this.canvasService.objects.length - 1];
+    const obj = this.canvasService.objects[0];
     if (!obj) return;
     if (
       this.isDrawing &&
@@ -582,28 +618,10 @@ export class CanvasComponent implements OnInit {
       if (!pen?.path || pen.isPathClosed) return;
       const { x, y } = this.canvasService.canvas!.getPointer(event.e, false);
       const start = pen.path[pen.path.length - 1] as unknown as number[];
-      // this.canvasService.reRender();
-      // this.canvasService.canvas?.add(
-      //   new fabric.Line([start[3] || start[1], start[4] || start[2], x, y], {
-      //     stroke: '#81868a',
-      //     strokeWidth: 1,
-      //   })
-      // );
+
       if (this.canvasService.quadraticCurveRefLine) {
-        this.canvasService.canvas?.remove(
-          this.canvasService.quadraticCurveRefLine
-        );
-        this.canvasService.quadraticCurveRefLine =
-          this.canvasService.quadraticCurveRefLine = new fabric.Line(
-            [start[3] || start[1], start[4] || start[2], x, y],
-            {
-              stroke: '#81868a',
-              strokeWidth: 1,
-            }
-          );
-        this.canvasService.canvas?.add(
-          this.canvasService.quadraticCurveRefLine
-        );
+        this.canvasService.quadraticCurveRefLine.set({x1:start[3] || start[1], y1:start[4] || start[2], x2:x, y2:y})
+        this.canvasService.canvas?.requestRenderAll()
       } else {
         this.canvasService.quadraticCurveRefLine = new fabric.Line(
           [start[3] || start[1], start[4] || start[2], x, y],
@@ -616,6 +634,14 @@ export class CanvasComponent implements OnInit {
           this.canvasService.quadraticCurveRefLine
         );
       }
+    } else if (
+      this.isPathControlPointMoving &&
+      this.canvasService.quadraticCurveRefLine
+    ) {
+      this.canvasService.canvas?.remove(
+        this.canvasService.quadraticCurveRefLine
+      );
+      this.canvasService.quadraticCurveRefLine=null
     }
 
     if (

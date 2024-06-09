@@ -88,12 +88,16 @@
   }
 </style>
 
-
-
-
 <main class="main">
   @if(is_goodToGo&& canvasService.layout.visibility.export_panel){
   <app-export />
+  } @if(is_goodToGo&& canvasService.layout.visibility.import_image_panel){
+  <app-import-image
+    (close)="
+      canvasService.toggleLayoutVisibility(['import_image_panel'], false);
+      canvasService.setRole('select')
+    "
+  />
   } @if( is_goodToGo&& canvasService.layout.visibility.layer_panel){
   <app-layer-panel
     [layers]="canvasService.objects"
@@ -152,9 +156,7 @@
       >
         arrow_forward_ios
       </button>
-      }@else {
-     
-      } @if(is_goodToGo&& canvasService.layout.visibility.tool_panel){
+      }@else { } @if(is_goodToGo&& canvasService.layout.visibility.tool_panel){
       <app-tool-bar />
       }
       <button
@@ -190,7 +192,6 @@
   @if(is_goodToGo&& canvasService.layout.visibility.property_panel){
   <app-property-panel />
   }
-  
   @if(canvasService.layout.visibility.setting_panel||canvasService.layout.visibility.menu_panel||canvasService.layout.visibility.frame_selection_panel){
   <section
     style="
@@ -229,7 +230,7 @@
   }
 </main>
 @if (!is_goodToGo) {
-  <div class="loader">
-    <h3>Connecting to server</h3>
-  </div>
+<div class="loader">
+  <h3>Connecting to server</h3>
+</div>
 }

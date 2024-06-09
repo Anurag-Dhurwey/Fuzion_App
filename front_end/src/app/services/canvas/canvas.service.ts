@@ -12,7 +12,6 @@ import {
   Roles,
   Fab_PathArray,
   Fab_Path,
-  PropertiesToInclude,
   QuadraticCurveControlPoint,
 } from '../../../types/app.types';
 import { v4 } from 'uuid';
@@ -21,17 +20,19 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   Layout,
   PreviousCustomizationState,
+  PropertiesToInclude,
   UpdateObjectsMethods,
   Visibility,
 } from '../../../types/canvas.service.types';
 import { doc, updateDoc } from 'firebase/firestore';
 import { DbService } from '../db/db.service';
+import { propertiesToInclude } from '../../constants';
 // import { AuthService } from '../auth/auth.service';
 @Injectable({
   providedIn: 'root',
 })
 export class CanvasService {
-  propertiesToInclude = ['_id', 'type'];
+  // propertiesToInclude = ['_id', 'type','pathType','clipStartEndPoint'];
   private _role: Roles = 'select';
   private _objects: Fab_Objects[] = [];
   canvas: fabric.Canvas | undefined;
@@ -82,6 +83,7 @@ export class CanvasService {
       menu_panel: false,
       export_panel: false,
       frame_selection_panel: !this.frame.x && !this.frame.x,
+      import_image_panel:false
     },
   };
   constructor(
@@ -171,11 +173,11 @@ export class CanvasService {
   }
 
   addQuadraticCurveControlPoints(path: Fab_Path) {
-    this.quadraticCurveControlPoints = [];
+    this.removeQuadraticCurveControlPoints()
     this.getTransformedPoints(path).forEach((point, i) => {
-      if (i == path.path!.length - 1) {
-        return;
-      }
+      // if (i == path.path!.length - 1) {
+      //   return;
+      // }
       if (point[0] === 'M' || point[0] === 'L') {
         const circle = new fabric.Circle({
           left: point[1],
@@ -186,7 +188,7 @@ export class CanvasService {
           hasBorders: false,
           excludeFromExport: true,
         }) as QuadraticCurveControlPoint;
-        circle.name = 'node';
+        circle.ctrlType = 'node';
         circle.index = i;
         circle.ctrlOf = path._id;
 
@@ -201,7 +203,7 @@ export class CanvasService {
           hasBorders: false,
           excludeFromExport: true,
         }) as QuadraticCurveControlPoint;
-        circle.name = 'curve';
+        circle.ctrlType = 'curve';
         circle.index = i;
         circle.ctrlOf = path._id;
 
@@ -215,7 +217,7 @@ export class CanvasService {
           hasBorders: false,
           excludeFromExport: true,
         }) as QuadraticCurveControlPoint;
-        circle2.name = 'node';
+        circle2.ctrlType = 'node';
         circle2.index = i;
         circle2.ctrlOf = path._id;
 
@@ -227,6 +229,7 @@ export class CanvasService {
     });
     this.editingPath = path;
     path.selectable = false;
+    path.evented=false;
     path.hasBorders = false;
     path.hasControls = false;
   }
@@ -237,6 +240,7 @@ export class CanvasService {
     this.quadraticCurveControlPoints = [];
     if (!this.editingPath) return;
     this.editingPath.selectable = true;
+    this.editingPath.evented = true;
     this.editingPath.hasBorders = true;
     this.editingPath.hasControls = true;
     this.editingPath = null;
@@ -297,7 +301,7 @@ export class CanvasService {
     }
     if (this.activeObjects.type == 'activeSelection') {
       const activeSe = (this.activeObjects as ActiveSelection).toObject(
-        this.propertiesToInclude
+        propertiesToInclude
       );
 
       this.enliveObjs(activeSe.objects, (objs) => {
@@ -373,6 +377,7 @@ export class CanvasService {
       menu_panel: false,
       export_panel: false,
       frame_selection_panel: !this.frame.x && !this.frame.x,
+      import_image_panel:false,
     };
   }
 
@@ -669,13 +674,13 @@ export class CanvasService {
       this.reRender();
     } else if (method === 'push') {
       objs.forEach((obj) => {
-        this._objects.push(obj);
-        this.canvas?.add(this._objects[this._objects.length - 1]);
+        this._objects.unshift(obj);
+        this.canvas?.add(this._objects[0]);
       });
     } else if (method === 'popAndPush') {
-      this.canvas?.remove(this._objects[this._objects.length - 1]);
-      this._objects[this._objects.length - 1] = objs[0];
-      this.canvas?.add(this._objects[this._objects.length - 1]);
+      this.canvas?.remove(this._objects[0]);
+      this._objects[0] = objs[0];
+      this.canvas?.add(this._objects[0]);
     } else if (method === 'replace') {
       objs.forEach((item) => {
         const i = this.objects.findIndex((obj) => obj._id == item._id);
@@ -741,13 +746,13 @@ export class CanvasService {
     const draw = (objects: Fab_Objects[]) => {
       objects.forEach((obj) => {
         if (obj.type === 'group') {
-          draw(obj._objects as Fab_Objects[]);
+          draw([...obj._objects].reverse() as Fab_Objects[]);
         } else {
           this.canvas?.add(obj);
         }
       });
     };
-    draw(this.objects);
+    draw([...this.objects].reverse());
     this.tempRefObj?.forEach((ref) => {
       this.canvas?.add(ref);
     });
@@ -772,7 +777,7 @@ export class CanvasService {
       | 'tool_panel'
       | 'setting_panel'
       | 'menu_panel'
-      | 'export_panel'
+      | 'export_panel'|'import_image_panel'
     )[],
     status?: boolean
   ) {
@@ -934,7 +939,7 @@ export class CanvasService {
       perPixelTargetFind: false,
     });
     const bojs = this.objects.map((ob) =>
-      ob.toObject(this.propertiesToInclude)
+      ob.toObject(propertiesToInclude)
     );
     fabric.util.enlivenObjects(
       bojs,
@@ -944,7 +949,7 @@ export class CanvasService {
         if (format == 'jpeg' || format == 'png') {
           cb(exportable_canvas.toDataURL({ format }));
         } else if (format == 'json') {
-          cb(exportable_canvas.toJSON(this.propertiesToInclude));
+          cb(exportable_canvas.toJSON(propertiesToInclude));
         } else {
           cb('unrecognized formate');
         }

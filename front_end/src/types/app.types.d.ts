@@ -23,23 +23,25 @@ export type Fab_Objects = (
   | (fabric.Line & { type: 'line' })
   | (fabric.Rect & { type: 'rect' })
   | (fabric.Circle & { type: 'circle' })
-  | (fabric.Image & { type: 'image' })
+  // | (fabric.Image & { type: 'image' })
+  |Fab_Image
   | (fabric.IText & { type: 'i-text' })
   | Group
 ) & {
   _id: string;
 };
-
+export type Fab_Image=(fabric.Image & { type: 'image', _id: string; })
 export type Fab_Path = fabric.Path & {
   _id: string;
   isPathClosed?: boolean;
   type: 'path';
   pathType: 'free_hand' | 'quadratic_curve';
+  clipStartEndPoint?:boolean
 };
 export type Fab_PathArray = [string, number, number, number, number];
 
 export type QuadraticCurveControlPoint = fabric.Circle & {
-  name: 'curve' | 'node';
+  ctrlType: 'curve' | 'node';
   index: number;
   ctrlOf: string;
 };
@@ -55,7 +57,7 @@ export type possibleShapeType =
 export type Position = { x: number; y: number };
 // export type Presense = { id: string; mouse: Position; expire: number };
 
-export type PropertiesToInclude = { _id: string; pathType?: string };
+// export type PropertiesToInclude = { _id: string; pathType?: string,clipStartEndPoint?:boolean };
 
 export type Fields = {
   title:

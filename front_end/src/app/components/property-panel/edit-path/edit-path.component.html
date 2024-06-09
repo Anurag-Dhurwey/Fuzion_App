@@ -1,0 +1,97 @@
+<style>
+  .propertyCard {
+    padding-bottom: 15px;
+    width: 100%;
+    height: fit-content;
+    border-bottom: 2px solid black;
+  }
+  .propertyCard > div {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    row-gap: 5px;
+    column-gap: 4px;
+  }
+  .propertyCard > div > span {
+    min-width: 49%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .propertyCard span label {
+    font-size: small;
+  }
+
+  .propertyCard span input {
+    width: 50px;
+    text-align: center;
+    background: none;
+    outline: none;
+    border: none;
+    font-size: small;
+    font-weight: bold;
+  }
+
+  /* .color_box {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 2px;
+    background: silver !important;
+    padding: 2px;
+    overflow: hidden;
+  } */
+  /* #add-remove {
+    outline: none;
+    border: none;
+    background: none;
+    font-size: large;
+    cursor: pointer;
+  } */
+</style>
+
+@for (common of editPthFields; track $index) {
+<div class="propertyCard">
+  <h6
+    style="
+      margin: 4px 0px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    "
+  >
+    <span>{{ common.title }}</span>
+  </h6>
+  <div>
+    <!-- @if(canvasService.oneDarrayOfSelectedObj.length===1){ -->
+    @for (key of common.keys; track $index) {
+    <!-- @if(isThisKeyRequired(key)){ -->
+    <span>
+      <!-- <label [for]="key.lable">
+        {{ key.lable }}
+      </label> -->
+      @if (key.inputType==='button') {
+      <button [name]="key.name" [id]="key.name" (click)="onInput($event.target)">{{ key.lable }}</button>
+      }@else if (key.inputType==='checkbox') {
+        <label [for]="key.lable">
+          {{ key.lable }}
+        </label>
+      <input
+        [type]="key.inputType"
+        [name]="key.name"
+        [id]="key.lable"
+        (input)="onInput($event.target)"
+        [checked]="editingPath.clipStartEndPoint"
+      />
+      }
+    </span>
+    }
+    <!-- } -->
+    <!-- } -->
+  </div>
+</div>
+}

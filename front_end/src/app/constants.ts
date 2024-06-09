@@ -1,0 +1,1 @@
+export const propertiesToInclude = ['_id', 'type','pathType','clipStartEndPoint','ctrlType','ctrlOf','index'];

@@ -1,19 +1,14 @@
-import {
-  Component,
-  ElementRef,
-  HostListener,
-  ViewChild,
-} from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { Roles } from '../../../types/app.types';
 import { CommonModule } from '@angular/common';
-import { Fab_Objects } from '../../../types/app.types';
-import { v4 as uuidv4, v4 } from 'uuid';
-import { fabric } from 'fabric';
+// import { Fab_Objects } from '../../../types/app.types';
+// import { v4 as uuidv4, v4 } from 'uuid';
+// import { fabric } from 'fabric';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { ExportComponent } from '../export/export.component';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { DbService } from '../../services/db/db.service';
-import { SocketService } from '../../services/socket/socket.service';
+// import { DbService } from '../../services/db/db.service';
+// import { SocketService } from '../../services/socket/socket.service';
 @Component({
   selector: 'app-tool-bar',
   standalone: true,
@@ -28,25 +23,18 @@ import { SocketService } from '../../services/socket/socket.service';
   styleUrl: './tool-bar.component.css',
 })
 export class ToolBarComponent {
-
-  @ViewChild('fileInput') fileInput: ElementRef<HTMLInputElement> | undefined;
-  @ViewChild('importInput') importInput:
-    | ElementRef<HTMLInputElement>
-    | undefined;
-
-
-    @HostListener('window:keyup', ['$event'])
-    keyUp(event: KeyboardEvent) {
-      if(event.key=='i'){
-        this.fileInput?.nativeElement.click();
-      }
+  @HostListener('window:keyup', ['$event'])
+  keyUp(event: KeyboardEvent) {
+    if (event.key == 'i') {
+      // this.canvasService.toggleLayoutVisibility(['import_image_panel'], true);
+      this.onClickRoleButton('image')
     }
-   
+  }
 
   constructor(
     public canvasService: CanvasService,
-    private socketService: SocketService,
-    private dbService: DbService
+    // private socketService: SocketService,
+    // private dbService: DbService
   ) {
     // this.store.select(appSelector).subscribe((state) => (this.app$ = state));
   }
@@ -62,41 +50,41 @@ export class ToolBarComponent {
     { role: 'image', icon: 'image' },
   ];
 
-  async onImageInput(files: FileList | null) {
-    if (files && files.length) {
-      const file = files[0];
+  // async onImageInput(files: FileList | null) {
+  //   if (files && files.length) {
+  //     const file = files[0];
 
-      if (this.socketService.socket?.connected) {
-        const img = document.createElement('img');
-        img.onload = () => {
-          const imgInstance = new fabric.Image(img, {
-            left: 200,
-            top: 200,
-          }) as fabric.Image & { type: 'image'; _id: string };
-          imgInstance._id = v4();
-          this.canvasService.updateObjects(imgInstance, 'push');
-        };
-        img.src = await this.dbService.uploadImage(file);
-      } else {
-        const reader = new FileReader();
-        reader.onload = () => {
-          typeof reader.result === 'string' &&
-            fabric.Image?.fromURL(reader.result, (imgObj) => {
-              const object = imgObj as Fab_Objects;
-              object._id = uuidv4();
-              this.canvasService.updateObjects(object, 'push');
-            });
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-  }
+  //     if (this.socketService.socket?.connected) {
+  //       const img = document.createElement('img');
+  //       img.onload = () => {
+  //         const imgInstance = new fabric.Image(img, {
+  //           left: 200,
+  //           top: 200,
+  //         }) as fabric.Image & { type: 'image'; _id: string };
+  //         imgInstance._id = v4();
+  //         this.canvasService.updateObjects(imgInstance, 'push');
+  //       };
+  //       img.src = await this.dbService.uploadImage(file);
+  //     } else {
+  //       const reader = new FileReader();
+  //       reader.onload = () => {
+  //         typeof reader.result === 'string' &&
+  //           fabric.Image?.fromURL(reader.result, (imgObj) => {
+  //             const object = imgObj as Fab_Objects;
+  //             object._id = uuidv4();
+  //             this.canvasService.updateObjects(object, 'push');
+  //           });
+  //       };
+  //       reader.readAsDataURL(file);
+  //     }
+  //   }
+  // }
 
   onClickRoleButton(role: Roles) {
-    this.canvasService.setRole(role)
+    this.canvasService.setRole(role);
     if (role === 'image') {
-      this.fileInput?.nativeElement.click();
+      // this.fileInput?.nativeElement.click();
+      this.canvasService.toggleLayoutVisibility(['import_image_panel'], true);
     }
-   
   }
 }

@@ -1,0 +1,129 @@
+<style>
+  .main_panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 11;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(1, 116, 142, 0.616);
+  }
+
+  .form {
+    z-index: 10;
+    background-color: lightgray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    column-gap: 10px;
+    flex-wrap: wrap;
+    border-radius: 10px;
+    position: relative;
+  }
+  .form input {
+    padding: 5px 10px;
+    width: 290px;
+  }
+  .form button {
+    padding: 5px 10px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .form #filetype {
+    width: 100px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+
+  .closeBtn {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .closeBtn > .closeIcon {
+    font-size: larger;
+  }
+</style>
+<div class="main_panel">
+  <div
+    class="form"
+    [style]="{
+      width: window.innerWidth / 2 + 'px',
+      height: window.innerHeight / 2 + 'px'
+    }"
+    style="min-width: 320px"
+  >
+    <div
+      style="
+        width: 100%;
+        height: fit-content;
+        padding: 5px 2px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        column-gap: 10px;
+      "
+    >
+      <button
+        (click)="inputType = 1"
+        [style]="{ backgroundColor: inputType == 1 ? 'gray' : '' }"
+      >
+        Brows
+      </button>
+      <button
+        (click)="inputType = 2"
+        [style]="{ backgroundColor: inputType == 2 ? 'gray' : '' }"
+      >
+        Link
+      </button>
+    </div>
+
+    @if(imageObject&&imageObject.getSrc()&&imageObject.height &&
+    imageObject.width){
+    <img
+      [src]="imageObject.getSrc()"
+      alt="preview"
+      [style]="{
+        width: 100 + 'px',
+        height: 100 * (imageObject.height / imageObject.width) + 'px'
+      }"
+    />
+    } @if(inputType==1){
+
+    <input
+      type="file"
+      name="fileInput"
+      id="fileInput"
+      #fileInput
+      accept="image/*"
+      (change)="onImageInput(fileInput.files)"
+    />
+    }@else if (inputType==2) {
+
+    <input type="text" id="link" placeholder="link" [formControl]="link" />
+    <button (click)="loadImageLink()">Preview</button>
+    }
+
+    <button (click)="openBtn()">Open</button>
+
+    <!-- <select name="" id="filetype" [formControl]="file_type">
+        <option value="png">PNG</option>
+        <option value="jpeg">JPG</option>
+        <option value="pdf">PDF</option>
+        <option value="JSON">JSON</option>
+      </select> -->
+    <!-- <button (click)="exportFile()">Export</button>
+      <button (click)="close(false)">cancle</button> -->
+    <button class="material-symbols-outlined closeBtn" (click)="close.emit()">
+      <!-- <IoClose className={styles.closeIcon} /> -->
+      close
+    </button>
+  </div>
+</div>
