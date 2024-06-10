@@ -15,48 +15,58 @@ import { AuthService } from '../../services/auth/auth.service';
 export class PreviewCardComponent implements OnInit {
   @Input() project: Project | undefined;
   @Input() id: string = v4();
-  @Input() dimension: { width: number; height: number } = {
-    width: 250,
-    height: 150,
-  };
+  // @Input() dimension: { width: number; height: number } = {
+  //   width: 250,
+  //   height: 150,
+  // };
   @Input() admin_controls: boolean = false;
-  canvas: fabric.Canvas | undefined;
+  // canvas: fabric.Canvas | undefined;
+
+  _imageToPreview: string = '';
 
   constructor(private _dbService: DbService, public authService: AuthService) {}
   ngOnInit(): void {}
   ngAfterViewInit(): void {
-    const board = document.getElementById(this.id) as HTMLCanvasElement;
-    board.width = this.dimension.width;
-    board.height = this.dimension.height;
-    this.canvas = new fabric.Canvas(board, {
-      backgroundColor: 'dimgray',
-      selection: false,
-      skipTargetFind: true,
-      defaultCursor: 'pointer',
-      allowTouchScrolling: false,
-    });
+    if (!this.project) return;
+    // const board = document.getElementById(this.id) as HTMLCanvasElement;
+    const board = document.createElement('canvas');
+    board.width = this.project.width;
+    board.height = this.project.height;
+    const canvas = new fabric.StaticCanvas(board, {});
 
     if (this.project?.objects && typeof this.project.objects === 'string') {
       fabric.util.enlivenObjects(
         JSON.parse(this.project.objects),
         (live: any) => {
           live?.forEach((obj: Fab_Objects) => {
-            const scalY = this.dimension.height / this.project!.height;
-            const scalX = this.dimension.width / this.project!.width;
-            obj.scaleToHeight(this.dimension.height * scalY);
-            obj.scaleToWidth(this.dimension.width * scalX);
-            obj.left = obj.left! * scalX;
-            obj.top = obj.top! * scalY;
-            this.canvas?.add(obj);
-            this.canvas?.renderAll();
+            // const scalY = this.dimension.height / this.project!.height;
+            // const scalX = this.dimension.width / this.project!.width;
+            // obj.scaleToHeight(this.dimension.height * scalY);
+            // obj.scaleToWidth(this.dimension.width * scalX);
+            // obj.left = obj.left! * scalX;
+            // obj.top = obj.top! * scalY;
+            canvas?.add(obj);
           });
+          // canvas?.add(live);
+          canvas?.requestRenderAll();
+          const src = canvas.toDataURL({ format: 'png' });
+          this.seImageToPreview(src);
         },
         'fabric'
       );
     }
   }
+
+  get imageToPreview() {
+    return this._imageToPreview;
+  }
+
   deleteProject() {
     this._dbService.deleteProject(this.id);
+  }
+
+  seImageToPreview(src: string) {
+    this._imageToPreview = src;
   }
 
   markPromotional() {

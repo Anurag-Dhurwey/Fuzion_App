@@ -4,12 +4,13 @@ import { SocketService } from '../../services/socket/socket.service';
 import { DbService } from '../../services/db/db.service';
 import { fabric } from 'fabric';
 import { v4 } from 'uuid';
-import { Fab_Image} from '../../../types/app.types';
+import { Fab_Image } from '../../../types/app.types';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { AsyncPipe } from '@angular/common';
 @Component({
   selector: 'app-import-image',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule,AsyncPipe],
   templateUrl: './import-image.component.html',
   styleUrl: './import-image.component.css',
 })
@@ -19,11 +20,17 @@ export class ImportImageComponent {
   constructor(
     public canvasService: CanvasService,
     private socketService: SocketService,
-    private dbService: DbService
+    public dbService: DbService
   ) {}
 
+  uploadStatus: {
+    status: 'uploading' | '' | 'success' | 'failed';
+    percent?: number;
+    message: string;
+  } = { status: '', message: '' };
+
   imageObject: null | Fab_Image = null;
-  inputType: 1 | 2 = 1;
+  inputType: 1 | 2 |3= 1;
   link = new FormControl('');
 
   get window() {
@@ -35,17 +42,50 @@ export class ImportImageComponent {
       const file = files[0];
 
       if (this.socketService.socket?.connected) {
+        if (file.size >= 5 * 1024 * 1024) {
+          alert('File size should be less than 5MB');
+          return;
+        }
         const img = document.createElement('img');
-        img.onload = () => {
-          const imgInstance = new fabric.Image(img, {
-            left: 200,
-            top: 200,
-          }) as fabric.Image & { type: 'image'; _id: string };
-          imgInstance._id = v4();
-          // this.canvasService.updateObjects(imgInstance, 'push');
-          this.imageObject = imgInstance;
+
+        const onUploading = (percent: number) => {
+          this.uploadStatus.percent = Math.floor(percent);
+          this.uploadStatus.status = 'uploading';
         };
-        img.src = await this.dbService.uploadImage(file);
+
+        const onUploadSuccess = (src: string) => {
+          img.src = src;
+          this.uploadStatus.status = 'success';
+          this.uploadStatus.message = 'success';
+        };
+        const onUploadError = (message: string) => {
+          this.uploadStatus.message = message;
+          this.uploadStatus.status = 'failed';
+        };
+
+        try {
+          img.onload = () => {
+            const imgInstance = new fabric.Image(img, {
+              left: 200,
+              top: 200,
+            }) as fabric.Image & { type: 'image'; _id: string };
+            imgInstance._id = v4();
+            // this.canvasService.updateObjects(imgInstance, 'push');
+            this.imageObject = imgInstance;
+            this.uploadStatus = { status: 'success', message: 'Success' };
+          };
+          this.uploadStatus = { status: 'uploading', message: 'uploading' };
+          await this.dbService.uploadImage(
+            file,
+            onUploading,
+            onUploadSuccess,
+            onUploadError
+          );
+          // img.src = src;
+        } catch (error: any) {
+          alert('Unable to Upload image on Server: try another method');
+          this.uploadStatus = { status: 'failed', message: error.message };
+        }
       } else {
         const reader = new FileReader();
         reader.onload = () => {
@@ -62,8 +102,8 @@ export class ImportImageComponent {
     }
   }
 
-  async loadImageLink() {
-    if (!this.link.value?.toString().length) {
+  async loadImageLink(link:string|null) {
+    if (!link) {
       alert('Link is required');
       return;
     }
@@ -78,7 +118,7 @@ export class ImportImageComponent {
       // this.canvasService.updateObjects(imgInstance, 'push');
       this.imageObject = imgInstance;
     };
-    img.src = this.link.value;
+    img.src = link;
   }
 
   openBtn() {

@@ -46,7 +46,7 @@
     }
   </span>
   }
-  <div
+  <!-- <div
     style="
       position: absolute;
       top: 0;
@@ -59,8 +59,19 @@
     "
     [routerLink]="admin_controls?'/canvas/' + id:'/canvas/demo/' + id"
     
-  ></div>
-  <canvas style="z-index: 0" [id]="id"></canvas>
+  ></div> -->
+  <!-- @if (imageToPreview.length) { -->
+
+  <img
+    [src]="imageToPreview"
+    style="object-fit: contain; cursor: pointer;"
+    width="250px"
+    height="150px"
+    alt="imageToPreview"
+    [routerLink]="admin_controls ? '/canvas/' + id : '/canvas/demo/' + id"
+  />
+  <!-- } -->
+  <!-- <canvas style="z-index: 0" [id]="id"></canvas> -->
 </div>
 
 <!-- <button style="z-index: 10;" (click)="test()">test</button> -->

@@ -225,20 +225,11 @@ io.on("connection", async (socket) => {
   socket.on("disconnect", async () => {
     onlineUsers[socket.id].forEach(async (docId) => {
       try {
-        // const objects = await client.hGet(`room:${docId}`, "objects");
-        // if (!objects) return;
-        // await db
-        //   .collection("projects")
-        //   .doc(docId)
-        //   .update({ objects: objects || "[]" });
         const res = await saveObjsToDb(docId, socket);
         if (res) {
-          await client.del(`room:${docId}`);
-          // socket.emit("updation:succeeded",docId);
+          socket.to(docId).emit("updation:succeeded",docId);
+          // await client.del(`room:${docId}`);
         }
-        // else {
-        //   socket.emit("updation:failed",docId);
-        // }
       } catch (error) {
         console.error(error);
       }

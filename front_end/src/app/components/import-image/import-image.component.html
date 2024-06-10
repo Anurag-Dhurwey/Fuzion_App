@@ -58,16 +58,18 @@
       width: window.innerWidth / 2 + 'px',
       height: window.innerHeight / 2 + 'px'
     }"
-    style="min-width: 320px"
+    style="min-width: 320px;min-height: 400px;"
   >
+    @if(uploadStatus.status!='uploading'){
     <div
       style="
         width: 100%;
-        height: fit-content;
+        height: 10%;
         padding: 5px 2px;
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-wrap: wrap;
         column-gap: 10px;
       "
     >
@@ -83,47 +85,89 @@
       >
         Link
       </button>
+      <button
+        (click)="inputType = 3; dbService.getMyImages()"
+        [style]="{ backgroundColor: inputType == 3 ? 'gray' : '' }"
+      >
+        Uploads
+      </button>
+    </div>
+    <div
+      style="
+        width: 100%;
+        height: 80%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+      "
+    >
+      @if(imageObject&&imageObject.height && imageObject.width&&inputType!=3){
+      <img
+        [src]="imageObject.getSrc()"
+        alt="preview"
+        [style]="{
+          width: 100 + 'px',
+          height: 100 * (imageObject.height / imageObject.width) + 'px'
+        }"
+      />
+      } @if(inputType==1){
+
+      <input
+        type="file"
+        name="fileInput"
+        id="fileInput"
+        #fileInput
+        accept="image/*"
+        (change)="onImageInput(fileInput.files)"
+      />
+      } @else if (inputType==2) {
+
+      <input type="text" id="link" placeholder="link" [formControl]="link" />
+      <button (click)="loadImageLink(link.value)">Preview</button>
+      } @else if (inputType==3) {
+      <div
+        style="
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-wrap: wrap;
+          row-gap: 5px;
+          column-gap: 5px;
+          width: 100%;
+          height: 100%;
+        "
+      >
+        @for (img of dbService.images$|async; track $index) {
+        <img
+          [src]="img"
+          [alt]="img + $index"
+          style="
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            border-radius: 10px;
+          "
+          [style]="{
+            border: imageObject?.getSrc()==img ? '3px solid blue' : '3px solid gray'
+          }"
+          (click)="loadImageLink(img)"
+        />
+        }
+      </div>
+      }
+    </div>
+    <div style="width: 100%; height: 10%;">
+      @if (imageObject) {
+      <button style="width: 100%; height: 100%;" (click)="openBtn()">Open</button>
+      }
     </div>
 
-    @if(imageObject&&imageObject.getSrc()&&imageObject.height &&
-    imageObject.width){
-    <img
-      [src]="imageObject.getSrc()"
-      alt="preview"
-      [style]="{
-        width: 100 + 'px',
-        height: 100 * (imageObject.height / imageObject.width) + 'px'
-      }"
-    />
-    } @if(inputType==1){
-
-    <input
-      type="file"
-      name="fileInput"
-      id="fileInput"
-      #fileInput
-      accept="image/*"
-      (change)="onImageInput(fileInput.files)"
-    />
-    }@else if (inputType==2) {
-
-    <input type="text" id="link" placeholder="link" [formControl]="link" />
-    <button (click)="loadImageLink()">Preview</button>
-    }
-
-    <button (click)="openBtn()">Open</button>
-
-    <!-- <select name="" id="filetype" [formControl]="file_type">
-        <option value="png">PNG</option>
-        <option value="jpeg">JPG</option>
-        <option value="pdf">PDF</option>
-        <option value="JSON">JSON</option>
-      </select> -->
-    <!-- <button (click)="exportFile()">Export</button>
-      <button (click)="close(false)">cancle</button> -->
     <button class="material-symbols-outlined closeBtn" (click)="close.emit()">
-      <!-- <IoClose className={styles.closeIcon} /> -->
       close
     </button>
+    }@else {
+    <p>Uploading : {{ uploadStatus.percent }} %</p>
+    }
   </div>
 </div>

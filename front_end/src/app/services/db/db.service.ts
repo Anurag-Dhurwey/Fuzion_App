@@ -6,6 +6,7 @@ import {
   ref,
   uploadBytesResumable,
   getDownloadURL,
+  listAll,
 } from 'firebase/storage';
 
 import {
@@ -24,11 +25,12 @@ import {
 // import { getAnalytics } from 'firebase/analytics';
 import { environment } from '../../../../environment';
 // front_end/environment.ts
-import { SocketService } from '../socket/socket.service';
+// import { SocketService } from '../socket/socket.service';
 import { Project } from '../../../types/app.types';
 import { v4 } from 'uuid';
-import { CanvasService } from '../canvas/canvas.service';
-
+// import { CanvasService } from '../canvas/canvas.service';
+import { Observable, of, from } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 @Injectable({
   providedIn: 'root',
 })
@@ -39,10 +41,9 @@ export class DbService {
   storage;
   private _projects: Project[] = [];
   private _promotional_projects: Project[] = [];
-  constructor(
-    // private socketService: SocketService,
-    // private canvasService: CanvasService
-  ) {
+   images$: Observable<string[]> = new Observable();
+   imageRequestDone:boolean=false
+  constructor() { // private canvasService: CanvasService // private socketService: SocketService,
     this.app = initializeApp(environment.firebaseConfig);
     this.store = getFirestore(this.app);
     this.auth = getAuth(this.app);
@@ -54,7 +55,7 @@ export class DbService {
   get promotional_projects() {
     return this._promotional_projects;
   }
-  async createProject(width:number,height:number) {
+  async createProject(width: number, height: number) {
     if (!this.auth.currentUser) return;
     try {
       const pro = {
@@ -163,25 +164,94 @@ export class DbService {
     return res;
   }
 
+  getMyImages() {
+    if(this.imageRequestDone){
+      return
+    }
+    if (this.auth.currentUser) {
+      const storageRef = ref(
+        this.storage,
+        `images/${this.auth.currentUser.uid}`
+      );
+      this.images$ = from(listAll(storageRef)).pipe(
+        switchMap((result) => {
+          const downloadUrls = result.items.map((item) => getDownloadURL(item));
+          return from(Promise.all(downloadUrls)); // Resolve all promises to strings
+        }),
+        map((downloadUrls) => downloadUrls) // Ensure type safety
+      );
+      this.imageRequestDone=true
+    } else {
+      this.images$ = of([]); // Return an empty array if no user is logged in
+    }
+    // console.log(this.images$.pipe.length)
+  }
+
+  get myImages() {
+    // if (!this.images$.pipe.length) {
+    //   this.getMyImages();
+    // }
+    console.log(this.images$.pipe.length)
+    return this.images$;
+  }
+
   async updateObjects(objects: string, id: string) {
     try {
       await updateDoc(doc(this.store, 'projects', id), {
         objects,
       });
-      return true
+      return true;
     } catch (error) {
       console.error(error);
-      return false
+      return false;
     }
   }
-  async uploadImage(img: File) {
+  async uploadImage(
+    img: File,
+    onStateChange: (percent: number) => void,
+    onSuccess: (src: string) => void,
+    onError: (error: string) => void
+  ) {
+    if (!this.auth.currentUser) {
+      onError('unauthenticated request');
+      return;
+    }
+    if (img.size >= 5 * 1024 * 1024) {
+      onError('File size should be less than 5MB');
+      return;
+    }
     const metadata = {
       contentType: img.type,
     };
 
-    const storageRef = ref(this.storage, 'images/' + v4());
+    const storageRef = ref(
+      this.storage,
+      `images/${this.auth.currentUser.uid}/${v4()}`
+    );
     const uploadTask = uploadBytesResumable(storageRef, img, metadata);
-    return await getDownloadURL(uploadTask.snapshot.ref);
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        onStateChange(progress);
+      },
+      (error) => {
+        // Handle unsuccessful uploads
+        console.log(error);
+        onError(error.message);
+      },
+      () => {
+        // Handle successful uploads on complete
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          // this.downloadURL = downloadURL;
+          console.log({ downloadURL });
+          onSuccess(downloadURL);
+        });
+      }
+    );
+    // return await getDownloadURL(uploadTask.snapshot.ref);
   }
 
   setProjects(

@@ -934,7 +934,7 @@ export class CanvasService {
     canvas.id = 'exportable_canvas';
     canvas.width = this.frame.x;
     canvas.height = this.frame.y;
-    const exportable_canvas = new fabric.Canvas(canvas, {
+    const exportable_canvas = new fabric.StaticCanvas(canvas, {
       selection: false,
       perPixelTargetFind: false,
     });
