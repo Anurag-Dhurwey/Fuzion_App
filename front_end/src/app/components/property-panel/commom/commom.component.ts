@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import {
+  Fab_Objects,
+  Fab_Path,
   Fields,
   Keys,
   PossibleKeysOfObject,
@@ -258,18 +260,49 @@ export class CommomComponent {
     },
   };
 
-  // lockFields: { title: 'Lock'; keys: Keys[] } = {
-  //   title: 'Lock',
-  //   keys: [
-  //     this.fields.lockMovementX,
-  //     this.fields.lockMovementY,
-  //     this.fields.lockScalingX,
-  //     this.fields.lockScalingY,
-  //     this.fields.lockRotation,
-  //   ],
-  // };
-
   commonFields: Fields[] = [
+    {
+      title: 'Position',
+      keys: [this.fields.top, this.fields.left],
+    },
+    {
+      title: 'Size',
+      keys: [
+        this.fields.width,
+        this.fields.height,
+        this.fields.scaleX,
+        this.fields.scaleY,
+        this.fields.angle,
+      ],
+    },
+
+    {
+      title: 'Stroke',
+      keys: [this.fields.stroke, this.fields.strokeWidth],
+      buttons: {
+        add: this.addBtn,
+        remove: this.removeBtn,
+      },
+    },
+    {
+      title: 'Fill',
+      keys: [this.fields.fill],
+      buttons: {
+        add: this.addBtn,
+        remove: this.removeBtn,
+      },
+    },
+    {
+      title: 'Flip',
+      keys: [this.fields.flipX, this.fields.flipY],
+    },
+    {
+      title: 'Others',
+      keys: [this.fields.opacity],
+    },
+    // this.lockFields,
+  ];
+  quadratic_curve: Fields[] = [
     {
       title: 'Position',
       keys: [this.fields.top, this.fields.left],
@@ -580,6 +613,37 @@ export class CommomComponent {
     // this.lockFields,
   ];
 
+  buttons: {
+    quadratic_curve: {
+      lable: string;
+      inputBox_type: 'button';
+      emit: () => void;
+    }[];
+  } = {
+    quadratic_curve: [
+      {
+        lable: 'Edit Path',
+        inputBox_type: 'button',
+        emit: () => {
+          this.canvasService.addQuadraticCurveControlPoints();
+        },
+      },
+    ],
+  };
+
+  getButtonsList() {
+    const objs = this.canvasService.oneDarrayOfSelectedObj;
+    if (
+      objs.length &&
+      objs[0].type === 'path' &&
+      objs[0].pathType == 'quadratic_curve'
+    ) {
+      return this.buttons.quadratic_curve;
+    } else {
+      return [];
+    }
+  }
+
   getFieldsList(type?: possibleShapeType | 'activeSelection') {
     if (!type) {
       if (
@@ -597,6 +661,10 @@ export class CommomComponent {
     } else if (type == 'rect') {
       return this.rectFields;
     } else if (type == 'path') {
+      // if((this.canvasService.activeObjects as Fab_Path).pathType==='quadratic_curve'){
+      //   return [...this.commonFields];
+
+      // }
       return this.commonFields;
     } else if (type == 'image') {
       return this.commonFields;

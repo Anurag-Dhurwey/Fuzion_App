@@ -83,7 +83,7 @@ export class CanvasService {
       menu_panel: false,
       export_panel: false,
       frame_selection_panel: !this.frame.x && !this.frame.x,
-      import_image_panel:false
+      import_image_panel: false,
     },
   };
   constructor(
@@ -172,9 +172,19 @@ export class CanvasService {
     return fabric.util.transformPoint({ x, y } as fabric.Point, matrix);
   }
 
-  addQuadraticCurveControlPoints(path: Fab_Path) {
-    this.removeQuadraticCurveControlPoints()
+  addQuadraticCurveControlPoints(path?: Fab_Path) {
+    if (
+      !path &&
+      (this.activeObjects as Fab_Path).pathType === 'quadratic_curve'
+    ) {
+      path = this.activeObjects as Fab_Path;
+    }
+
+    if (!path) return;
+    this.removeQuadraticCurveControlPoints();
+
     this.getTransformedPoints(path).forEach((point, i) => {
+      if (!path) return;
       // if (i == path.path!.length - 1) {
       //   return;
       // }
@@ -229,7 +239,7 @@ export class CanvasService {
     });
     this.editingPath = path;
     path.selectable = false;
-    path.evented=false;
+    path.evented = false;
     path.hasBorders = false;
     path.hasControls = false;
   }
@@ -377,7 +387,7 @@ export class CanvasService {
       menu_panel: false,
       export_panel: false,
       frame_selection_panel: !this.frame.x && !this.frame.x,
-      import_image_panel:false,
+      import_image_panel: false,
     };
   }
 
@@ -648,6 +658,38 @@ export class CanvasService {
     );
   }
 
+  getObjectById(id: string): Fab_Objects | undefined {
+    const found = (objs: Fab_Objects[]): Fab_Objects | undefined => {
+      for (const obj of objs) {
+        if (obj._id == id) {
+          return obj;
+        }
+
+        if (obj.type == 'group') {
+          const f = found(obj._objects);
+          if (f) {
+            return f;
+          }
+        }
+      }
+      return;
+    };
+
+    for (const obj of this.objects) {
+      if (obj._id == id) {
+        return obj;
+      }
+
+      if (obj.type == 'group') {
+        const f = found(obj._objects);
+        if (f) {
+          return f;
+        }
+      }
+    }
+    return;
+  }
+
   //  async saveObjectsToDb(){
   // if(this.socketService.socket?.connected){
   //  try {
@@ -687,7 +729,7 @@ export class CanvasService {
         if (i >= 0) {
           this.canvas?.remove(this._objects[i]);
           this._objects[i] = item;
-          this.canvas?.insertAt(this._objects[i],i,false);
+          this.canvas?.insertAt(this._objects[i], i, false);
         }
       });
     } else if (method === 'delete') {
@@ -701,7 +743,7 @@ export class CanvasService {
           this._objects.splice(index, 1);
         }
       });
-      this.reRender()
+      this.reRender();
     }
     this.canvas?.renderAll();
 
@@ -777,7 +819,8 @@ export class CanvasService {
       | 'tool_panel'
       | 'setting_panel'
       | 'menu_panel'
-      | 'export_panel'|'import_image_panel'
+      | 'export_panel'
+      | 'import_image_panel'
     )[],
     status?: boolean
   ) {
@@ -824,15 +867,15 @@ export class CanvasService {
       this.canvas.isDrawingMode = false;
     }
     if (role === 'select') {
-       this.objectCustomization('restore');
+      this.objectCustomization('restore');
       this.canvas.selection = true;
-      this.recentStates.event_selectable=[]
+      this.recentStates.event_selectable = [];
     } else {
-       this.canvas.selection = false;
-       const state =this.objectCustomization('set', false);
-       if(!this.recentStates.event_selectable.length){
-        this.recentStates.event_selectable=state
-       }
+      this.canvas.selection = false;
+      const state = this.objectCustomization('set', false);
+      if (!this.recentStates.event_selectable.length) {
+        this.recentStates.event_selectable = state;
+      }
     }
     this.tempRefObj = [];
     if (role != 'pan') {
@@ -881,8 +924,8 @@ export class CanvasService {
       if (method === 'set') {
         pre_state.push({
           _id: (objs as Fab_Objects)._id,
-          selectable: !!objs.selectable ,
-          evented: !!objs.evented ,
+          selectable: !!objs.selectable,
+          evented: !!objs.evented,
         });
         objs.selectable = !!arg;
         objs.evented = !!arg;
@@ -890,7 +933,7 @@ export class CanvasService {
         const recent = this.recentStates.event_selectable.find(
           (re) => re._id === (objs as Fab_Objects)._id
         );
-        if (recent!=undefined) {
+        if (recent != undefined) {
           objs.selectable = recent.selectable;
           objs.evented = recent.evented;
         }
@@ -938,9 +981,7 @@ export class CanvasService {
       selection: false,
       perPixelTargetFind: false,
     });
-    const bojs = this.objects.map((ob) =>
-      ob.toObject(propertiesToInclude)
-    );
+    const bojs = this.objects.map((ob) => ob.toObject(propertiesToInclude));
     fabric.util.enlivenObjects(
       bojs,
       (res: fabric.Object[]) => {

@@ -1,9 +1,17 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  HostListener,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { Fab_Objects } from '../../../types/app.types';
 import { LayerPanelContextMenuComponent } from './layer-panel-context-menu/layer-panel-context-menu.component';
 
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { LayerService } from '../../services/layer/layer.service';
+// import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-layer-panel',
@@ -18,11 +26,20 @@ export class LayerPanelComponent implements OnInit {
   @Input() group_id: string | null = null;
   @Output() saveObjectsToDB = new EventEmitter<void>();
 
+  // renaming:boolean=false
+
+  // name=new FormControl('')
 
   constructor(
     public canvasService: CanvasService,
     public layerService: LayerService
   ) {}
+
+  // onRename(name:Event){
+  //   console.log('name',name.target)
+  //   this.layerService.renameLayerForm!.name=(name.target as HTMLInputElement).value
+  // }
+
 
   @HostListener('window:mouseup', ['$event'])
   mouseup(event: MouseEvent) {
@@ -41,5 +58,12 @@ export class LayerPanelComponent implements OnInit {
       this.layerService.changeOrder?.to?.group_id === group_id &&
       index === this.layerService.changeOrder.to.index
     );
+  }
+
+  onDblClick(id: string, name?: string) {
+    this.layerService.renameLayerForm = {
+      layerId: id,
+      name: name || '',
+    };
   }
 }

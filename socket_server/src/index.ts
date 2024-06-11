@@ -55,9 +55,21 @@ async function saveObjsToDb(
   }
 }
 
+
+const getSocketIdsInRoom = (room:string) => {
+  const roomObject = io.sockets.adapter.rooms.get(room);
+  // io.sockets.adapter.rooms.get(room)
+  if (roomObject) {
+    // const socketIds = r;
+    return [...roomObject];
+  }
+  return [];
+};
+
 io.on("connection", async (socket) => {
   onlineUsers[socket.id] = [];
   console.log("a user connected");
+ 
 
   socket.on("room:join", async (roomId: string) => {
     if (!roomId) return;
@@ -184,41 +196,7 @@ io.on("connection", async (socket) => {
     async (data: { position: position; roomId: string }) => {
       const { position, roomId } = data;
       if (!position || !roomId) return;
-      socket.to(roomId).emit("mouse:move", { _id: socket.id, position });
-      // try {
-      //   const presenseStr = await client.hGet(`room:${roomId}`, "presense");
-      //   if (!presenseStr) {
-      //     await client.hSet(`room:${roomId}`, {
-      //       presense: JSON.stringify([
-      //         { id: socket.id, mouse: data, expire: Date.now() },
-      //       ]),
-      //     });
-      //   } else {
-      //     let presense: { id: string; mouse: position; expire: number }[] =
-      //       JSON.parse(presenseStr);
-      //     presense = presense.filter((pre) => Date.now() - pre.expire < 10000);
-      //     const index = presense.findIndex((ele) => ele.id === socket.id);
-      //     if (index != -1) {
-      //       presense[index] = {
-      //         id: presense[index].id,
-      //         mouse: position,
-      //         expire: Date.now(),
-      //       };
-      //     } else {
-      //       presense.push({
-      //         id: socket.id,
-      //         mouse: position,
-      //         expire: Date.now(),
-      //       });
-      //     }
-      //     await client.hSet(`room:${roomId}`, {
-      //       presense: JSON.stringify(presense),
-      //     });
-      //     socket.to(roomId).emit("mouse:move", presense);
-      //   }
-      // } catch (error: any) {
-      //   console.log(error.message);
-      // }
+      socket.to(roomId).emit("mouse:move", { _id: socket.id, position })
     }
   );
 
@@ -228,7 +206,9 @@ io.on("connection", async (socket) => {
         const res = await saveObjsToDb(docId, socket);
         if (res) {
           socket.to(docId).emit("updation:succeeded",docId);
-          // await client.del(`room:${docId}`);
+          if(!getSocketIdsInRoom(docId).length){
+            await client.del(`room:${docId}`);
+          }
         }
       } catch (error) {
         console.error(error);

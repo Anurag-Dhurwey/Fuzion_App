@@ -13,7 +13,34 @@ export class LayerService {
     from: { obj_id: string; group_id: string | null; index: number };
     to?: { group_id: string | null; index: number };
   } = null;
+
+  renameLayerForm: {
+    layerId: string;
+    name: string;
+  } | null = null;
+
   constructor(public canvasService: CanvasService) {}
+
+  onLayerRename(target: EventTarget | null) {
+    if (!this.renameLayerForm || !target) return;
+    this.renameLayerForm.name = (target as HTMLInputElement).value;
+  }
+  exitLayerRenameForm() {
+    if (this.renameLayerForm && this.canvasService.activeObjects) {
+      if (this.canvasService.activeObjects.type == 'activeSelection') {
+        const group = this.canvasService.getObjectById(
+          this.renameLayerForm.layerId
+        );
+        if (group) {
+          group.name = this.renameLayerForm.name;
+        }
+      } else {
+        this.canvasService.activeObjects.name = this.renameLayerForm.name;
+      }
+    }
+    this.renameLayerForm = null;
+    // this.canvasService.canvas?.renderAll()
+  }
 
   private traveseAndSetToAll(
     objects: Fab_Objects[],
@@ -146,7 +173,6 @@ export class LayerService {
     }
 
     this.canvasService.canvas?.requestRenderAll();
-
   }
 
   setAllObjsToActiveSelection() {
@@ -233,6 +259,7 @@ export class LayerService {
         top: selectedElements[0].top,
         left: selectedElements[0].left,
       } as IGroupOptions).setCoords() as Group;
+      newGroup.name = newGroup.type;
       newGroup._objects = selectedElements;
       // Function to recursively insert the new group
       const insertGroup = (array: Fab_Objects[]): Fab_Objects[] => {

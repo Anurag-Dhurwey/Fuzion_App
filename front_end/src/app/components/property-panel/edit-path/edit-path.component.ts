@@ -53,8 +53,13 @@ export class EditPathComponent {
     },
   ];
 
+
   get editingPath() {
     return this.canvasService.editingPath as Fab_Path;
+  }
+
+  close(){
+    this.canvasService.removeQuadraticCurveControlPoints()
   }
 
   onInput(target: any) {

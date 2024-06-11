@@ -97,8 +97,11 @@
       @if(key.inputBox_type!='choose'&& key.lock){
       <span
         class="material-symbols-outlined"
-        (click)="$event.stopPropagation(); lockProperty(key.lock.key,!getValue(key.lock.key))"
-        style="font-size: small; cursor: pointer;"
+        (click)="
+          $event.stopPropagation();
+          lockProperty(key.lock.key, !getValue(key.lock.key))
+        "
+        style="font-size: small; cursor: pointer"
       >
         {{ !getValue(key.lock.key) ? "lock_open_right" : "lock" }}
       </span>
@@ -138,3 +141,26 @@
   </div>
 </div>
 }
+
+<div class="propertyCard">
+  <h6
+    style="
+      margin: 4px 0px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    "
+  >
+    Options
+  </h6>
+  @for (but of getButtonsList(); track $index) {
+  <div>
+    <span>
+      <!-- <label> {{ but.lable }}</label> -->
+      <button style="cursor: pointer;" (click)="but.emit()">{{ but.lable }}</button>
+    </span>
+  </div>
+}
+</div>
+
