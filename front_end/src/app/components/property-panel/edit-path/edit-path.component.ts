@@ -78,7 +78,7 @@ export class EditPathComponent {
   clipStartEndPoint() {
     if (!this.canvasService.editingPath) return;
     this.canvasService.editingPath.clipStartEndPoint = !this.canvasService.editingPath.clipStartEndPoint;
-    this.replacePath();
+    // this.replacePath();
   }
 
   joinStartEndPoint() {
@@ -165,6 +165,7 @@ export class EditPathComponent {
         _id: this.canvasService.editingPath._id,
         pathType: this.canvasService.editingPath.pathType,
         clipStartEndPoint: this.canvasService.editingPath.clipStartEndPoint,
+        name:this.canvasService.editingPath.name||'path'
       },
       'replace'
     );

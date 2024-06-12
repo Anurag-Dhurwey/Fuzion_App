@@ -851,6 +851,7 @@ export class CanvasService {
         {
           _id: this.currentDrawingObject._id,
           pathType: this.currentDrawingObject.pathType,
+          name:this.currentDrawingObject.name||'path'
         },
         'popAndPush'
       );

@@ -70,6 +70,8 @@ export class CanvasComponent implements OnInit {
 
   projectResFromServer: boolean = false;
 
+  private webWorker: Worker|null=null;
+
   constructor(
     public socketService: SocketService,
     public canvasService: CanvasService,
@@ -84,7 +86,7 @@ export class CanvasComponent implements OnInit {
   @HostListener('window:keydown', ['$event'])
   keyDown(event: KeyboardEvent) {
     if (this.layerService.renameLayerForm) {
-      if (['Escape','Tab','Enter'].includes(event.key) ) {
+      if (['Escape', 'Tab', 'Enter'].includes(event.key)) {
         this.layerService.exitLayerRenameForm();
       }
     }
@@ -154,11 +156,26 @@ export class CanvasComponent implements OnInit {
     }
   }
 
-  // onRoleChange() {
-  //   if (this.canvasService.editingPath) {
-  //     this.canvasService.removeQuadraticCurveControlPoints();
-  //   }
-  // }
+  createWebWorker(){
+    // createWorker(): void {
+      const workerBlob = new Blob([`
+        onmessage = function(e) {
+          const data = e.data;
+          // Perform heavy computation
+          const result = performHeavyComputation(data);
+          postMessage(result);
+        };
+  
+        function performHeavyComputation(data) {
+          // Your heavy computation logic here
+          // For demonstration, just returning the data
+          return data;
+        }
+      `], { type: 'application/javascript' });
+  
+      this.webWorker = new Worker(URL.createObjectURL(workerBlob));
+    // }
+  }
 
   private onProjectEvent = (data: Project) => {
     console.log('onProject');
@@ -304,11 +321,36 @@ export class CanvasComponent implements OnInit {
     });
     this.canvasService.canvas?.on('object:moving', (e) => {
       // this.canvasService.emitReplaceObjsEventToSocket();
-      if ((e.target! as QuadraticCurveControlPoint).ctrlOf) {
+      // let x: number = 0;
+
+      // let y: number = 0;
+      // if (e.e.clientX && e.e.clientY) {
+      //   x = e.e.movementX;
+
+      //   y = e.e.movementY;
+      // } else if (
+      //   (e.e as unknown as TouchEvent).touches?.length &&
+      //   this.lastPosX &&
+      //   this.lastPosY
+      // ) {
+      //   // this.canvasService.transformViewPort(
+      //   x = (e.e as unknown as TouchEvent).touches[0].clientX - this.lastPosX;
+      //   y = (e.e as unknown as TouchEvent).touches[0].clientY - this.lastPosY;
+      //   // );
+      //   this.lastPosX = (e.e as unknown as TouchEvent).touches[0].clientX;
+      //   this.lastPosY = (e.e as unknown as TouchEvent).touches[0].clientY;
+      // }
+      // x = e.e.movementX || (e.e as unknown as TouchEvent).touches[0].clientX;
+      // y = e.e.movementY || (e.e as unknown as TouchEvent).touches[0].clientY;
+      if (
+        (e.target as QuadraticCurveControlPoint).ctrlOf &&
+        e.target?.left &&
+        e.target?.top
+      ) {
         this.onQuadraticCurveControlPointMoving(
           e.target as QuadraticCurveControlPoint,
-          e.e.movementX,
-          e.e.movementY
+          e.target.left,
+          e.target.top
         );
       }
     });
@@ -391,13 +433,13 @@ export class CanvasComponent implements OnInit {
       if (point.index == 0) {
         // const start1 = (path[point.index] as unknown as number[])[1];
         // const start2 = (path[point.index] as unknown as number[])[2];
-        (path[point.index] as unknown as number[])[1] = point.left;
-        (path[point.index] as unknown as number[])[2] = point.top;
+        (path[point.index] as unknown as number[])[1] = x;
+        (path[point.index] as unknown as number[])[2] = y;
         if (this.canvasService.editingPath.clipStartEndPoint) {
           // const end1 = (path[path.length - 1] as unknown as number[])[3];
           // const end2 = (path[path.length - 1] as unknown as number[])[4];
-          (path[path.length - 1] as unknown as number[])[3] = point.left;
-          (path[path.length - 1] as unknown as number[])[4] = point.top;
+          (path[path.length - 1] as unknown as number[])[3] = x;
+          (path[path.length - 1] as unknown as number[])[4] = y;
           // const end_point =
           //   this.canvasService.quadraticCurveControlPoints[path.length - 1];
           // end_point.left &&
@@ -414,13 +456,13 @@ export class CanvasComponent implements OnInit {
       } else if (point.index === path.length - 1 && point.ctrlType == 'node') {
         // const end1 = (path[path.length - 1] as unknown as number[])[3];
         // const end2 = (path[path.length - 1] as unknown as number[])[4];
-        (path[path.length - 1] as unknown as number[])[3] = point.left;
-        (path[path.length - 1] as unknown as number[])[4] = point.top;
+        (path[path.length - 1] as unknown as number[])[3] = x;
+        (path[path.length - 1] as unknown as number[])[4] = y;
         if (this.canvasService.editingPath.clipStartEndPoint) {
           // const start1 = (path[0] as unknown as number[])[1];
           // const start2 = (path[0] as unknown as number[])[2];
-          (path[0] as unknown as number[])[1] = point.left;
-          (path[0] as unknown as number[])[2] = point.top;
+          (path[0] as unknown as number[])[1] = x;
+          (path[0] as unknown as number[])[2] = y;
 
           // const start_point = this.canvasService.quadraticCurveControlPoints[0];
           // start_point.left &&
@@ -438,13 +480,15 @@ export class CanvasComponent implements OnInit {
         if (point.ctrlType == 'node') {
           // const p1 = (path[point.index] as unknown as number[])[3];
           // const p2 = (path[point.index] as unknown as number[])[4];
-          (path[point.index] as unknown as number[])[3] = point.left;
-          (path[point.index] as unknown as number[])[4] = point.top;
+          // console.log(p1,' ',p2,' ',x,' ',y);
+          (path[point.index] as unknown as number[])[3] = x;
+          (path[point.index] as unknown as number[])[4] = y;
         } else if (point.ctrlType == 'curve') {
           // const p1 = (path[point.index] as unknown as number[])[1];
           // const p2 = (path[point.index] as unknown as number[])[2];
-          (path[point.index] as unknown as number[])[1] = point.left;
-          (path[point.index] as unknown as number[])[2] = point.top;
+          // console.log(p1,' ',p2,' ',x,' ',y);
+          (path[point.index] as unknown as number[])[1] = x;
+          (path[point.index] as unknown as number[])[2] = y;
         }
       }
       this.canvasService.loadSVGFromString(
@@ -453,6 +497,7 @@ export class CanvasComponent implements OnInit {
           _id: this.canvasService.editingPath._id,
           pathType: this.canvasService.editingPath.pathType,
           clipStartEndPoint: this.canvasService.editingPath.clipStartEndPoint,
+          name: this.canvasService.editingPath.name || 'path',
         },
         'replace'
       );
@@ -699,6 +744,7 @@ export class CanvasComponent implements OnInit {
             {
               _id: penPath._id,
               pathType: 'quadratic_curve',
+              name: penPath.name || 'path',
             },
             'popAndPush'
           );
