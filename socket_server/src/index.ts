@@ -41,11 +41,12 @@ async function saveObjsToDb(
 ) {
   try {
     const objects = await client.hGet(`room:${docId}`, "objects");
-    if (!objects) return;
+    if (!objects) return false;
     await db.collection("projects").doc(docId).update({ objects: objects });
     if (socket) {
       socket.emit("saveObjectsToDB:succeeded", docId);
     }
+    console.log("saved");
     return true;
   } catch (error) {
     if (socket) {
@@ -55,8 +56,7 @@ async function saveObjsToDb(
   }
 }
 
-
-const getSocketIdsInRoom = (room:string) => {
+const getSocketIdsInRoom = (room: string) => {
   const roomObject = io.sockets.adapter.rooms.get(room);
   // io.sockets.adapter.rooms.get(room)
   if (roomObject) {
@@ -69,7 +69,6 @@ const getSocketIdsInRoom = (room:string) => {
 io.on("connection", async (socket) => {
   onlineUsers[socket.id] = [];
   console.log("a user connected");
- 
 
   socket.on("room:join", async (roomId: string) => {
     if (!roomId) return;
@@ -94,9 +93,13 @@ io.on("connection", async (socket) => {
       if (pro) {
         pro.id = doc.id;
         let objects = await client.hGet(`room:${roomId}`, "objects");
-
+        // console.log({objects});
         if (objects) {
           pro.objects = objects;
+        }else{
+          await client.hSet(`room:${roomId}`, {
+            objects: pro.objects,
+          });
         }
         socket.emit("project", pro);
       }
@@ -151,15 +154,17 @@ io.on("connection", async (socket) => {
         );
         if (method == "push") {
           objects.forEach((obj) => {
-            data.push(obj);
+            data.unshift(obj);
           });
         } else if (method === "popAndPush") {
-          data[data.length - 1] = objects[0];
+          data[0] = objects[0];
         } else if (method === "replace") {
           objects.forEach((item) => {
             const i = data.findIndex((obj) => obj._id == item._id);
             if (i >= 0) {
               data[i] = item;
+            }else{
+              data.unshift(item);
             }
           });
         } else if (method == "delete") {
@@ -172,6 +177,7 @@ io.on("connection", async (socket) => {
         await client.hSet(`room:${roomId}`, {
           objects: JSON.stringify(data),
         });
+        // console.log( (await client.hGet(`room:${roomId}`, "objects")) )
         socket.to(roomId).emit("objects:modified", objects, method);
       } catch (error) {
         console.error(error);
@@ -186,7 +192,7 @@ io.on("connection", async (socket) => {
   socket.on("saveObjectsToDB:succeeded", (docId) => {
     socket.to(docId).emit("saveObjectsToDB:succeeded", docId);
   });
-  
+
   socket.on("saveObjectsToDB:failed", (docId) => {
     socket.to(docId).emit("saveObjectsToDB:failed", docId);
   });
@@ -196,7 +202,7 @@ io.on("connection", async (socket) => {
     async (data: { position: position; roomId: string }) => {
       const { position, roomId } = data;
       if (!position || !roomId) return;
-      socket.to(roomId).emit("mouse:move", { _id: socket.id, position })
+      socket.to(roomId).emit("mouse:move", { _id: socket.id, position });
     }
   );
 
@@ -205,9 +211,10 @@ io.on("connection", async (socket) => {
       try {
         const res = await saveObjsToDb(docId, socket);
         if (res) {
-          socket.to(docId).emit("updation:succeeded",docId);
-          if(!getSocketIdsInRoom(docId).length){
+          socket.to(docId).emit("updation:succeeded", docId);
+          if (!getSocketIdsInRoom(docId).length) {
             await client.del(`room:${docId}`);
+            console.log("deleted on disconnect");
           }
         }
       } catch (error) {

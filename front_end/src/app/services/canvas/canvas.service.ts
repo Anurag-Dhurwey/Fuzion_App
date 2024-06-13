@@ -730,6 +730,12 @@ export class CanvasService {
           this.canvas?.remove(this._objects[i]);
           this._objects[i] = item;
           this.canvas?.insertAt(this._objects[i], i, false);
+        } else {
+          this._objects.unshift(item);
+          this.canvas?.add(this._objects[0]);
+        }
+        if (item.type === 'path') {
+          this.reRender();
         }
       });
     } else if (method === 'delete') {
@@ -851,7 +857,7 @@ export class CanvasService {
         {
           _id: this.currentDrawingObject._id,
           pathType: this.currentDrawingObject.pathType,
-          name:this.currentDrawingObject.name||'path'
+          name: this.currentDrawingObject.name || 'path',
         },
         'popAndPush'
       );

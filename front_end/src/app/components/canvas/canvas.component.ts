@@ -179,6 +179,7 @@ export class CanvasComponent implements OnInit {
 
   private onProjectEvent = (data: Project) => {
     console.log('onProject');
+    if(this.projectResFromServer)return
     this.projectResFromServer = true;
     this.initializeCanvasSetup(data);
 
@@ -416,6 +417,19 @@ export class CanvasComponent implements OnInit {
     } else {
       this.initializeCanvasSetup();
     }
+
+    this.createWebWorker();
+    if (this.webWorker) {
+      this.webWorker.onmessage = (event) => {
+        const { type, res } = event.data as {
+          type: 'quadCtrlPointMovement';
+          res?: { x?: number; y?: number };
+        };
+       
+      };
+    }
+
+
   }
 
   onQuadraticCurveControlPointMoving(

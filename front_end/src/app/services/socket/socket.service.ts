@@ -11,6 +11,7 @@ import {
   // SocketOnEvents,
 } from '../../../types/app.types';
 import { environment } from '../../../../environment';
+import { propertiesToInclude } from '../../constants';
 @Injectable({
   providedIn: 'root',
 })
@@ -97,7 +98,7 @@ export class SocketService {
       if (!Array.isArray(objects)) {
         objects = [objects];
       }
-      objects = objects.map((obj) => obj.toObject(['_id', 'type']));
+      objects = objects.map((obj) => obj.toObject(propertiesToInclude));
       this.socket?.emit('objects:modified', { roomId, objects, method });
     },
     saveObjectsToDB_succeeded:(projectId: string)=>{
