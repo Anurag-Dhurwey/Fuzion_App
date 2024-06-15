@@ -11,11 +11,12 @@ export type Roles =
   | 'image'
   | 'text';
 
-export type Group = fabric.Group & {
+export type Fab_Group = fabric.Group & {
   _objects: Fab_Objects[];
   type: 'group';
   isMinimized?: boolean;
   _id: string;
+  isJoined?:boolean
 };
 
 export type Fab_Objects = (
@@ -25,12 +26,13 @@ export type Fab_Objects = (
   | (fabric.Circle & { type: 'circle' })
   // | (fabric.Image & { type: 'image' })
   |Fab_Image
-  | (fabric.IText & { type: 'i-text' })
-  | Group
+  |Fab_IText
+  | Fab_Group
 ) & {
   _id: string;
 };
 export type Fab_Image=(fabric.Image & { type: 'image', _id: string; })
+export type Fab_IText=(fabric.IText & { type: 'i-text' , _id: string;})
 export type Fab_Path = fabric.Path & {
   _id: string;
   isPathClosed?: boolean;

@@ -6,7 +6,7 @@ import {
 } from '../socket/socket.service';
 // import { Observable, Subscriber } from 'rxjs';
 import {
-  Group,
+  Fab_Group,
   Fab_Objects,
   Project,
   Roles,
@@ -305,6 +305,20 @@ export class CanvasService {
     return transformedPoints;
   }
 
+  filterSelectableObjectsFromGroup(group: Fab_Group) {
+    const selectable: Fab_Objects[] = [];
+    for (const obj of group._objects) {
+      if (obj.type != 'group') {
+        selectable.push(obj);
+      } else if (obj.type === 'group' && obj.isJoined) {
+        selectable.push(obj);
+      } else if (obj.type === 'group' && !obj.isJoined&&obj._objects.length) {
+        selectable.push(...this.filterSelectableObjectsFromGroup(obj))
+      }
+    }
+    return selectable;
+  }
+
   clonedObjsFromActiveObjs(cb: (objs: any[]) => void) {
     if (!this.activeObjects) {
       return;
@@ -316,12 +330,15 @@ export class CanvasService {
 
       this.enliveObjs(activeSe.objects, (objs) => {
         this.canvas?.discardActiveObject();
-        const emitableObjs = this.objects.filter((ob) =>
-          activeSe.objects.some((active: Fab_Objects) => active._id == ob._id)
-        );
+        // const emitableObjs = this.objects.filter((ob) =>
+        //   activeSe.objects.some((active: Fab_Objects) => active._id == ob._id)
+        // );
+        const emitableObjs = activeSe.objects.map((active: Fab_Objects) => {
+          return this.getObjectById(active._id);
+        });
         cb(emitableObjs);
-        this.updateObjects(activeSe.objects, 'delete', false);
-        this.updateObjects(objs, 'push', false);
+        // this.updateObjects(activeSe.objects, 'delete', false);
+        this.updateObjects(objs, 'replace', false);
         const se = new fabric.ActiveSelection(objs, {
           ...activeSe,
           canvas: this.canvas,
@@ -523,7 +540,7 @@ export class CanvasService {
     return false;
   }
 
-  seriesIndex(id: string, text?: string) {
+  seriesIndex(id: string) {
     let count = 0;
     function traverse(
       obj: Fab_Objects & { series_index?: number }
@@ -577,6 +594,7 @@ export class CanvasService {
   }
 
   mountProject(project: Omit<Project, 'objects'> & { objects: Fab_Objects[] }) {
+    this.totalChanges.clear();
     this._objects = project.objects;
     this.members = project.members;
     this.projectId = project.id;
@@ -590,6 +608,7 @@ export class CanvasService {
   }
 
   unMountProject() {
+    this.totalChanges.clear();
     this._objects = [];
     this.members = [];
     this.adminId = undefined;
@@ -648,7 +667,7 @@ export class CanvasService {
             _id: v4(),
             top: objects[0].top,
             left: objects[0].left,
-          } as IGroupOptions) as Group;
+          } as IGroupOptions) as Fab_Group;
           newGroup._objects = objects;
           this._objects = [newGroup, ...this.objects];
         }
@@ -690,17 +709,93 @@ export class CanvasService {
     return;
   }
 
-  //  async saveObjectsToDb(){
-  // if(this.socketService.socket?.connected){
-  //  try {
+  deleteObject(object: Fab_Objects): boolean {
+    // let insertAt = -1;
 
-  //  } catch (error) {
+    const itirate = (objs: Fab_Objects[]): boolean => {
+      for (const [index, ob] of objs.entries()) {
+        if (ob._id == object._id) {
+          this.canvas?.remove(objs[index]);
+          objs.splice(index, 1);
+          return true;
+        }
+        if (ob.type == 'group') {
+          const res = itirate(ob._objects);
+          if (res) {
+            return res;
+          }
+        }
+      }
+      return false;
+    };
 
-  //  }
-  // }else{
+    for (const [index, ob] of this._objects.entries()) {
+      if (ob._id == object._id) {
+        this.canvas?.remove(this._objects[index]);
+        this._objects.splice(index, 1);
+        return true;
+      }
 
-  // }
-  //   }
+      if (ob.type == 'group') {
+        const res = itirate(ob._objects);
+        if (res) {
+          return res;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  replaceObject(object: Fab_Objects): number | undefined {
+    // here group is ignored
+    let insertAt = -1;
+
+    const itirate = (objs: Fab_Objects[]): number | undefined => {
+      for (const [index, ob] of objs.entries()) {
+        if (ob.type != 'group') {
+          insertAt++;
+          console.log(insertAt, 'cb');
+          if (ob._id == object._id) {
+            this.canvas?.remove(objs[index]);
+            objs[index] = object;
+            this.canvas?.insertAt(objs[index], insertAt, false);
+            return insertAt;
+          }
+        } else {
+          return itirate(ob._objects);
+        }
+      }
+      return;
+    };
+
+    for (const [index, ob] of this._objects.entries()) {
+      if (ob.type != 'group') {
+        insertAt++;
+        console.log(insertAt, 'in');
+        if (ob._id == object._id) {
+          this.canvas?.remove(this._objects[index]);
+          this._objects[index] = object;
+          this.canvas?.insertAt(this._objects[index], insertAt, false);
+          return insertAt;
+        }
+      } else {
+        const s_i = itirate(ob._objects);
+        if (Number.isInteger(s_i)) {
+          return s_i;
+        }
+      }
+    }
+
+    return;
+
+    // this._objects = this._objects.map((obj) => {
+    //   if(obj._id===object._id){
+    //     return object;
+    //   }
+    //   return obj
+    // });
+  }
 
   updateObjects(
     objs: Fab_Objects | Fab_Objects[],
@@ -725,15 +820,20 @@ export class CanvasService {
       this.canvas?.add(this._objects[0]);
     } else if (method === 'replace') {
       objs.forEach((item) => {
-        const i = this.objects.findIndex((obj) => obj._id == item._id);
-        if (i >= 0) {
-          this.canvas?.remove(this._objects[i]);
-          this._objects[i] = item;
-          this.canvas?.insertAt(this._objects[i], i, false);
-        } else {
+        // const i = this.objects.findIndex((obj) => obj._id == item._id);
+        const insertAt = this.replaceObject(item);
+        if (!Number.isInteger(insertAt)) {
           this._objects.unshift(item);
           this.canvas?.add(this._objects[0]);
         }
+        // if (Number.isInteger(isReplaced)) {
+        //   this.canvas?.remove(this._objects[i]);
+        //   this._objects[i] = item;
+        //   this.canvas?.insertAt(this._objects[i], i, false);
+        // } else {
+        //   this._objects.unshift(item);
+        //   this.canvas?.add(this._objects[0]);
+        // }
         if (item.type === 'path') {
           this.reRender();
         }
@@ -741,17 +841,18 @@ export class CanvasService {
     } else if (method === 'delete') {
       // this.canvas?.discardActiveObject();
       objs.forEach((obj) => {
-        const index = this._objects.findIndex(
-          (element) => element._id === obj._id
-        );
-        if (index >= 0) {
-          this.canvas?.remove(this._objects[index]);
-          this._objects.splice(index, 1);
-        }
+        this.deleteObject(obj);
+        // const index = this._objects.findIndex(
+        //   (element) => element._id === obj._id
+        // );
+        // if (index >= 0) {
+        //   this.canvas?.remove(this._objects[index]);
+        //   this._objects.splice(index, 1);
+        // }
       });
       this.reRender();
     }
-    this.canvas?.renderAll();
+    this.canvas?.requestRenderAll();
 
     this.projectId &&
       emit_event &&
@@ -844,6 +945,23 @@ export class CanvasService {
     }
   }
 
+  // exitTextEditing() {
+  //   if (
+  //     !this.currentDrawingObject ||
+  //     this.currentDrawingObject.type != 'i-text'
+  //   ) {
+  //     return;
+  //   }
+
+  //   if (this.currentDrawingObject.text?.length) {
+  //     this.currentDrawingObject.exitEditing();
+  //     this.updateObjects([this.currentDrawingObject], 'replace');
+  //   } else {
+  //     this.currentDrawingObject.exitEditing();
+  //     this.updateObjects([this.currentDrawingObject], 'delete');
+  //   }
+  // }
+
   setRole(role: Roles) {
     if (!this.canvas) return;
     this.preview_scence_stop();
@@ -862,9 +980,7 @@ export class CanvasService {
         'popAndPush'
       );
     } else if (this.currentDrawingObject?.type == 'i-text') {
-      (this.currentDrawingObject as fabric.IText).exitEditing();
-      !(this.currentDrawingObject as fabric.IText).text &&
-        this.updateObjects([this.currentDrawingObject], 'delete');
+      this.currentDrawingObject.exitEditing();
     }
     this.currentDrawingObject = undefined;
     // this.reRender();

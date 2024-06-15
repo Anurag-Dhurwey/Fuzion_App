@@ -6,7 +6,7 @@ import { client } from "./redis.config";
 import { routes } from "./routes/routes";
 import { admin, db } from "./firebase.config";
 import { socket_middleware } from "./middleware/socket_middleware";
-import { IObjectOptions, Project } from "../types";
+import { Fab_Objects, Project } from "../types";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
 require("dotenv").config();
 
@@ -35,6 +35,89 @@ type UserMap = Record<string, string[]>;
 let onlineUsers: UserMap = {};
 // let last_updation_of_objects: "updating" | null | number = null;
 
+const deleteObject = (object: Fab_Objects, data: Fab_Objects[]): boolean => {
+  // let insertAt = -1;
+
+  const itirate = (objs: Fab_Objects[]): boolean => {
+    for (const [index, ob] of objs.entries()) {
+      if (ob._id == object._id) {
+        objs.splice(index, 1);
+        return true;
+      }
+      if (ob.type == "group") {
+        const res = itirate(ob.objects);
+        if (res) {
+          return res;
+        }
+      }
+    }
+    return false;
+  };
+
+  for (const [index, ob] of data.entries()) {
+    if (ob._id == object._id) {
+      data.splice(index, 1);
+      return true;
+    }
+
+    if (ob.type == "group") {
+      const res = itirate(ob.objects);
+      if (res) {
+        return res;
+      }
+    }
+  }
+
+  return false;
+};
+
+const replaceObject = (
+  object: Fab_Objects,
+  data: Fab_Objects[]
+): number | undefined => {
+  // here group is ignored
+  let insertAt = -1;
+
+  const itirate = (objs: Fab_Objects[]): number | undefined => {
+    for (const [index, ob] of objs.entries()) {
+      if (ob.type != "group") {
+        insertAt++;
+        if (ob._id == object._id) {
+          objs[index] = object;
+          return insertAt;
+        }
+      } else {
+        return itirate(ob.objects);
+      }
+    }
+    return;
+  };
+
+  for (const [index, ob] of data.entries()) {
+    if (ob.type != "group") {
+      insertAt++;
+      if (ob._id == object._id) {
+        data[index] = object;
+        return insertAt;
+      }
+    } else {
+      const s_i = itirate(ob.objects);
+      if (Number.isInteger(s_i)) {
+        return s_i;
+      }
+    }
+  }
+
+  return;
+
+  // this._objects = this._objects.map((obj) => {
+  //   if(obj._id===object._id){
+  //     return object;
+  //   }
+  //   return obj
+  // });
+};
+
 async function saveObjsToDb(
   docId: string,
   socket?: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
@@ -46,7 +129,7 @@ async function saveObjsToDb(
     if (socket) {
       socket.emit("saveObjectsToDB:succeeded", docId);
     }
-    console.log("saved");
+    console.log(JSON.parse(objects).length);
     return true;
   } catch (error) {
     if (socket) {
@@ -96,7 +179,7 @@ io.on("connection", async (socket) => {
         // console.log({objects});
         if (objects) {
           pro.objects = objects;
-        }else{
+        } else {
           await client.hSet(`room:${roomId}`, {
             objects: pro.objects,
           });
@@ -139,7 +222,7 @@ io.on("connection", async (socket) => {
       roomId,
       method,
     }: {
-      objects: IObjectOptions | IObjectOptions[];
+      objects: Fab_Objects | Fab_Objects[];
       roomId: string;
       method: "push" | "reset" | "popAndPush" | "replace" | "delete";
     }) => {
@@ -149,7 +232,7 @@ io.on("connection", async (socket) => {
         objects = [objects];
       }
       try {
-        let data: IObjectOptions[] = JSON.parse(
+        let data: Fab_Objects[] = JSON.parse(
           (await client.hGet(`room:${roomId}`, "objects")) || "[]"
         );
         if (method == "push") {
@@ -157,19 +240,22 @@ io.on("connection", async (socket) => {
             data.unshift(obj);
           });
         } else if (method === "popAndPush") {
-          data[0] = objects[0];
+          const i=data.findIndex(ob=>ob._id==(objects as Fab_Objects[])[0]._id)
+          if(i!=-1){
+            data[i] = objects[0];
+          }
         } else if (method === "replace") {
           objects.forEach((item) => {
-            const i = data.findIndex((obj) => obj._id == item._id);
-            if (i >= 0) {
-              data[i] = item;
-            }else{
+            // const i = data.findIndex((obj) => obj._id == item._id);
+            const res=replaceObject(item,data)
+            if (!Number.isInteger(res))  {
               data.unshift(item);
             }
           });
         } else if (method == "delete") {
           objects.forEach((obj) => {
-            data = data.filter((item) => item._id != obj._id);
+            // data = data.filter((item) => item._id != obj._id);
+            deleteObject(obj,data)
           });
         } else if (method === "reset") {
           data = objects;
@@ -179,6 +265,7 @@ io.on("connection", async (socket) => {
         });
         // console.log( (await client.hGet(`room:${roomId}`, "objects")) )
         socket.to(roomId).emit("objects:modified", objects, method);
+        console.log('modified')
       } catch (error) {
         console.error(error);
       }

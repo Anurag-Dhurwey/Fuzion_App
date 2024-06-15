@@ -14,6 +14,7 @@ import {
   Fab_Path,
   QuadraticCurveControlPoint,
   Fab_PathArray,
+  Fab_IText,
 } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
@@ -70,7 +71,7 @@ export class CanvasComponent implements OnInit {
 
   projectResFromServer: boolean = false;
 
-  private webWorker: Worker|null=null;
+  private webWorker: Worker | null = null;
 
   constructor(
     public socketService: SocketService,
@@ -156,9 +157,11 @@ export class CanvasComponent implements OnInit {
     }
   }
 
-  createWebWorker(){
+  createWebWorker() {
     // createWorker(): void {
-      const workerBlob = new Blob([`
+    const workerBlob = new Blob(
+      [
+        `
         onmessage = function(e) {
           const data = e.data;
           // Perform heavy computation
@@ -171,15 +174,18 @@ export class CanvasComponent implements OnInit {
           // For demonstration, just returning the data
           return data;
         }
-      `], { type: 'application/javascript' });
-  
-      this.webWorker = new Worker(URL.createObjectURL(workerBlob));
+      `,
+      ],
+      { type: 'application/javascript' }
+    );
+
+    this.webWorker = new Worker(URL.createObjectURL(workerBlob));
     // }
   }
 
   private onProjectEvent = (data: Project) => {
     console.log('onProject');
-    if(this.projectResFromServer)return
+    if (this.projectResFromServer) return;
     this.projectResFromServer = true;
     this.initializeCanvasSetup(data);
 
@@ -371,7 +377,21 @@ export class CanvasComponent implements OnInit {
       });
       console.log('modified');
     });
-
+    // this.canvasService.canvas.on('text:editing:entered', (e) => {
+    //   console.log(e.target);
+    // });
+    this.canvasService.canvas.on('text:editing:exited', (e) => {
+      if(!e.target||e.target.type!='i-text'){
+        return
+      }
+      if ((e.target as fabric.IText).text?.length) {
+        // this.currentDrawingObject.exitEditing();
+        this.canvasService.updateObjects([(e.target as Fab_IText)], 'replace');
+      } else {
+        // this.currentDrawingObject.exitEditing();
+        this.canvasService.updateObjects([(e.target as Fab_IText)], 'delete');
+      }
+    });
     // this.canvasService.addGrid()
     project && this.canvasService.enliveProject(project, () => {}, true);
   }
@@ -425,11 +445,8 @@ export class CanvasComponent implements OnInit {
           type: 'quadCtrlPointMovement';
           res?: { x?: number; y?: number };
         };
-       
       };
     }
-
-
   }
 
   onQuadraticCurveControlPointMoving(
@@ -545,12 +562,13 @@ export class CanvasComponent implements OnInit {
           (obj as fabric.IText).enterEditing();
         }
       } else {
-        (this.canvasService.currentDrawingObject as fabric.IText).exitEditing();
-        !(this.canvasService.currentDrawingObject as fabric.IText).text &&
-          this.canvasService.updateObjects(
-            [this.canvasService.currentDrawingObject],
-            'delete'
-          );
+        // (this.canvasService.currentDrawingObject as fabric.IText).exitEditing();
+        // !(this.canvasService.currentDrawingObject as fabric.IText).text &&
+        //   this.canvasService.updateObjects(
+        //     [this.canvasService.currentDrawingObject],
+        //     'delete'
+        //   );
+        (this.canvasService.currentDrawingObject as Fab_IText).exitEditing();
         this.canvasService.currentDrawingObject = undefined;
         this.canvasService.setRole('select');
       }

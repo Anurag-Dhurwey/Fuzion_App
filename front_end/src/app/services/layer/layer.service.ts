@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanvasService } from '../canvas/canvas.service';
-import { Group, Fab_Objects, Position } from '../../../types/app.types';
+import { Fab_Group, Fab_Objects, Position } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
 import { v4 } from 'uuid';
@@ -76,20 +76,22 @@ export class LayerService {
 
   setActiveSelection(e: MouseEvent, object: Fab_Objects) {
     if (object.type === 'group') {
+      const selectable =
+        this.canvasService.filterSelectableObjectsFromGroup(object);
       if (e.ctrlKey) {
         if (this.canvasService.activeObjects) {
           if (
-            object._objects.some((obj) =>
+            selectable.some((obj) =>
               this.canvasService.isSelected((obj as Fab_Objects)._id)
             )
           ) {
-            object._objects.forEach((obj) =>
+            selectable.forEach((obj) =>
               (
                 this.canvasService.activeObjects as ActiveSelection
               ).removeWithUpdate(obj)
             );
           } else {
-            (object._objects as Fab_Objects[]).forEach((obj) => {
+            selectable.forEach((obj) => {
               if (!this.canvasService.isSelected(obj._id)) {
                 if (
                   this.canvasService.activeObjects?.type === 'activeSelection'
@@ -110,10 +112,10 @@ export class LayerService {
             });
           }
         } else {
-          if (object._objects.length === 1) {
-            this.canvasService.canvas?.setActiveObject(object._objects[0]);
-          } else if (object._objects.length > 1) {
-            const select = new fabric.ActiveSelection(object._objects, {
+          if (selectable.length === 1) {
+            this.canvasService.canvas?.setActiveObject(selectable[0]);
+          } else if (selectable.length > 1) {
+            const select = new fabric.ActiveSelection(selectable, {
               canvas: this.canvasService.canvas,
             });
             this.canvasService.canvas?.setActiveObject(select);
@@ -121,10 +123,11 @@ export class LayerService {
         }
       } else {
         this.canvasService.canvas?.discardActiveObject();
-        if (object._objects.length === 1) {
-          this.canvasService.canvas?.setActiveObject(object._objects[0]);
-        } else if (object._objects.length > 1) {
-          const select = new fabric.ActiveSelection(object._objects, {
+        // const selectable=this.canvasService.filterSelectableObjectsFromGroup(object)
+        if (selectable.length === 1) {
+          this.canvasService.canvas?.setActiveObject(selectable[0]);
+        } else if (selectable.length > 1) {
+          const select = new fabric.ActiveSelection(selectable, {
             canvas: this.canvasService.canvas,
           });
           this.canvasService.canvas?.setActiveObject(select);
@@ -201,7 +204,16 @@ export class LayerService {
       this.setActiveSelection(e, data);
     }
   }
-
+  isGroupSelected(group: Fab_Group) {
+    if (!group._objects.length) return false;
+    if (group.isJoined) {
+      return this.canvasService.isSelected(group._id);
+    } else {
+      return !this.canvasService
+        .filterSelectableObjectsFromGroup(group)
+        .some((ob) => !this.canvasService.isSelected(ob._id));
+    }
+  }
   createGroup() {
     // Recursive function to find and remove elements from the root array
     function findAndRemoveElement(
@@ -241,26 +253,29 @@ export class LayerService {
       rootArray: Fab_Objects[],
       selectedElements: Fab_Objects[]
     ) => {
-      if (!selectedElements.length) return rootArray;
+      if (!selectedElements.length || selectedElements.length === 1)
+        return rootArray;
       // Remove selected elements from their original positions
       const newGroupId = v4();
       console.log({ selectedElements });
       // const newRoot = add_series_Property(rootArray);
       // Calculate the series index for the new group
       let indexes = selectedElements.map((element) => {
-        return this.canvasService.seriesIndex(element._id, 'indexes') as number;
+        return this.canvasService.seriesIndex(element._id) as number;
       });
       // indexes=indexes.filter(num=>Number.isInteger(num))
       const seriesIndex = Math.min(...indexes);
       console.log(indexes);
       // console.log(selectedElements[0].left,selectedElements[0].top)
-      const newGroup = new fabric.Group([], {
+      const newGroup = new fabric.Group(selectedElements, {
         _id: newGroupId,
-        top: selectedElements[0].top,
-        left: selectedElements[0].left,
-      } as IGroupOptions).setCoords() as Group;
+        // top: selectedElements[0].top,
+        // left: selectedElements[0].left,
+        canvas: this.canvasService.canvas,
+      } as IGroupOptions) as Fab_Group;
+      newGroup.setCoords();
       newGroup.name = newGroup.type;
-      newGroup._objects = selectedElements;
+      // newGroup._objects = selectedElements;
       // Function to recursively insert the new group
       const insertGroup = (array: Fab_Objects[]): Fab_Objects[] => {
         return array.flatMap((element) => {

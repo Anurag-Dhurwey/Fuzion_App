@@ -131,7 +131,7 @@
     }}"
     style="margin-bottom: 2px"
     [style]="{
-      backgroundColor: canvasService.idsOfSelectedObj.includes(obj._id)
+      backgroundColor: layerService.isGroupSelected(obj)
         ? 'rgb(162, 160, 100)'
         : 'rgb(162, 160, 160)'
     }"

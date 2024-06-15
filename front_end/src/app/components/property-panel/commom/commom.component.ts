@@ -9,6 +9,7 @@ import {
   possibleShapeType,
 } from '../../../../types/app.types';
 import { CanvasService } from '../../../services/canvas/canvas.service';
+import { propertiesToInclude } from '../../../constants';
 // import { SocketService } from '../../../services/socket/socket.service';
 
 @Component({
@@ -580,7 +581,7 @@ export class CommomComponent {
           inputBox_type: 'number',
           step: 1,
           pipe(val: number) {
-            return val.toFixed();
+            return val;
           },
         },
       ],
@@ -707,8 +708,10 @@ export class CommomComponent {
         'angle',
         'strokeWidth',
         'opacity',
+        'radius',
       ].includes(target.name)
     ) {
+      console.log( (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.IText).toObject(propertiesToInclude))
       return parseFloat(target.value);
     } else if (
       [

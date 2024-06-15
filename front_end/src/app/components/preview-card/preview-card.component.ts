@@ -5,6 +5,7 @@ import { v4 } from 'uuid';
 import { RouterLink } from '@angular/router';
 import { DbService } from '../../services/db/db.service';
 import { AuthService } from '../../services/auth/auth.service';
+import { CanvasService } from '../../services/canvas/canvas.service';
 @Component({
   selector: 'app-preview-card',
   standalone: true,
@@ -24,7 +25,11 @@ export class PreviewCardComponent implements OnInit {
 
   _imageToPreview: string = '';
 
-  constructor(private _dbService: DbService, public authService: AuthService) {}
+  constructor(
+    private _dbService: DbService,
+    public authService: AuthService,
+    private canvasService: CanvasService
+  ) {}
   ngOnInit(): void {}
   ngAfterViewInit(): void {
     if (!this.project) return;
@@ -39,13 +44,13 @@ export class PreviewCardComponent implements OnInit {
         JSON.parse(this.project.objects),
         (live: any) => {
           live?.forEach((obj: Fab_Objects) => {
-            // const scalY = this.dimension.height / this.project!.height;
-            // const scalX = this.dimension.width / this.project!.width;
-            // obj.scaleToHeight(this.dimension.height * scalY);
-            // obj.scaleToWidth(this.dimension.width * scalX);
-            // obj.left = obj.left! * scalX;
-            // obj.top = obj.top! * scalY;
-            canvas?.add(obj);
+            if (obj.type === 'group') {
+              this.canvasService
+                .filterSelectableObjectsFromGroup(obj)
+                .forEach((ob) => canvas.add(ob));
+            } else {
+              canvas?.add(obj);
+            }
           });
           // canvas?.add(live);
           canvas?.requestRenderAll();
