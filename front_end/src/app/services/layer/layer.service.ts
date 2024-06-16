@@ -4,6 +4,7 @@ import { Fab_Group, Fab_Objects, Position } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
 import { v4 } from 'uuid';
+import { SocketService } from '../socket/socket.service';
 @Injectable({
   providedIn: 'root',
 })
@@ -19,23 +20,38 @@ export class LayerService {
     name: string;
   } | null = null;
 
-  constructor(public canvasService: CanvasService) {}
+  constructor(
+    public canvasService: CanvasService,
+    private socketService: SocketService
+  ) {}
 
   onLayerRename(target: EventTarget | null) {
     if (!this.renameLayerForm || !target) return;
     this.renameLayerForm.name = (target as HTMLInputElement).value;
   }
   exitLayerRenameForm() {
-    if (this.renameLayerForm && this.canvasService.activeObjects) {
-      if (this.canvasService.activeObjects.type == 'activeSelection') {
-        const group = this.canvasService.getObjectById(
-          this.renameLayerForm.layerId
-        );
-        if (group) {
-          group.name = this.renameLayerForm.name;
-        }
-      } else {
-        this.canvasService.activeObjects.name = this.renameLayerForm.name;
+    if (this.renameLayerForm) {
+      // if (this.canvasService.activeObjects.type == 'activeSelection') {
+      //   const group = this.canvasService.getObjectById(
+      //     this.renameLayerForm.layerId
+      //   );
+      //   if (group) {
+      //     group.name = this.renameLayerForm.name;
+      //   }
+      // } else {
+      //   this.canvasService.activeObjects.name = this.renameLayerForm.name;
+      // }
+      const found = this.canvasService.getObjectById(
+        this.renameLayerForm.layerId
+      );
+      if (found) {
+        found.name = this.renameLayerForm.name;
+        this.canvasService.projectId &&
+          this.socketService.emit.set_object_property(
+            this.canvasService.projectId,
+            found._id,
+            { name: this.renameLayerForm.name }
+          );
       }
     }
     this.renameLayerForm = null;

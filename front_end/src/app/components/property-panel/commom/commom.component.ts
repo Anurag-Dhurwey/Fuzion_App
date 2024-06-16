@@ -10,6 +10,7 @@ import {
 } from '../../../../types/app.types';
 import { CanvasService } from '../../../services/canvas/canvas.service';
 import { propertiesToInclude } from '../../../constants';
+import { SocketService } from '../../../services/socket/socket.service';
 // import { SocketService } from '../../../services/socket/socket.service';
 
 @Component({
@@ -21,7 +22,8 @@ import { propertiesToInclude } from '../../../constants';
 })
 export class CommomComponent {
   constructor(
-    public canvasService: CanvasService // private socketService: SocketService
+    public canvasService: CanvasService,
+    private socketService: SocketService
   ) {}
 
   addBtn = (keys: Keys[]) => {
@@ -691,7 +693,11 @@ export class CommomComponent {
         target.name as keyof fabric.Object,
         value
       );
-      this.canvasService.emitReplaceObjsEventToSocket();
+      this.canvasService.emitSetObjPropertyEventToSocket(
+        this.canvasService.oneDarrayOfSelectedObj[0]._id,
+        { [target.name]: value }
+      );
+      // this.socketService.emit.set_object_property(this.canvasService.pr)
       this.canvasService.canvas?.requestRenderAll();
     }
   }
@@ -711,7 +717,11 @@ export class CommomComponent {
         'radius',
       ].includes(target.name)
     ) {
-      console.log( (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.IText).toObject(propertiesToInclude))
+      console.log(
+        (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.IText).toObject(
+          propertiesToInclude
+        )
+      );
       return parseFloat(target.value);
     } else if (
       [

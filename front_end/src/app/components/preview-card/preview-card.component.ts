@@ -43,17 +43,8 @@ export class PreviewCardComponent implements OnInit {
       fabric.util.enlivenObjects(
         JSON.parse(this.project.objects),
         (live: any) => {
-          live?.forEach((obj: Fab_Objects) => {
-            if (obj.type === 'group') {
-              this.canvasService
-                .filterSelectableObjectsFromGroup(obj)
-                .forEach((ob) => canvas.add(ob));
-            } else {
-              canvas?.add(obj);
-            }
-          });
-          // canvas?.add(live);
-          canvas?.requestRenderAll();
+          this.canvasService.renderObjectsOnCanvas(canvas, live);
+          canvas?.renderAll();
           const src = canvas.toDataURL({ format: 'png' });
           this.seImageToPreview(src);
         },

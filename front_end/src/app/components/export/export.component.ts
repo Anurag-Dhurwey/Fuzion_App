@@ -30,22 +30,22 @@ export class ExportComponent {
     if (!this.canvasService.canvas) {
       return;
     }
-    const click = (imageDataURL: string | undefined) => {
-      if (!imageDataURL) {
-        alert('something went wrong');
-        return;
-      }
-      const link = document.createElement('a');
-      link.href = imageDataURL;
-      link.download = this.file_name.value || 'myDrawing';
-      link.click();
-      this.canvasService.totalChanges.clear();
-    };
+    // const click = (imageDataURL: string | undefined) => {
+    //   if (!imageDataURL) {
+    //     alert('something went wrong');
+    //     return;
+    //   }
+    //   const link = document.createElement('a');
+    //   link.href = imageDataURL;
+    //   link.download = this.file_name.value || 'myDrawing';
+    //   link.click();
+    //   this.canvasService.totalChanges.clear();
+    // };
     // const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    if (this.file_type.value === 'png'||this.file_type.value === 'jpeg') {
+    if (this.file_type.value === 'png' || this.file_type.value === 'jpeg') {
       this.canvasService!.export(this.file_type.value, (res) => {
         if (typeof res != 'string') return;
-        click(res);
+        this.canvasService.downloadSrc(res, this.file_name.value || undefined);
       });
     }
     //  else if (this.file_type.value === 'jpeg') {
@@ -54,7 +54,7 @@ export class ExportComponent {
     //     click(res);
     //   });
     //   // click(this.canvasService.export('jpeg') as string);
-    // } 
+    // }
     else if (this.file_type.value === 'pdf') {
       const { width, height } = this.canvasService.canvas;
       const pdf = new jsPDF({
@@ -68,14 +68,7 @@ export class ExportComponent {
         pdf.save(`${this.file_name.value || 'myDrawing'}`);
       });
     } else if (this.file_type.value === 'JSON') {
-      this.canvasService.export('json', (res) => {
-        const blob = new Blob([JSON.stringify(res)], {
-          type: 'application/json',
-        });
-        const url = URL.createObjectURL(blob);
-        click(url);
-        URL.revokeObjectURL(url);
-      });
+     this.canvasService.exportAsJSON(this.file_name.value||undefined)
     } else {
       throw new Error('file type not recognized');
     }

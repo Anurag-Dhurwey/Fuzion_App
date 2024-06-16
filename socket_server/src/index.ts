@@ -109,13 +109,21 @@ const replaceObject = (
   }
 
   return;
+};
 
-  // this._objects = this._objects.map((obj) => {
-  //   if(obj._id===object._id){
-  //     return object;
-  //   }
-  //   return obj
-  // });
+const findObject = (_id: string, data: Fab_Objects[]): Fab_Objects | null => {
+  for (const ob of data) {
+    if (ob._id == _id) {
+      return ob;
+    }
+    if (ob.type === "group"&&!ob.isJoined) {
+      const res = findObject(_id, ob.objects);
+      if (res) {
+        return res;
+      }
+    }
+  }
+  return null;
 };
 
 async function saveObjsToDb(
@@ -240,22 +248,24 @@ io.on("connection", async (socket) => {
             data.unshift(obj);
           });
         } else if (method === "popAndPush") {
-          const i=data.findIndex(ob=>ob._id==(objects as Fab_Objects[])[0]._id)
-          if(i!=-1){
+          const i = data.findIndex(
+            (ob) => ob._id == (objects as Fab_Objects[])[0]._id
+          );
+          if (i != -1) {
             data[i] = objects[0];
           }
         } else if (method === "replace") {
           objects.forEach((item) => {
             // const i = data.findIndex((obj) => obj._id == item._id);
-            const res=replaceObject(item,data)
-            if (!Number.isInteger(res))  {
+            const res = replaceObject(item, data);
+            if (!Number.isInteger(res)) {
               data.unshift(item);
             }
           });
         } else if (method == "delete") {
           objects.forEach((obj) => {
             // data = data.filter((item) => item._id != obj._id);
-            deleteObject(obj,data)
+            deleteObject(obj, data);
           });
         } else if (method === "reset") {
           data = objects;
@@ -265,13 +275,37 @@ io.on("connection", async (socket) => {
         });
         // console.log( (await client.hGet(`room:${roomId}`, "objects")) )
         socket.to(roomId).emit("objects:modified", objects, method);
-        console.log('modified')
+        console.log("modified");
       } catch (error) {
         console.error(error);
       }
     }
   );
+  socket.on(
+    "set:object:property",
+    async (roomId: string, _id: string, property: Fab_Objects) => {
+      try {
+        let data: Fab_Objects[] = JSON.parse(
+          (await client.hGet(`room:${roomId}`, "objects")) || "[]"
+        );
 
+        const found=findObject(_id,data) as any
+        if(found){
+          for (const [key,val] of Object.entries(property)) {
+            found[key]=val
+          }
+          await client.hSet(`room:${roomId}`, {
+            objects: JSON.stringify(data),
+          });
+          // console.log( (await client.hGet(`room:${roomId}`, "objects")) )
+          socket.to(roomId).emit("set:object:property", _id, property);
+        }
+
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  );
   socket.on("saveObjectsToDB", (docId) => {
     saveObjsToDb(docId, socket);
   });

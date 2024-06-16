@@ -4,6 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import { fabric } from 'fabric';
 import {
   Fab_Objects,
+  FabObjectsPropertiesOnly,
   Position,
   Project,
   // Project,
@@ -69,11 +70,16 @@ export class SocketService {
     ) => {
       this.socket?.on('objects:modified', callback);
     },
-    saveObjectsToDB_succeeded:(cb:(roomId:string)=>void)=>{
-      this.socket?.on("saveObjectsToDB:succeeded",cb)
+    set_object_property: (
+      cb: (_id: string, property: FabObjectsPropertiesOnly) => void
+    ) => {
+      this.socket?.on('set:object:property', cb);
     },
-    saveObjectsToDB_failed:(cb:(roomId:string)=>void)=>{
-      this.socket?.on("saveObjectsToDB:failed",cb)
+    saveObjectsToDB_succeeded: (cb: (roomId: string) => void) => {
+      this.socket?.on('saveObjectsToDB:succeeded', cb);
+    },
+    saveObjectsToDB_failed: (cb: (roomId: string) => void) => {
+      this.socket?.on('saveObjectsToDB:failed', cb);
     },
   };
 
@@ -101,11 +107,18 @@ export class SocketService {
       objects = objects.map((obj) => obj.toObject(propertiesToInclude));
       this.socket?.emit('objects:modified', { roomId, objects, method });
     },
-    saveObjectsToDB_succeeded:(projectId: string)=>{
-      this.socket?.emit("saveObjectsToDB:succeeded",projectId)
+    set_object_property: (
+      roomId: string,
+      _id: string,
+      property: FabObjectsPropertiesOnly
+    ) => {
+      this.socket?.emit('set:object:property', roomId, _id, property);
     },
-    saveObjectsToDB_failed:(projectId: string)=>{
-      this.socket?.emit("saveObjectsToDB:failed",projectId)
+    saveObjectsToDB_succeeded: (projectId: string) => {
+      this.socket?.emit('saveObjectsToDB:succeeded', projectId);
+    },
+    saveObjectsToDB_failed: (projectId: string) => {
+      this.socket?.emit('saveObjectsToDB:failed', projectId);
     },
     mouse_move: (roomId: string, position: Position) => {
       this.socket?.emit('mouse:move', { position, roomId });

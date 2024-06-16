@@ -16,7 +16,7 @@ export type Fab_Group = fabric.Group & {
   type: 'group';
   isMinimized?: boolean;
   _id: string;
-  isJoined?:boolean
+  isJoined?: boolean;
 };
 
 export type Fab_Objects = (
@@ -25,20 +25,20 @@ export type Fab_Objects = (
   | (fabric.Rect & { type: 'rect' })
   | (fabric.Circle & { type: 'circle' })
   // | (fabric.Image & { type: 'image' })
-  |Fab_Image
-  |Fab_IText
+  | Fab_Image
+  | Fab_IText
   | Fab_Group
 ) & {
   _id: string;
 };
-export type Fab_Image=(fabric.Image & { type: 'image', _id: string; })
-export type Fab_IText=(fabric.IText & { type: 'i-text' , _id: string;})
+export type Fab_Image = fabric.Image & { type: 'image'; _id: string };
+export type Fab_IText = fabric.IText & { type: 'i-text'; _id: string };
 export type Fab_Path = fabric.Path & {
   _id: string;
   isPathClosed?: boolean;
   type: 'path';
   pathType: 'free_hand' | 'quadratic_curve';
-  clipStartEndPoint?:boolean
+  clipStartEndPoint?: boolean;
 };
 export type Fab_PathArray = [string, number, number, number, number];
 
@@ -47,6 +47,15 @@ export type QuadraticCurveControlPoint = fabric.Circle & {
   index: number;
   ctrlOf: string;
 };
+
+export type PropertiesOnly<T> = {
+  [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K;
+}[keyof T];
+
+// Use the utility type to define the new interface
+export type FabObjectsPropertiesOnly = Partial<
+  Pick<Fab_Objects, PropertiesOnly<Fab_Objects>>
+>;
 
 export type possibleShapeType =
   | 'path'

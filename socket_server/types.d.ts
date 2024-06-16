@@ -94,6 +94,7 @@ export type Group = IObjectOptions & {
   objects: Fab_Objects[];
   type: "group";
   isMinimized?: boolean;
+  isJoined?:boolean
   _id: string;
 };
 

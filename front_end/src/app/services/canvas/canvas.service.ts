@@ -13,6 +13,7 @@ import {
   Fab_PathArray,
   Fab_Path,
   QuadraticCurveControlPoint,
+  FabObjectsPropertiesOnly,
 } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
@@ -24,8 +25,8 @@ import {
   UpdateObjectsMethods,
   Visibility,
 } from '../../../types/canvas.service.types';
-import { doc, updateDoc } from 'firebase/firestore';
-import { DbService } from '../db/db.service';
+// import { doc, updateDoc } from 'firebase/firestore';
+// import { DbService } from '../db/db.service';
 import { propertiesToInclude } from '../../constants';
 // import { AuthService } from '../auth/auth.service';
 @Injectable({
@@ -115,6 +116,17 @@ export class CanvasService {
       if (!this.projectId) return;
       this.socketService.emit.object_modified(this.projectId, objs, 'replace');
     });
+  }
+  emitSetObjPropertyEventToSocket(
+    _id: string,
+    property: FabObjectsPropertiesOnly
+  ) {
+    if (!this.projectId) return;
+    this.socketService.emit.set_object_property(this.projectId, _id, property);
+    // this.clonedObjsFromActiveObjs((objs) => {
+    //   if (!this.projectId) return;
+    //   this.socketService.emit.object_modified(this.projectId, objs, 'replace');
+    // });
   }
 
   grid: fabric.Line[] = [];
@@ -312,8 +324,10 @@ export class CanvasService {
         selectable.push(obj);
       } else if (obj.type === 'group' && obj.isJoined) {
         selectable.push(obj);
-      } else if (obj.type === 'group' && !obj.isJoined&&obj._objects.length) {
-        selectable.push(...this.filterSelectableObjectsFromGroup(obj))
+      } else if (obj.type === 'group' && !obj.isJoined && obj._objects.length) {
+        selectable.push(
+          ...this.filterSelectableObjectsFromGroup(obj).reverse()
+        );
       }
     }
     return selectable;
@@ -755,7 +769,6 @@ export class CanvasService {
       for (const [index, ob] of objs.entries()) {
         if (ob.type != 'group') {
           insertAt++;
-          console.log(insertAt, 'cb');
           if (ob._id == object._id) {
             this.canvas?.remove(objs[index]);
             objs[index] = object;
@@ -772,7 +785,6 @@ export class CanvasService {
     for (const [index, ob] of this._objects.entries()) {
       if (ob.type != 'group') {
         insertAt++;
-        console.log(insertAt, 'in');
         if (ob._id == object._id) {
           this.canvas?.remove(this._objects[index]);
           this._objects[index] = object;
@@ -889,27 +901,35 @@ export class CanvasService {
   //   //   );
   // }
 
-  renderObjectsOnCanvas(backgroungColor?: string) {
-    this.canvas?.clear();
-    this.canvas?.setBackgroundColor(backgroungColor || '#282829', () => {});
+  renderObjectsOnCanvas(
+    canvas: fabric.Canvas | fabric.StaticCanvas,
+    objects: Fab_Objects[],
+    options?: { backgroungColor?: string }
+  ) {
+    canvas.clear();
+    if (options?.backgroungColor) {
+      canvas.setBackgroundColor(options.backgroungColor, () => {});
+    }
     const draw = (objects: Fab_Objects[]) => {
       objects.forEach((obj) => {
         if (obj.type === 'group') {
           draw([...obj._objects].reverse() as Fab_Objects[]);
         } else {
-          this.canvas?.add(obj);
+          canvas.add(obj);
         }
       });
     };
-    draw([...this.objects].reverse());
-    this.tempRefObj?.forEach((ref) => {
-      this.canvas?.add(ref);
-    });
+    draw([...objects].reverse());
   }
 
   reRender() {
-    // this.objectsObserver?.next('objects');
-    this.renderObjectsOnCanvas();
+    if (!this.canvas) return;
+    this.renderObjectsOnCanvas(this.canvas, this.objects, {
+      backgroungColor: '#282829',
+    });
+    this.tempRefObj?.forEach((ref) => {
+      this.canvas?.add(ref);
+    });
   }
   isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -1107,9 +1127,9 @@ export class CanvasService {
     const bojs = this.objects.map((ob) => ob.toObject(propertiesToInclude));
     fabric.util.enlivenObjects(
       bojs,
-      (res: fabric.Object[]) => {
-        res.forEach((re) => exportable_canvas.add(re));
-        exportable_canvas.requestRenderAll();
+      (res: Fab_Objects[]) => {
+        this.renderObjectsOnCanvas(exportable_canvas, res);
+        exportable_canvas.renderAll();
         if (format == 'jpeg' || format == 'png') {
           cb(exportable_canvas.toDataURL({ format }));
         } else if (format == 'json') {
@@ -1120,8 +1140,27 @@ export class CanvasService {
       },
       'fabric'
     );
-    // this.objects.forEach((obj) => {
-    //   exportable_canvas.add(obj);
-    // });
+  }
+
+  downloadSrc(
+    src: string,
+    name: string = 'myDrawing' + '_' + Date.now().toString()
+  ) {
+    const link = document.createElement('a');
+    link.href = src;
+    link.download = name;
+    link.click();
+    this.totalChanges.clear();
+  }
+
+  exportAsJSON(name?: string) {
+    this.export('json', (res) => {
+      const blob = new Blob([JSON.stringify(res)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      this.downloadSrc(url, name);
+      URL.revokeObjectURL(url);
+    });
   }
 }

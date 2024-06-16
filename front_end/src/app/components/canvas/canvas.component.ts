@@ -15,6 +15,7 @@ import {
   QuadraticCurveControlPoint,
   Fab_PathArray,
   Fab_IText,
+  FabObjectsPropertiesOnly,
 } from '../../../types/app.types';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
@@ -237,6 +238,13 @@ export class CanvasComponent implements OnInit {
         this.canvasService.totalChanges.clear();
       }
     });
+    this.socketService.on.set_object_property((_id, property) => {
+      const found = this.canvasService.getObjectById(_id);
+      if (found) {
+        (found as fabric.Object).set(property)
+        this.canvasService.canvas?.requestRenderAll()
+      }
+    });
     this.canvasService.projectId &&
       this.socketService.emit.room_join(this.canvasService.projectId);
   };
@@ -381,15 +389,15 @@ export class CanvasComponent implements OnInit {
     //   console.log(e.target);
     // });
     this.canvasService.canvas.on('text:editing:exited', (e) => {
-      if(!e.target||e.target.type!='i-text'){
-        return
+      if (!e.target || e.target.type != 'i-text') {
+        return;
       }
       if ((e.target as fabric.IText).text?.length) {
         // this.currentDrawingObject.exitEditing();
-        this.canvasService.updateObjects([(e.target as Fab_IText)], 'replace');
+        this.canvasService.updateObjects([e.target as Fab_IText], 'replace');
       } else {
         // this.currentDrawingObject.exitEditing();
-        this.canvasService.updateObjects([(e.target as Fab_IText)], 'delete');
+        this.canvasService.updateObjects([e.target as Fab_IText], 'delete');
       }
     });
     // this.canvasService.addGrid()
