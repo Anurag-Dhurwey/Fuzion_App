@@ -5,9 +5,6 @@ import {
   HostListener,
   Input,
   Output,
-  SimpleChanges,
-  ViewChild,
-  viewChild,
 } from '@angular/core';
 import { fabric } from 'fabric';
 // import { Fab_Objects } from '../../../types/app.types';
@@ -21,19 +18,19 @@ import Color from 'color';
   styleUrl: './color-picker.component.css',
 })
 export class ColorPickerComponent {
-  // @Input({ required: true }) target_name: string | null = null;
-  // @Input({ required: true }) target: Fab_Objects | null = null;
-  // gradientColorIndex: number = 0;
-  // toggle = true;
 
   @Output() onColorChnage = new EventEmitter<string>();
   @Input({ required: true }) inputColor: string = '';
   @Input() width: number = 300;
+  @Input() colorPresets: string[] = [];
   @HostListener('window:mouseup', ['$event'])
   mouseUp() {
     this.palette.mouseDown = false;
     this.hueSlider.mouseDown = false;
   }
+
+
+  
 
   hueColors = [
     'hsl(0, 100%, 50%)',
@@ -65,7 +62,7 @@ export class ColorPickerComponent {
 
   hue: string | null = null;
   currentColor: string = this.inputColor || '';
-  defaultColorFormate: DefaultColorFormate = 'RGB';
+  defaultColorFormate: DefaultColorFormate = 'HEX';
   palette: {
     ctx: null | CanvasRenderingContext2D;
     dim: {
@@ -95,12 +92,14 @@ export class ColorPickerComponent {
     mouseDown: false,
   };
   ngAfterViewInit() {
+    this.palette.dim.w = this.width;
+    this.hueSlider.dim.w = this.width;
     const ele_palette = document.getElementById('palette') as HTMLCanvasElement;
-    ele_palette.width = this.palette.dim.w;
+    ele_palette.width = this.width;
     ele_palette.height = this.palette.dim.h;
     this.palette.ctx = ele_palette.getContext('2d') as CanvasRenderingContext2D;
     const ele_hue = document.getElementById('hue') as HTMLCanvasElement;
-    ele_hue.width = this.hueSlider.dim.w;
+    ele_hue.width = this.width;
     ele_hue.height = this.hueSlider.dim.h;
     this.hueSlider.ctx = ele_hue.getContext('2d') as CanvasRenderingContext2D;
 
@@ -136,7 +135,7 @@ export class ColorPickerComponent {
         0,
         2 * Math.PI
       );
-      this.palette.ctx.lineWidth = 1;
+      this.palette.ctx.lineWidth = 3;
       this.palette.ctx.stroke();
     }
   }
@@ -162,7 +161,7 @@ export class ColorPickerComponent {
         this.hueSlider.dim.h
       );
       // this.hueSlider.ctx.fillRect(0,0,width,height)
-      this.hueSlider.ctx.lineWidth = 1;
+      this.hueSlider.ctx.lineWidth = 3;
       this.hueSlider.ctx.stroke();
     }
   }
@@ -183,10 +182,6 @@ export class ColorPickerComponent {
     this.hueSlider.lastMousePo = null;
     this.inputColor = val;
     this.setCurrentColor(val);
-    // this.currentColor = val;
-    // this.onColorChnage.emit(val);
-    // this.drawPalette();
-    // this.drawHueSlider();
   }
 
   onFormateChange(val: string) {
@@ -213,12 +208,6 @@ export class ColorPickerComponent {
     ctx: CanvasRenderingContext2D,
     callback?: (ctx: CanvasRenderingContext2D) => void
   ) {
-    // if (!this.palette.ctx) {
-    //   const ele = document.getElementById('palette') as HTMLCanvasElement;
-    //   ele.width = this.palette.dim.w;
-    //   ele.height = this.palette.dim.h;
-    //   this.palette.ctx = ele.getContext('2d') as CanvasRenderingContext2D;
-    // }
     const width = this.palette.dim.w;
     const height = this.palette.dim.h;
     ctx.clearRect(0, 0, width, height);
@@ -238,29 +227,6 @@ export class ColorPickerComponent {
 
     ctx.fillStyle = blackGrad;
     ctx.fillRect(0, 0, width, height);
-    // if (!this.palette.lastMousePo) {
-    //   const po = this.findColorPosition(
-    //     this.inputColor || 'gray',
-    //     this.palette.ctx,
-    //     width,
-    //     height
-    //   );
-    //   this.palette.lastMousePo = po || null;
-    // }
-    // if (this.palette.lastMousePo) {
-    //   this.palette.ctx.strokeStyle = 'white';
-    //   this.palette.ctx.fillStyle = 'white';
-    //   this.palette.ctx.beginPath();
-    //   this.palette.ctx.arc(
-    //     this.palette.lastMousePo.x,
-    //     this.palette.lastMousePo.y,
-    //     5,
-    //     0,
-    //     2 * Math.PI
-    //   );
-    //   this.palette.ctx.lineWidth = 1;
-    //   this.palette.ctx.stroke();
-    // }
   }
   drawHueSlider(
     ctx: CanvasRenderingContext2D,
@@ -342,17 +308,15 @@ export class ColorPickerComponent {
     this.hue = this.pickColor(ctx, e.offsetX, e.offsetY)!;
     this.hueSlider.lastMousePo = { x: e.offsetX, y: e.offsetY };
     // this.drawPalette();
-
-  
-
     if (this.palette.lastMousePo?.x) {
-      this.setCurrentColor(
-        this.pickColor(
-          this.palette.ctx!,
-          this.palette.lastMousePo.x,
-          this.palette.lastMousePo.y
-        )!
+      this.drawPalette(this.palette.ctx!);
+      const co = this.pickColor(
+        this.palette.ctx!,
+        this.palette.lastMousePo.x,
+        this.palette.lastMousePo.y
       );
+      // console.log(co)
+      co && this.setCurrentColor(co);
     }
     // this.drawHueSlider();
   }

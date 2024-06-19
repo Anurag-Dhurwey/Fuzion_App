@@ -1086,6 +1086,30 @@ export class CanvasService {
     return pre_state;
   }
 
+  existingColorsPreset(objs: Fab_Objects[]): Set<string> {
+    const colorPreset = new Set<string>();
+    for (const obj of objs) {
+      if (obj.type === 'group') {
+        const coPreset = this.existingColorsPreset(obj._objects);
+        coPreset.forEach((co) => colorPreset.add(co));
+      } else {
+        obj.stroke?.toString().length && colorPreset.add(obj.stroke);
+        obj.backgroundColor?.toString().length &&
+          colorPreset.add(obj.backgroundColor);
+        if (obj.fill?.toString().length){
+          if (typeof obj.fill == 'string') {
+            colorPreset.add(obj.fill);
+          } else if (obj.fill instanceof fabric.Gradient) {
+            (obj.fill as fabric.Gradient).colorStops?.forEach((color) => {
+              colorPreset.add(color.color);
+            });
+          }
+        }
+      }
+    }
+    return colorPreset;
+  }
+
   loadSVGFromString(
     data: Fab_Objects,
     propertiesToInclude: PropertiesToInclude,

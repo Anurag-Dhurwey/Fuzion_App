@@ -19,14 +19,16 @@ export class PropertyPanelComponent {
   showColorPicker = false;
   colorPickerTargetName: keyof fabric.Object | null = null;
 
-
-  ngAfterViewInit(){
-    this.canvasService.canvas?.on('selection:cleared',()=>{
-      this.closeColorPicker()
-    })
-    this.canvasService.canvas?.on('selection:updated',()=>{
-      this.closeColorPicker()
-    })
+  get colorPreset() {
+    return [...this.canvasService.existingColorsPreset(this.canvasService.objects)];
+  }
+  ngAfterViewInit() {
+    this.canvasService.canvas?.on('selection:cleared', () => {
+      this.closeColorPicker();
+    });
+    this.canvasService.canvas?.on('selection:updated', () => {
+      this.closeColorPicker();
+    });
   }
 
   onDeleteClick() {
@@ -62,7 +64,7 @@ export class PropertyPanelComponent {
     this.showColorPicker = false;
     this.colorPickerTargetName = null;
   }
- 
+
   // onNgxPickerClose() {
   //   this.showColorPicker = false;
   // }

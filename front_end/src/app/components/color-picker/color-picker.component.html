@@ -1,6 +1,6 @@
 <style>
   .main {
-    min-width: 300px;
+    /* min-width: 300px; */
     min-height: 550px;
     display: flex;
     justify-content: center;
@@ -10,7 +10,7 @@
     padding: 10px 10px;
   }
 </style>
-<div class="main" [style]="{ width: width }">
+<div class="main" [style]="{ width: width + 'px' }">
   <div style="width: 100%; height: fit-content">
     <span></span>
   </div>
@@ -40,13 +40,7 @@
       #hue
       id="hue"
     ></canvas>
-    <canvas
-      [width]="width"
-      #alpha
-      id="alpha"
-      width="300px"
-      height="30px"
-    ></canvas>
+    <canvas [width]="width" #alpha id="alpha" height="30px"></canvas>
     <div
       [style]="{ width: width }"
       style="
@@ -62,8 +56,8 @@
         name="color-formate"
         id="color-formate"
       >
+      <option value="HEX">HEX</option>
         <option value="RGB">RGB</option>
-        <option value="HEX">HEX</option>
         <option value="HSL">HSL</option>
         <option value="HSV">HSV</option>
       </select>
@@ -80,6 +74,35 @@
       />
       <!-- } -->
     </div>
+    @if (colorPresets.length) {
+   
+    <div
+      style="
+        width: 100%;
+        height: fit-content;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        flex-wrap: wrap;
+      "
+    >
+    <!-- <p style="width: 100%; height: fit-content">Presets</p> -->
+      @for (color of colorPresets; track $index) {
+      <button
+        (click)="onChangeColor(color)"
+        style="
+          width: 25px;
+          height: 25px;
+          outline: none;
+          border: none;
+          cursor: pointer;
+        "
+        [style]="{ backgroundColor: color }"
+      ></button>
+      }
+    </div>
+    }
   </div>
   <!-- } -->
 
