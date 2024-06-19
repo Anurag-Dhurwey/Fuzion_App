@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import {
   Fab_Objects,
   Fab_Path,
@@ -21,6 +21,11 @@ import { SocketService } from '../../../services/socket/socket.service';
   styleUrl: './commom.component.css',
 })
 export class CommomComponent {
+
+
+  @Output() onInputClick=new EventEmitter<MouseEvent>() 
+  @Output() onValueChange=new EventEmitter<Event>() 
+
   constructor(
     public canvasService: CanvasService,
     private socketService: SocketService

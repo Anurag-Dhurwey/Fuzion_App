@@ -31,6 +31,7 @@ import { MenuPanelComponent } from './menu-panel/menu-panel.component';
 import { SettingPanelComponent } from './setting-panel/setting-panel.component';
 import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-selection-panel.component';
 import { ImportImageComponent } from '../import-image/import-image.component';
+import { ColorPickerComponent } from '../color-picker/color-picker.component';
 // import { ActiveSelection } from 'fabric/fabric-impl';
 
 @Component({
@@ -49,6 +50,7 @@ import { ImportImageComponent } from '../import-image/import-image.component';
     SettingPanelComponent,
     FrameSelectionPanelComponent,
     ImportImageComponent,
+    // ColorPickerComponent
   ],
   templateUrl: './canvas.component.html',
   styleUrl: './canvas.component.css',

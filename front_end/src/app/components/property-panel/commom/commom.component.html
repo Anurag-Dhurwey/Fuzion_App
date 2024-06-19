@@ -134,6 +134,7 @@
         (input)="onChange($event)"
         [value]="key.pipe(getValue(key.key))"
         [checked]="getValue(key.key)"
+        (click)="onInputClick.emit($event)"
       />
       }
     </span>

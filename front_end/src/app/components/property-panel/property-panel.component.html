@@ -50,8 +50,9 @@
     }}
   </span>
 </div>
-<div class="propertyBar">
-  @if(canvasService.oneDarrayOfSelectedObj.length&& !canvasService.editingPath){
+<div class="propertyBar" id="propertyBar">
+  @if(canvasService.oneDarrayOfSelectedObj.length&&
+  !canvasService.editingPath&&!showColorPicker){
   <h4 style="margin: 0px">
     <span style="padding: 0px 5px">{{
       canvasService.oneDarrayOfSelectedObj.length > 1
@@ -59,7 +60,7 @@
         : canvasService.oneDarrayOfSelectedObj[0].type
     }}</span>
   </h4>
-  <app-commom />
+  <app-commom (onInputClick)="onInputClick($event)" />
   <span
     style="
       display: flex;
@@ -77,8 +78,19 @@
       delete
     </button>
   </span>
-  }@else if (canvasService.editingPath) {
+  }@else if (canvasService.editingPath&&!showColorPicker) {
   <app-edit-path />
+  }@else if
+  (canvasService.oneDarrayOfSelectedObj.length&&showColorPicker&&colorPickerTargetName)
+  {
+  <app-color-picker
+    [inputColor]="
+      canvasService.oneDarrayOfSelectedObj[0][colorPickerTargetName]
+    "
+    [width]="getEleWidth"
+    (onColorChnage)="onColorChange($event)"
+  />
+  <button (click)="closeColorPicker()" style="width: 100%">close</button>
   } @else {
   <div
     style="
@@ -101,7 +113,7 @@
       style="cursor: pointer"
       (click)="canvasService.reRender()"
     >
-    refresh
+      refresh
     </span>
   </div>
   }

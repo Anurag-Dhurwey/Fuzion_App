@@ -19,13 +19,14 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 // import { getMessaging, provideMessaging } from '@angular/fire/messaging';
 // import { getPerformance, providePerformance } from '@angular/fire/performance';
 // import { getStorage, provideStorage } from '@angular/fire/storage';
-
+import { provideAnimations } from '@angular/platform-browser/animations';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
+    provideAnimations(),
     provideStore(),
     // provideState('app', appReducer),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch())
     // importProvidersFrom([
     //   provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     //   provideAnalytics(() => getAnalytics()),

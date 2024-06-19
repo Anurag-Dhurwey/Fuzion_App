@@ -1,0 +1,89 @@
+<style>
+  .main {
+    min-width: 300px;
+    min-height: 550px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    row-gap: 10px;
+    padding: 10px 10px;
+  }
+</style>
+<div class="main" [style]="{ width: width }">
+  <div style="width: 100%; height: fit-content">
+    <span></span>
+  </div>
+  <!-- @if(inputColor){ -->
+  <div
+    style="
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      row-gap: 10px;
+    "
+  >
+    <canvas
+      (mousemove)="mouseMoveOnPalette($event)"
+      (mousedown)="palette.mouseDown = true"
+      (click)="onCLickPalette($event)"
+      #palette_el
+      id="palette"
+    ></canvas>
+    <canvas
+      (mousedown)="hueSlider.mouseDown = true"
+      (mousemove)="mouseMoveOnHueSlider($event)"
+      [width]="width"
+      height="30px"
+      (click)="onClickHueSlider($event)"
+      #hue
+      id="hue"
+    ></canvas>
+    <canvas
+      [width]="width"
+      #alpha
+      id="alpha"
+      width="300px"
+      height="30px"
+    ></canvas>
+    <div
+      [style]="{ width: width }"
+      style="
+        height: fit-content;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      "
+    >
+      <select
+        (change)="onFormateChange(formate.value)"
+        #formate
+        name="color-formate"
+        id="color-formate"
+      >
+        <option value="RGB">RGB</option>
+        <option value="HEX">HEX</option>
+        <option value="HSL">HSL</option>
+        <option value="HSV">HSV</option>
+      </select>
+      <!-- @if(currentColor||inputColor){ -->
+      <input
+        name="color"
+        #color
+        (change)="onChangeColor(color.value)"
+        type="text"
+        style="flex: auto"
+        [value]="
+          convertFormate(currentColor || inputColor, defaultColorFormate)
+        "
+      />
+      <!-- } -->
+    </div>
+  </div>
+  <!-- } -->
+
+  <!-- <div style="width: 100px; height: 100px;" [style]="{backgroundColor:currentColor}"></div> -->
+
+  <div></div>
+</div>
