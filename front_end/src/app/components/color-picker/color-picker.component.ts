@@ -1,412 +1,146 @@
 import {
   Component,
-  ElementRef,
   EventEmitter,
-  HostListener,
   Input,
   Output,
 } from '@angular/core';
 import { fabric } from 'fabric';
-// import { Fab_Objects } from '../../../types/app.types';
 import Color from 'color';
+import { CanvasService } from '../../services/canvas/canvas.service';
+import { GradientColorstopManipulatorComponent } from './gradient-colorstop-manipulator/gradient-colorstop-manipulator.component';
+import { ColorContainerComponent } from './color-container/color-container.component';
+import { ColorStop } from '../../../types/color-picker.types';
+import { IncludePropertiesOnly } from '../../../types/app.types';
 
 @Component({
   selector: 'app-color-picker',
   standalone: true,
-  imports: [],
+  imports: [GradientColorstopManipulatorComponent, ColorContainerComponent],
   templateUrl: './color-picker.component.html',
   styleUrl: './color-picker.component.css',
 })
 export class ColorPickerComponent {
-
-  @Output() onColorChnage = new EventEmitter<string>();
-  @Input({ required: true }) inputColor: string = '';
+  constructor(public canvasService: CanvasService) {}
+  @Output() onColorChnage = new EventEmitter<string | fabric.Gradient>();
+  @Input({ required: true }) targetNameToColor: keyof fabric.Object | null =
+    null;
   @Input() width: number = 300;
-  @Input() colorPresets: string[] = [];
-  @HostListener('window:mouseup', ['$event'])
-  mouseUp() {
-    this.palette.mouseDown = false;
-    this.hueSlider.mouseDown = false;
+
+  gradientColorStopIndex: number | null = null;
+
+  colorCatch: string | fabric.Gradient | fabric.Pattern | null = null;
+
+  get colorPresets() {
+    return [
+      ...this.canvasService.existingColorsPreset(this.canvasService.objects),
+    ];
   }
 
-
-  
-
-  hueColors = [
-    'hsl(0, 100%, 50%)',
-    'hsl(15, 100%, 50%)',
-    'hsl(30, 100%, 50%)',
-    'hsl(45, 100%, 50%)',
-    'hsl(60, 100%, 50%)',
-    'hsl(75, 100%, 50%)',
-    'hsl(90, 100%, 50%)',
-    'hsl(105, 100%, 50%)',
-    'hsl(120, 100%, 50%)',
-    'hsl(135, 100%, 50%)',
-    'hsl(150, 100%, 50%)',
-    'hsl(165, 100%, 50%)',
-    'hsl(180, 100%, 50%)',
-    'hsl(195, 100%, 50%)',
-    'hsl(210, 100%, 50%)',
-    'hsl(225, 100%, 50%)',
-    'hsl(240, 100%, 50%)',
-    'hsl(255, 100%, 50%)',
-    'hsl(270, 100%, 50%)',
-    'hsl(285, 100%, 50%)',
-    'hsl(300, 100%, 50%)',
-    'hsl(315, 100%, 50%)',
-    'hsl(330, 100%, 50%)',
-    'hsl(345, 100%, 50%)',
-    'hsl(360, 100%, 50%)',
-  ];
-
-  hue: string | null = null;
-  currentColor: string = this.inputColor || '';
-  defaultColorFormate: DefaultColorFormate = 'HEX';
-  palette: {
-    ctx: null | CanvasRenderingContext2D;
-    dim: {
-      w: number;
-      h: number;
-    };
-    lastMousePo: { x: number; y: number } | null;
-    mouseDown: boolean;
-  } = {
-    ctx: null,
-    dim: { w: this.width, h: 300 },
-    lastMousePo: null,
-    mouseDown: false,
-  };
-  hueSlider: {
-    ctx: null | CanvasRenderingContext2D;
-    dim: {
-      w: number;
-      h: number;
-    };
-    lastMousePo: { x: number; y: number } | null;
-    mouseDown: boolean;
-  } = {
-    ctx: null,
-    dim: { w: this.width, h: 30 },
-    lastMousePo: null,
-    mouseDown: false,
-  };
-  ngAfterViewInit() {
-    this.palette.dim.w = this.width;
-    this.hueSlider.dim.w = this.width;
-    const ele_palette = document.getElementById('palette') as HTMLCanvasElement;
-    ele_palette.width = this.width;
-    ele_palette.height = this.palette.dim.h;
-    this.palette.ctx = ele_palette.getContext('2d') as CanvasRenderingContext2D;
-    const ele_hue = document.getElementById('hue') as HTMLCanvasElement;
-    ele_hue.width = this.width;
-    ele_hue.height = this.hueSlider.dim.h;
-    this.hueSlider.ctx = ele_hue.getContext('2d') as CanvasRenderingContext2D;
-
-    const animate = () => {
-      this.drawHueSlider(this.hueSlider.ctx!);
-      this.drawRefOnHueSlider();
-      this.drawPalette(this.palette.ctx!);
-      this.drawRefOnpalette();
-      requestAnimationFrame(animate);
-    };
-    requestAnimationFrame(animate);
-  }
-
-  drawRefOnpalette() {
-    if (!this.palette.ctx) return;
-    if (!this.palette.lastMousePo) {
-      const po = this.findColorPosition(
-        this.inputColor || 'gray',
-        this.palette.ctx,
-        this.palette.dim.w,
-        this.palette.dim.h
-      );
-      this.palette.lastMousePo = po || null;
-    }
-    if (this.palette.lastMousePo) {
-      this.palette.ctx.strokeStyle = 'white';
-      this.palette.ctx.fillStyle = 'white';
-      this.palette.ctx.beginPath();
-      this.palette.ctx.arc(
-        this.palette.lastMousePo.x,
-        this.palette.lastMousePo.y,
-        5,
-        0,
-        2 * Math.PI
-      );
-      this.palette.ctx.lineWidth = 3;
-      this.palette.ctx.stroke();
-    }
-  }
-  drawRefOnHueSlider() {
-    if (!this.hueSlider.ctx) return;
-    if (!this.hueSlider.lastMousePo && this.hue) {
-      // console.log('hue')
-      const po = this.findColorPosition(
-        this.hue,
-        this.hueSlider.ctx,
-        this.hueSlider.dim.w,
-        this.hueSlider.dim.h
-      );
-      this.hueSlider.lastMousePo = po || null;
-    }
-    if (this.hueSlider.lastMousePo) {
-      this.hueSlider.ctx.strokeStyle = 'white';
-      this.hueSlider.ctx.fillStyle = 'white';
-      this.hueSlider.ctx.beginPath();
-      this.hueSlider.ctx.moveTo(this.hueSlider.lastMousePo.x, 0);
-      this.hueSlider.ctx.lineTo(
-        this.hueSlider.lastMousePo.x,
-        this.hueSlider.dim.h
-      );
-      // this.hueSlider.ctx.fillRect(0,0,width,height)
-      this.hueSlider.ctx.lineWidth = 3;
-      this.hueSlider.ctx.stroke();
-    }
-  }
-  mouseMoveOnPalette(e: MouseEvent) {
-    if (this.palette.mouseDown) {
-      this.onCLickPalette(e);
-    }
-  }
-  mouseMoveOnHueSlider(e: MouseEvent) {
-    if (this.hueSlider.mouseDown) {
-      this.onClickHueSlider(e);
-    }
-  }
-
-  onChangeColor(val: string) {
-    this.hue = null;
-    this.palette.lastMousePo = null;
-    this.hueSlider.lastMousePo = null;
-    this.inputColor = val;
-    this.setCurrentColor(val);
-  }
-
-  onFormateChange(val: string) {
-    this.defaultColorFormate = val as DefaultColorFormate;
-  }
-
-  convertFormate(color: string, formate: DefaultColorFormate) {
-    if (!color) return color;
-    if (formate == 'RGB') {
-      return Color(color).rgb().string();
-    } else if (formate == 'HSL') {
-      return Color(color).hsl().string();
-    } else if (formate == 'HSV') {
-      return Color(color).hsv().string();
-    } else if (formate == 'HEX') {
-      return Color(color).hex();
-    } else if (formate == 'CMYK') {
-      return Color(color).cmyk().string();
-    }
-    return 'unknown formate';
-  }
-
-  drawPalette(
-    ctx: CanvasRenderingContext2D,
-    callback?: (ctx: CanvasRenderingContext2D) => void
-  ) {
-    const width = this.palette.dim.w;
-    const height = this.palette.dim.h;
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = this.hue || this.findHue(this.inputColor || 'gray') || '';
-    ctx.fillRect(0, 0, width, height);
-
-    const whiteGrad = ctx.createLinearGradient(0, 0, width, 0);
-    whiteGrad.addColorStop(0.1, 'rgba(255,255,255,1)');
-    whiteGrad.addColorStop(1, 'rgba(255,255,255,0)');
-
-    ctx.fillStyle = whiteGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    const blackGrad = ctx.createLinearGradient(0, 0, 0, height);
-    blackGrad.addColorStop(0.1, 'rgba(0,0,0,0)');
-    blackGrad.addColorStop(1, 'rgba(0,0,0,1)');
-
-    ctx.fillStyle = blackGrad;
-    ctx.fillRect(0, 0, width, height);
-  }
-  drawHueSlider(
-    ctx: CanvasRenderingContext2D,
-    callback?: (ctx: CanvasRenderingContext2D) => void
-  ) {
-    // if (!this.hueSlider.ctx) {
-    //   const ele = document.getElementById('hue') as HTMLCanvasElement;
-    //   ele.width = this.hueSlider.dim.w;
-    //   ele.height = this.hueSlider.dim.h;
-    //   this.hueSlider.ctx = ele.getContext('2d') as CanvasRenderingContext2D;
-    // }
-    const width = this.hueSlider.dim.w;
-    const height = this.hueSlider.dim.h;
-
-    ctx.clearRect(0, 0, width, height);
-
-    const gradient = ctx.createLinearGradient(0, 0, width, 0);
-    // for (let i = 0; i <= 360; i+=15) {
-    //   gradient.addColorStop(parseFloat((i / (360)).toFixed(2)),`hsl(${i}, 100%, 50%)`);
-    // }
-    this.hueColors.forEach((co, i) => {
-      gradient.addColorStop(i / this.hueColors.length, co);
-    });
-
-    ctx.beginPath();
-    ctx.rect(0, 0, width, height);
-
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    ctx.closePath();
-    // if (!this.hueSlider.lastMousePo && this.hue) {
-    //   // console.log('hue')
-    //   const po = this.findColorPosition(
-    //     this.hue,
-    //     this.hueSlider.ctx,
-    //     width,
-    //     height
-    //   );
-    //   this.hueSlider.lastMousePo = po || null;
-    // }
-    // if (this.hueSlider.lastMousePo) {
-    //   this.hueSlider.ctx.strokeStyle = 'white';
-    //   this.hueSlider.ctx.fillStyle = 'white';
-    //   this.hueSlider.ctx.beginPath();
-    //   this.hueSlider.ctx.moveTo(this.hueSlider.lastMousePo.x, 0);
-    //   this.hueSlider.ctx.lineTo(this.hueSlider.lastMousePo.x, height);
-    //   // this.hueSlider.ctx.fillRect(0,0,width,height)
-    //   this.hueSlider.ctx.lineWidth = 1;
-    //   this.hueSlider.ctx.stroke();
-    // }
-  }
-
-  onCLickPalette(e: MouseEvent) {
-    if (!this.palette.ctx) return;
-    const ele = document.createElement('canvas');
-    ele.width = this.palette.dim.w;
-    ele.height = this.palette.dim.h;
-    const ctx = ele.getContext('2d');
-    if (!ctx) return;
-    this.drawPalette(ctx);
-    this.setCurrentColor(this.pickColor(ctx, e.offsetX, e.offsetY)!);
-    this.palette.lastMousePo = { x: e.offsetX, y: e.offsetY };
-    // this.drawPalette();
-  }
-
-  setCurrentColor(color: string) {
-    this.currentColor = color;
-    this.onColorChnage.emit(Color(color).hex());
-  }
-
-  onClickHueSlider(e: MouseEvent) {
-    if (!this.hueSlider.ctx) return;
-    const ele = document.createElement('canvas');
-    ele.width = this.hueSlider.dim.w;
-    ele.height = this.hueSlider.dim.h;
-    const ctx = ele.getContext('2d');
-    if (!ctx) return;
-    this.drawHueSlider(ctx);
-    this.hue = this.pickColor(ctx, e.offsetX, e.offsetY)!;
-    this.hueSlider.lastMousePo = { x: e.offsetX, y: e.offsetY };
-    // this.drawPalette();
-    if (this.palette.lastMousePo?.x) {
-      this.drawPalette(this.palette.ctx!);
-      const co = this.pickColor(
-        this.palette.ctx!,
-        this.palette.lastMousePo.x,
-        this.palette.lastMousePo.y
-      );
-      // console.log(co)
-      co && this.setCurrentColor(co);
-    }
-    // this.drawHueSlider();
-  }
-
-  findHue(color: string) {
-    try {
-      const obj = Color(color);
-      const hsl = obj.hsl().object();
-      this.hue = `hsl(${Math.floor(hsl['h'])}, 100%, 50%)`;
-      return `hsl(${Math.floor(hsl['h'])}, 100%, 50%)`;
-    } catch (error) {
-      return;
-    }
-  }
-
-  private pickColor(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number
-  ): string | null {
-    const pixel = ctx.getImageData(x, y, 1, 1).data;
-
-    if (pixel) {
-      const [r, g, b, a] = pixel;
-      return `rgba(${r},${g},${b},${a / 255})`;
-    } else {
-      return null;
-    }
-  }
-
-  findColorPosition(
-    color: string,
-    ctx: CanvasRenderingContext2D,
-    w: number,
-    h: number
-  ) {
-    const imageData = ctx.getImageData(0, 0, w, h);
-    const data = imageData.data;
-    const targetColor = Color(color).rgb().array();
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      const a = data[i + 3];
-
-      if (this.colorWithinTolerance([r, g, b], targetColor, 10)) {
-        const x = (i / 4) % w;
-        const y = Math.floor(i / 4 / w);
-        return { x, y };
-      }
+  get fillColorFormateType() {
+    const objs = this.canvasService.oneDarrayOfSelectedObj;
+    if (!objs.length || !objs[0].fill?.toString().length) return;
+    if (typeof objs[0].fill === 'string') {
+      return 'string';
+    } else if (objs[0].fill instanceof fabric.Gradient) {
+      return 'gradient';
     }
     return;
   }
-  colorWithinTolerance(rgb1: number[], rgb2: number[], tolerance: number) {
+
+  onColorStopSelected(stop: ColorStop) {
+    // console.log(stop);
+    this.gradientColorStopIndex = stop.index;
+  }
+
+  onColorStopSelectionUpdate(stop: ColorStop) {
+    // console.log(stop);
+    this.gradientColorStopIndex = stop.index;
+  }
+  onColorStopMoving(stop: ColorStop) {
+    const fill = (
+      this.canvasService.oneDarrayOfSelectedObj[0].fill as fabric.Gradient
+    ).toObject() as IncludePropertiesOnly<fabric.Gradient>;
+
+    // const grad = obj.fill as fabric.Gradient;
+    fill.colorStops![stop.index].offset = stop.offset;
+    const grad = new fabric.Gradient({
+      ...fill,
+    });
+    this.setCurrentColor(grad);
+  }
+  onColorStopModified(stop: ColorStop) {
+    // console.log(stop);
+  }
+  onColorStopSelectionCleared() {
+    this.gradientColorStopIndex = null;
+  }
+
+  fillPlaneColor() {
+    if (this.fillColorFormateType == 'string') return;
+    if (this.colorCatch && typeof this.colorCatch == 'string') {
+      this.setCurrentColor(this.colorCatch);
+    } else {
+      this.setCurrentColor('#07a4b0');
+    }
+    this.colorCatch = this.canvasService.oneDarrayOfSelectedObj[0].fill || null;
+    // this.palette.lastMousePo = null;
+    // this.hueSlider.lastMousePo = null;
+    // this.gradientColorStopIndex = null;
+  }
+
+  fillGradientColor() {
+    if (this.fillColorFormateType == 'gradient') return;
+    if (this.colorCatch && this.colorCatch instanceof fabric.Gradient) {
+      this.setCurrentColor(this.colorCatch);
+    } else {
+      const grad = new fabric.Gradient({
+        type: 'linear',
+        gradientUnits: 'pixels', // or 'percentage'
+        coords: {
+          x1: 0,
+          y1: 0,
+          x2: this.canvasService.oneDarrayOfSelectedObj[0].width || 100,
+          y2: 0,
+        },
+        colorStops: [
+          { offset: 0, color: '#000' },
+          { offset: 1, color: '#fff' },
+        ],
+      });
+      this.setCurrentColor(grad);
+    }
+    this.colorCatch = this.canvasService.oneDarrayOfSelectedObj[0].fill || null;
+    // this.palette.lastMousePo = null;
+    // this.hueSlider.lastMousePo = null;
+    // this.gradientColorStopIndex = null;
+  }
+
+ 
+  setCurrentColor(color: string | fabric.Gradient) {
+    if (color instanceof fabric.Gradient) {
+      this.onColorChnage.emit(color);
+    } else {
+      this.onColorChnage.emit(Color(color).hex());
+    }
+   
+  }
+
+  
+
+  get gradient() {
+    if (this.fillColorFormateType == 'gradient') {
+      return this.canvasService.oneDarrayOfSelectedObj[0]
+        .fill as fabric.Gradient;
+    }
+    return null;
+  }
+
+  get isColorContainerVisible() {
     return (
-      Math.abs(rgb1[0] - rgb2[0]) <= tolerance &&
-      Math.abs(rgb1[1] - rgb2[1]) <= tolerance &&
-      Math.abs(rgb1[2] - rgb2[2]) <= tolerance
+      this.targetNameToColor != 'fill' ||
+      this.fillColorFormateType == 'string' ||
+      (this.fillColorFormateType == 'gradient' &&
+        this.gradientColorStopIndex != null)
     );
   }
-  // get colorType() {
-  //   if (!this.target_name || !this.target) return undefined;
-  //   if (
-  //     typeof this.target[this.target_name as keyof fabric.Object] == 'string'
-  //   ) {
-  //     return 'string';
-  //   } else if (
-  //     typeof this.target[this.target_name as keyof fabric.Object] == 'object'
-  //   ) {
-  //     return 'gradient';
-  //   }
-  //   return;
-  // }
-
-  // get setSelectedColor() {
-  //   if (!this.target_name || !this.target) return '';
-  //   if (this.colorType == 'string') {
-  //     return this.target[this.target_name as keyof fabric.Object] as string;
-  //   } else if (this.colorType == 'gradient') {
-  //     return (
-  //       (
-  //         this.target[
-  //           this.target_name as keyof fabric.Object
-  //         ] as fabric.Gradient
-  //       ).colorStops![this.gradientColorIndex].color || ''
-  //     );
-  //   } else {
-  //     return '';
-  //   }
-  // }
 }
-
-type DefaultColorFormate = 'RGB' | 'HSL' | 'HSV' | 'CMYK' | 'HEX';

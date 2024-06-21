@@ -5,7 +5,7 @@ import { EditPathComponent } from './edit-path/edit-path.component';
 import { ColorPickerComponent } from '../color-picker/color-picker.component';
 // import { Fab_Objects } from '../../../types/app.types';
 // import { QuadraticCurveControlPoint } from '../../../types/app.types';
-
+import { fabric } from 'fabric';
 @Component({
   selector: 'app-property-panel',
   standalone: true,
@@ -17,11 +17,15 @@ export class PropertyPanelComponent {
   constructor(public canvasService: CanvasService) {}
 
   showColorPicker = false;
-  colorPickerTargetName: keyof fabric.Object | null = null;
+  targetNameToColor: keyof fabric.Object | null = null;
 
-  get colorPreset() {
-    return [...this.canvasService.existingColorsPreset(this.canvasService.objects)];
-  }
+  // gradientColorStopIndex: number | null = null;
+
+  // get colorPreset() {
+  //   return [
+  //     ...this.canvasService.existingColorsPreset(this.canvasService.objects),
+  //   ];
+  // }
   ngAfterViewInit() {
     this.canvasService.canvas?.on('selection:cleared', () => {
       this.closeColorPicker();
@@ -42,17 +46,19 @@ export class PropertyPanelComponent {
     const target = event.target as HTMLInputElement;
     if (target.type === 'color') {
       event.preventDefault();
-      this.colorPickerTargetName = target.name as keyof fabric.Object;
+      this.targetNameToColor = target.name as keyof fabric.Object;
       this.showColorPicker = true;
     }
   }
-  onColorChange(val: string) {
-    if (!this.colorPickerTargetName) return;
+  onColorChange(val: string|fabric.Gradient) {
+    if (!this.targetNameToColor) return;
     (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.Object).set(
-      this.colorPickerTargetName,
+      this.targetNameToColor,
       val
     );
-    this.canvasService.canvas?.renderAll();
+    // this.canvasService.canvas?.renderAll();
+    this.canvasService.canvas?.requestRenderAll();
+    // this.canvasService.em
   }
 
   get getEleWidth() {
@@ -62,8 +68,35 @@ export class PropertyPanelComponent {
 
   closeColorPicker() {
     this.showColorPicker = false;
-    this.colorPickerTargetName = null;
+    this.targetNameToColor = null;
+
+    // this.gradientColorStopIndex=null
   }
+
+  // get color() {
+  //   const objs = this.canvasService.oneDarrayOfSelectedObj;
+  //   if (!objs.length || !objs[0].fill?.toString().length) return;
+  //   if (typeof objs[0].fill === 'string') {
+  //     return objs[0].fill;
+  //   } else if (
+  //     objs[0].fill instanceof fabric.Gradient &&
+  //     this.gradientColorStopIndex != null
+  //   ) {
+  //     return objs[0].fill.colorStops![this.gradientColorStopIndex].color;
+  //   }
+  //   return;
+  // }
+
+  // get fillColorFormateType() {
+  //   const objs = this.canvasService.oneDarrayOfSelectedObj;
+  //   if (!objs.length || !objs[0].fill?.toString().length) return;
+  //   if (typeof objs[0].fill === 'string') {
+  //     return 'string';
+  //   } else if (objs[0].fill instanceof fabric.Gradient) {
+  //     return 'gradient';
+  //   }
+  //   return;
+  // }
 
   // onNgxPickerClose() {
   //   this.showColorPicker = false;

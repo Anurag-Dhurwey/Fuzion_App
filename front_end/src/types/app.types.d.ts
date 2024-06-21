@@ -48,10 +48,11 @@ export type QuadraticCurveControlPoint = fabric.Circle & {
   ctrlOf: string;
 };
 
-export type PropertiesOnly<T> = {
+ type PropertiesOnly<T> = {
   [K in keyof T]: T[K] extends (...args: any[]) => any ? never : K;
 }[keyof T];
 
+export type IncludePropertiesOnly<T>= Pick<T, PropertiesOnly<T>>
 // Use the utility type to define the new interface
 export type FabObjectsPropertiesOnly = Partial<
   Pick<Fab_Objects, PropertiesOnly<Fab_Objects>>
