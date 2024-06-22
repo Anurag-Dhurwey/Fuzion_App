@@ -86,6 +86,11 @@ export class CanvasService {
       frame_selection_panel: !this.frame.x && !this.frame.x,
       import_image_panel: false,
     },
+    width: {
+      canvas_viewport: 66,
+      layer_panel: 15,
+      property_panel: 15,
+    },
   };
   constructor(
     private socketService: SocketService // private authService: AuthService
@@ -1096,7 +1101,7 @@ export class CanvasService {
         obj.stroke?.toString().length && colorPreset.add(obj.stroke);
         obj.backgroundColor?.toString().length &&
           colorPreset.add(obj.backgroundColor);
-        if (obj.fill?.toString().length){
+        if (obj.fill?.toString().length) {
           if (typeof obj.fill == 'string') {
             colorPreset.add(obj.fill);
           } else if (obj.fill instanceof fabric.Gradient) {

@@ -11,6 +11,11 @@ export interface Visibility {
 
 export interface Layout {
   visibility: Visibility;
+  width: {
+    layer_panel: number;
+    canvas_viewport: number;
+    property_panel: number;
+  };
 }
 
 export type UpdateObjectsMethods =

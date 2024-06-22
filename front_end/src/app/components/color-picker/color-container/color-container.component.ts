@@ -3,7 +3,9 @@ import {
   EventEmitter,
   HostListener,
   Input,
+  OnChanges,
   Output,
+  SimpleChanges,
 } from '@angular/core';
 import { CanvasService } from '../../../services/canvas/canvas.service';
 import Color from 'color';
@@ -16,10 +18,9 @@ import { IncludePropertiesOnly } from '../../../../types/app.types';
   templateUrl: './color-container.component.html',
   styleUrl: './color-container.component.css',
 })
-export class ColorContainerComponent {
+export class ColorContainerComponent implements OnChanges {
   constructor(public canvasService: CanvasService) {}
   @Output() onColorChnage = new EventEmitter<string | fabric.Gradient>();
-  // @Input({ required: true }) inputColor: string | fabric.Gradient = '';
   @Input({ required: true }) targetNameToColor: keyof fabric.Object | null =
     null;
   @Input({ required: true }) gradientColorStopIndex: number | null = null;
@@ -29,7 +30,6 @@ export class ColorContainerComponent {
     | undefined;
   @Input() colorPresets: string[] = [];
   @Input() width: number = 300;
-  // @Input() colorPresets: string[] = [];
   @HostListener('window:mouseup', ['$event'])
   mouseUp() {
     this.palette.mouseDown = false;
@@ -122,6 +122,20 @@ export class ColorContainerComponent {
     requestAnimationFrame(animate);
   }
 
+  mouseUpEventRegistered: boolean = false;
+  reset = () => {
+    this.ngAfterViewInit();
+    document.removeEventListener('mouseup', this.reset);
+    this.mouseUpEventRegistered = false;
+  };
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['width'] && !this.mouseUpEventRegistered) {
+      document.addEventListener('mouseup', this.reset);
+      this.mouseUpEventRegistered = true;
+    }
+  }
+
   get color(): string | undefined {
     const objs = this.canvasService.oneDarrayOfSelectedObj;
     if (
@@ -142,7 +156,6 @@ export class ColorContainerComponent {
     }
     return;
   }
-
 
   drawRefOnpalette() {
     if (!this.palette.ctx) return;
@@ -196,14 +209,43 @@ export class ColorContainerComponent {
       this.hueSlider.ctx.stroke();
     }
   }
+  touchMoveOnPalette(e: TouchEvent) {
+    const rect = (e.target as HTMLDivElement).getBoundingClientRect();
+    let x = e.targetTouches[0].pageX - rect.left;
+    let y = e.targetTouches[0].pageY - rect.top;
+
+    if (x < 0) {
+      x = 0;
+    } else if (x > rect.width) {
+      x = rect.width - 1;
+    }
+    if (y < 0) {
+      y = 0;
+    } else if (y > rect.height) {
+      x = rect.height;
+    }
+
+    this.onCLickPalette(x, y);
+  }
   mouseMoveOnPalette(e: MouseEvent) {
     if (this.palette.mouseDown) {
-      this.onCLickPalette(e);
+      this.onCLickPalette(e.offsetX, e.offsetY);
     }
+  }
+  touchMoveOnHueSlider(e: TouchEvent) {
+    const rect = (e.target as HTMLDivElement).getBoundingClientRect();
+    let x = e.targetTouches[0].pageX - rect.left;
+    let y = e.targetTouches[0].pageY - rect.top;
+    if (x < 0) {
+      x = 0;
+    } else if (x > rect.width) {
+      x = rect.width - 1;
+    }
+    this.onClickHueSlider(x, y);
   }
   mouseMoveOnHueSlider(e: MouseEvent) {
     if (this.hueSlider.mouseDown) {
-      this.onClickHueSlider(e);
+      this.onClickHueSlider(e.offsetX, e.offsetY);
     }
   }
 
@@ -302,7 +344,7 @@ export class ColorContainerComponent {
     ctx.closePath();
   }
 
-  onCLickPalette(e: MouseEvent) {
+  onCLickPalette(x: number, y: number) {
     if (!this.palette.ctx) return;
     const ele = document.createElement('canvas');
     ele.width = this.palette.dim.w;
@@ -310,14 +352,12 @@ export class ColorContainerComponent {
     const ctx = ele.getContext('2d');
     if (!ctx) return;
     this.drawPalette(ctx);
-    this.setCurrentColor(this.pickColor(ctx, e.offsetX, e.offsetY)!);
-    this.palette.lastMousePo = { x: e.offsetX, y: e.offsetY };
+    this.setCurrentColor(this.pickColor(ctx, x, y)!);
+    this.palette.lastMousePo = { x, y };
     // this.drawPalette();
   }
 
- 
-
-  onClickHueSlider(e: MouseEvent) {
+  onClickHueSlider(x: number, y: number) {
     if (!this.hueSlider.ctx) return;
     const ele = document.createElement('canvas');
     ele.width = this.hueSlider.dim.w;
@@ -325,8 +365,8 @@ export class ColorContainerComponent {
     const ctx = ele.getContext('2d');
     if (!ctx) return;
     this.drawHueSlider(ctx);
-    this.hue = this.pickColor(ctx, e.offsetX, e.offsetY)!;
-    this.hueSlider.lastMousePo = { x: e.offsetX, y: e.offsetY };
+    this.hue = this.pickColor(ctx, x, y)!;
+    this.hueSlider.lastMousePo = { x, y };
     // this.drawPalette();
     if (this.palette.lastMousePo?.x) {
       this.drawPalette(this.palette.ctx!);

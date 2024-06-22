@@ -11,20 +11,24 @@ style="
 <canvas
   (mousemove)="mouseMoveOnPalette($event)"
   (mousedown)="palette.mouseDown = true"
-  (click)="onCLickPalette($event)"
+  (click)="onCLickPalette($event.offsetX,$event.offsetY)"
   #palette_el
   id="palette"
-></canvas>
+  (touchmove)="$event.preventDefault();touchMoveOnPalette($event)"
+  ></canvas>
+  <!-- (touchstart)="$event.preventDefault()" -->
+  <!-- (touchend) -->
 <canvas
   (mousedown)="hueSlider.mouseDown = true"
   (mousemove)="mouseMoveOnHueSlider($event)"
   [width]="width"
   height="30px"
-  (click)="onClickHueSlider($event)"
+  (click)="onClickHueSlider($event.offsetX,$event.offsetY)"
   #hue
   id="hue"
+  (touchmove)="$event.preventDefault(); touchMoveOnHueSlider($event)"
 ></canvas>
-<canvas [width]="width" #alpha id="alpha" height="30px"></canvas>
+<!-- <canvas [width]="width" #alpha id="alpha" height="30px"></canvas> -->
 <div
   [style]="{ width: width }"
   style="

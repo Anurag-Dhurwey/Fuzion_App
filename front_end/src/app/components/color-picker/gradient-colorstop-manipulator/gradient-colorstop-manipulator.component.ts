@@ -35,10 +35,10 @@ export class GradientColorstopManipulatorComponent implements OnChanges {
       'color-stop-canvas'
     ) as HTMLCanvasElement;
     can.width = this.width;
-    can.height = 100;
+    can.height = 65;
     this.canvas = new fabric.Canvas(can, { selection: false });
     this.previewBoard = new fabric.Rect({
-      top: 50,
+      top: 30,
       left: 0,
       width: this.canvas.width,
       height: 50,
@@ -74,7 +74,7 @@ export class GradientColorstopManipulatorComponent implements OnChanges {
       top: 0,
       fill: 'yellow',
       width: 10,
-      height: 14,
+      height: 10,
       hasControls: false,
       evented: false,
       centeredRotation: true,
@@ -90,7 +90,7 @@ export class GradientColorstopManipulatorComponent implements OnChanges {
         index: tar.index,
         color: tar.color,
       });
-      this.refTriangle?.set({ left: tar.left!+tar.width!+1, top: tar.height!*2 });
+      this.refTriangle?.set({ left: tar.left!+tar.width!+1, top: tar.height!*1.5 });
       this.canvas?.add(this.refTriangle!);
       this.canvas?.requestRenderAll();
     });
@@ -153,6 +153,8 @@ export class GradientColorstopManipulatorComponent implements OnChanges {
       this.canvas?.requestRenderAll();
     }
   }
+
+
 
   draw() {
     this.canvas?.clear();

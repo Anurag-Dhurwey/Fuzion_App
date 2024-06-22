@@ -1,9 +1,4 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-} from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { fabric } from 'fabric';
 import Color from 'color';
 import { CanvasService } from '../../services/canvas/canvas.service';
@@ -88,44 +83,76 @@ export class ColorPickerComponent {
     // this.gradientColorStopIndex = null;
   }
 
+  linearGradient() {
+    return new fabric.Gradient({
+      type: 'linear',
+      gradientUnits: 'pixels', // or 'percentage'
+      coords: {
+        x1: 0,
+        y1: 0,
+        x2: this.canvasService.oneDarrayOfSelectedObj[0].width || 100,
+        y2: 0,
+      },
+      colorStops: [
+        { offset: 0, color: '#000' },
+        { offset: 1, color: '#fff' },
+      ],
+    });
+  }
+
+  radialGradient(width: number, height: number) {
+    return new fabric.Gradient({
+      type: 'radial',
+      gradientUnits: 'pixels', // or 'percentage'
+      coords: {
+        x1: Math.floor(width / 2),
+        y1: Math.floor(height / 2),
+        x2: Math.floor(width / 2),
+        y2: Math.floor(height / 2),
+        r1: Math.floor(1),
+        r2: Math.floor(width),
+      },
+      colorStops: [
+        { offset: 0, color: '#000' },
+
+        // { offset: 0.5, color: "violet" },
+        { offset: 1, color: '#fff' },
+      ],
+    });
+  }
+
   fillGradientColor() {
     if (this.fillColorFormateType == 'gradient') return;
     if (this.colorCatch && this.colorCatch instanceof fabric.Gradient) {
       this.setCurrentColor(this.colorCatch);
     } else {
-      const grad = new fabric.Gradient({
-        type: 'linear',
-        gradientUnits: 'pixels', // or 'percentage'
-        coords: {
-          x1: 0,
-          y1: 0,
-          x2: this.canvasService.oneDarrayOfSelectedObj[0].width || 100,
-          y2: 0,
-        },
-        colorStops: [
-          { offset: 0, color: '#000' },
-          { offset: 1, color: '#fff' },
-        ],
-      });
-      this.setCurrentColor(grad);
+      this.setCurrentColor(this.linearGradient());
     }
     this.colorCatch = this.canvasService.oneDarrayOfSelectedObj[0].fill || null;
     // this.palette.lastMousePo = null;
     // this.hueSlider.lastMousePo = null;
     // this.gradientColorStopIndex = null;
   }
+  onChangeGradientType(val: string) {
+    if (val == 'radial') {
+      this.setCurrentColor(
+        this.radialGradient(
+          this.canvasService.oneDarrayOfSelectedObj[0].width!,
+          this.canvasService.oneDarrayOfSelectedObj[0].height!
+        )
+      );
+    } else if (val == 'linear') {
+      this.setCurrentColor(this.linearGradient());
+    }
+  }
 
- 
   setCurrentColor(color: string | fabric.Gradient) {
     if (color instanceof fabric.Gradient) {
       this.onColorChnage.emit(color);
     } else {
       this.onColorChnage.emit(Color(color).hex());
     }
-   
   }
-
-  
 
   get gradient() {
     if (this.fillColorFormateType == 'gradient') {

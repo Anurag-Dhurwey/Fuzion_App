@@ -20,6 +20,8 @@
       gap: 5px;
       font-weight: 600;
       font-size: small;
+      padding: 5px;
+      background-color: lightskyblue;
     "
   >
     <button
@@ -41,12 +43,13 @@
       Gradient
     </button>
   </div>
-
-  }
-  
-   @if (fillColorFormateType=='gradient') {
+} @if (fillColorFormateType=='gradient') {
+    <select [value]="" #gradient_type (change)="onChangeGradientType(gradient_type.value)" name="gradient_type" id="gradient_type" style="margin: 10px 0px;">
+      <option value="linear">Linear</option>
+      <option value="radial">Radial</option>
+  </select>
   <app-gradient-colorstop-manipulator
-    [width]="width-10"
+    [width]="width - 10"
     [gradient]="gradient"
     (onColorStopSelected)="onColorStopSelected($event)"
     (onColorStopSelectionUpdate)="onColorStopSelectionUpdate($event)"
@@ -54,18 +57,16 @@
     (onColorStopModified)="onColorStopModified($event)"
     (onColorStopSelectionCleared)="onColorStopSelectionCleared()"
   />
+  } @if (isColorContainerVisible) {
+  <app-color-container
+    [width]="width - 10"
+    [targetNameToColor]="targetNameToColor"
+    [colorPresets]="colorPresets"
+    [fillColorFormateType]="fillColorFormateType"
+    (onColorChnage)="setCurrentColor($event)"
+    [gradientColorStopIndex]="gradientColorStopIndex"
+  />
   }
-
-  @if (isColorContainerVisible) {
-    <app-color-container
-      [width]="width-10"
-      [targetNameToColor]="targetNameToColor"
-      [colorPresets]="colorPresets"
-      [fillColorFormateType]="fillColorFormateType"
-      (onColorChnage)="setCurrentColor($event)"
-      [gradientColorStopIndex]="gradientColorStopIndex"
-    />
-    }
 
   <div></div>
 </div>
