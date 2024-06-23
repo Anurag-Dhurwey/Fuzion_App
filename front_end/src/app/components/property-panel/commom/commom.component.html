@@ -37,10 +37,10 @@
   }
 
   .color_box {
-    width: 20px !important;
-    height: 20px !important;
+    width: 16px !important;
+    height: 16px !important;
     border-radius: 2px;
-    background: silver !important;
+    border: 2px solid lightsalmon;
     padding: 2px;
     overflow: hidden;
   }
@@ -122,12 +122,31 @@
         <option [value]="option">{{ option }}</option>
         }
       </select>
-      }@else {
+      }@else if (key.inputBox_type == 'color') {
+      <span
+        (click)="inputColor.click()"
+        class="color_box"
+        [style]="{ background: cssColor(key.pipe(getValue(key.key))) }"
+      ></span>
+      <input
+        #inputColor
+        [max]="key.max"
+        [min]="key.min"
+        [step]="key.step"
+        style="display: none"
+        [type]="key.inputBox_type"
+        [name]="key.key"
+        [id]="key.key"
+        (input)="onChange($event)"
+        [value]="key.pipe(getValue(key.key))"
+        [checked]="getValue(key.key)"
+        (click)="onInputClick.emit($event)"
+      />
+      } @else {
       <input
         [max]="key.max"
         [min]="key.min"
         [step]="key.step"
-        [class]="key.inputBox_type == 'color' ? 'color_box' : ''"
         [type]="key.inputBox_type"
         [name]="key.key"
         [id]="key.key"
@@ -159,9 +178,10 @@
   <div>
     <span>
       <!-- <label> {{ but.lable }}</label> -->
-      <button style="cursor: pointer;" (click)="but.emit()">{{ but.lable }}</button>
+      <button style="cursor: pointer" (click)="but.emit()">
+        {{ but.lable }}
+      </button>
     </span>
   </div>
-}
+  }
 </div>
-

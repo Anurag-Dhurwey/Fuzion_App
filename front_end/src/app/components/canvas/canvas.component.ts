@@ -136,32 +136,48 @@ export class CanvasComponent implements OnInit {
     return window;
   }
 
-  resizeLayer_panel = (e: MouseEvent) => {
-    this.canvasService.layout.width.layer_panel = Math.min(
-      (e.clientX / window.innerWidth) * 100,
-      50
-    );
-    //  this.canvasService.layout.width.canvas_viewport-=e.movementX
+  resizeLayer_panel = (e: MouseEvent | TouchEvent) => {
+    const set = (x: number) => {
+      this.canvasService.layout.width.layer_panel = Math.min(
+        (x / window.innerWidth) * 100,
+        this.window.innerWidth < 600 ? 90 : 50
+      );
+    };
+    if (e instanceof MouseEvent) {
+      set(e.clientX);
+    } else {
+      set(e.touches[0].clientX);
+    }
   };
-  resizeProperty_panel = (e: MouseEvent) => {
+  resizeProperty_panel = (e: MouseEvent | TouchEvent) => {
+    const set = (x: number) => {
+      this.canvasService.layout.width.property_panel = Math.min(
+        100 - (x / window.innerWidth) * 100,
+        this.window.innerWidth < 600 ? 90 : 50
+      );
+    };
     // console.log(e.clientX);
-    this.canvasService.layout.width.property_panel = Math.min(
-      100 - (e.clientX / window.innerWidth) * 100,
-      50
-    );
-    // this.canvasService.layout.width.canvas_viewport-=e.movementX
+    if (e instanceof MouseEvent) {
+      set(e.clientX);
+    } else {
+      set(e.touches[0].clientX);
+    }
   };
   stopResizePanel = () => {
     document.removeEventListener('mousemove', this.resizeLayer_panel);
+    document.removeEventListener('touchmove', this.resizeLayer_panel);
     document.removeEventListener('mousemove', this.resizeProperty_panel);
+    document.removeEventListener('touchmove', this.resizeProperty_panel);
     document.removeEventListener('mouseup', this.stopResizePanel);
   };
   startResizePanel(panel: 'layer_panel' | 'property_panel') {
     if (panel == 'layer_panel') {
       document.addEventListener('mousemove', this.resizeLayer_panel);
+      // document.addEventListener('touchmove', this.resizeLayer_panel);
       document.addEventListener('mouseup', this.stopResizePanel);
     } else {
       document.addEventListener('mousemove', this.resizeProperty_panel);
+      // document.addEventListener('touchmove', this.resizeProperty_panel);
       document.addEventListener('mouseup', this.stopResizePanel);
     }
   }

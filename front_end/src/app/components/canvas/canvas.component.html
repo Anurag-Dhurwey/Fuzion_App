@@ -114,6 +114,7 @@
       cursor: col-resize;
     "
     (mousedown)="$event.preventDefault(); startResizePanel('layer_panel')"
+    (touchmove)="resizeLayer_panel($event)"
   ></div>
   }
 
@@ -208,6 +209,7 @@
       cursor: col-resize;
     "
     (mousedown)="$event.preventDefault(); startResizePanel('property_panel')"
+    (touchmove)="resizeProperty_panel($event)"
   ></div>
   <app-property-panel
     [style]="{ width: canvasService.layout.width.property_panel + 'vw' }"

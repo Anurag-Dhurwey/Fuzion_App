@@ -19,13 +19,7 @@ export class PropertyPanelComponent {
   showColorPicker = false;
   targetNameToColor: keyof fabric.Object | null = null;
 
-  // gradientColorStopIndex: number | null = null;
 
-  // get colorPreset() {
-  //   return [
-  //     ...this.canvasService.existingColorsPreset(this.canvasService.objects),
-  //   ];
-  // }
   ngAfterViewInit() {
     this.canvasService.canvas?.on('selection:cleared', () => {
       this.closeColorPicker();
@@ -73,32 +67,4 @@ export class PropertyPanelComponent {
     // this.gradientColorStopIndex=null
   }
 
-  // get color() {
-  //   const objs = this.canvasService.oneDarrayOfSelectedObj;
-  //   if (!objs.length || !objs[0].fill?.toString().length) return;
-  //   if (typeof objs[0].fill === 'string') {
-  //     return objs[0].fill;
-  //   } else if (
-  //     objs[0].fill instanceof fabric.Gradient &&
-  //     this.gradientColorStopIndex != null
-  //   ) {
-  //     return objs[0].fill.colorStops![this.gradientColorStopIndex].color;
-  //   }
-  //   return;
-  // }
-
-  // get fillColorFormateType() {
-  //   const objs = this.canvasService.oneDarrayOfSelectedObj;
-  //   if (!objs.length || !objs[0].fill?.toString().length) return;
-  //   if (typeof objs[0].fill === 'string') {
-  //     return 'string';
-  //   } else if (objs[0].fill instanceof fabric.Gradient) {
-  //     return 'gradient';
-  //   }
-  //   return;
-  // }
-
-  // onNgxPickerClose() {
-  //   this.showColorPicker = false;
-  // }
 }

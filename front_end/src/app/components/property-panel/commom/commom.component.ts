@@ -12,7 +12,8 @@ import { CanvasService } from '../../../services/canvas/canvas.service';
 import { propertiesToInclude } from '../../../constants';
 import { SocketService } from '../../../services/socket/socket.service';
 // import { SocketService } from '../../../services/socket/socket.service';
-
+import { fabric } from 'fabric';
+// import Color from 'color';
 @Component({
   selector: 'app-commom',
   standalone: true,
@@ -21,10 +22,8 @@ import { SocketService } from '../../../services/socket/socket.service';
   styleUrl: './commom.component.css',
 })
 export class CommomComponent {
-
-
-  @Output() onInputClick=new EventEmitter<MouseEvent>() 
-  @Output() onValueChange=new EventEmitter<Event>() 
+  @Output() onInputClick = new EventEmitter<MouseEvent>();
+  @Output() onValueChange = new EventEmitter<Event>();
 
   constructor(
     public canvasService: CanvasService,
@@ -802,6 +801,11 @@ export class CommomComponent {
   }
 
   getValue(key: PossibleKeysOfObject) {
+    // if (['backgroundColor', 'fill', 'stroke'].includes(key)) {
+    //   return this.cssColor(
+    //     this.canvasService.oneDarrayOfSelectedObj[0][key as keyof fabric.Object]
+    //   );
+    // }
     return this.canvasService.oneDarrayOfSelectedObj[0][
       key as keyof fabric.Object
     ];
@@ -823,6 +827,26 @@ export class CommomComponent {
       );
       // this.canvasService.emitReplaceObjsEventToSocket();
       // this.canvasService.canvas?.requestRenderAll();
+    }
+  }
+
+  cssColor(color: string | fabric.Gradient) {
+    if (color instanceof fabric.Gradient) {
+      if (color.type == 'radial') {
+        let radial = '';
+        color.colorStops?.forEach((it) => {
+          radial = `${radial}, ${it.color} ${it.offset * 100}%`;
+        });
+        return `radial-gradient(circle ${radial})`;
+      } else {
+        let linear = '';
+        color.colorStops?.forEach((it) => {
+          linear = `${linear}, ${it.color} ${it.offset * 100}%`;
+        });
+        return `linear-gradient(90deg ${linear})`;
+      }
+    } else {
+      return color;
     }
   }
 }
