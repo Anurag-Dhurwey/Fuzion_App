@@ -83,15 +83,11 @@
   }@else if
   (canvasService.oneDarrayOfSelectedObj.length&&showColorPicker&&targetNameToColor)
   {
-  <!-- canvasService.oneDarrayOfSelectedObj[0][targetNameToColor] -->
-    <!-- [inputColor]="
-    " -->
   <app-color-picker
     [width]="getEleWidth"
     (onColorChnage)="onColorChange($event)"
     [targetNameToColor]="targetNameToColor"
     />
-    <!-- [colorPresets]="colorPreset" -->
   <button (click)="closeColorPicker()" style="width: 100%">close</button>
   } @else {
   <div

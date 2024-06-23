@@ -113,10 +113,10 @@ export class ColorPickerComponent {
         r2: Math.floor(width),
       },
       colorStops: [
-        { offset: 0, color: '#000' },
+        { offset: 0, color: '#FF0B89' },
 
         // { offset: 0.5, color: "violet" },
-        { offset: 1, color: '#fff' },
+        { offset: 1, color: 'rgba(11, 147, 255, 0.15)' },
       ],
     });
   }
@@ -150,7 +150,7 @@ export class ColorPickerComponent {
     if (color instanceof fabric.Gradient) {
       this.onColorChnage.emit(color);
     } else {
-      this.onColorChnage.emit(Color(color).hex());
+      this.onColorChnage.emit(Color(color).hexa());
     }
   }
 

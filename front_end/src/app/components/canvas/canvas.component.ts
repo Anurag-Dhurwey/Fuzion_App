@@ -32,6 +32,7 @@ import { SettingPanelComponent } from './setting-panel/setting-panel.component';
 import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-selection-panel.component';
 import { ImportImageComponent } from '../import-image/import-image.component';
 import { ColorPickerComponent } from '../color-picker/color-picker.component';
+import Color from 'color';
 // import { ActiveSelection } from 'fabric/fabric-impl';
 
 @Component({

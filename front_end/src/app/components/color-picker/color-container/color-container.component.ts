@@ -34,6 +34,7 @@ export class ColorContainerComponent implements OnChanges {
   mouseUp() {
     this.palette.mouseDown = false;
     this.hueSlider.mouseDown = false;
+    this.alphaSlider.mouseDown = false;
   }
 
   hueColors = [
@@ -95,6 +96,20 @@ export class ColorContainerComponent implements OnChanges {
     lastMousePo: null,
     mouseDown: false,
   };
+  alphaSlider: {
+    ctx: null | CanvasRenderingContext2D;
+    dim: {
+      w: number;
+      h: number;
+    };
+    lastMousePo: { x: number; y: number } | null;
+    mouseDown: boolean;
+  } = {
+    ctx: null,
+    dim: { w: this.width, h: 20 },
+    lastMousePo: null,
+    mouseDown: false,
+  };
 
   // gradientColorStopIndex: number | null = null;
 
@@ -103,20 +118,33 @@ export class ColorContainerComponent implements OnChanges {
   ngAfterViewInit() {
     this.palette.dim.w = this.width;
     this.hueSlider.dim.w = this.width;
+    this.alphaSlider.dim.w = this.width;
     const ele_palette = document.getElementById('palette') as HTMLCanvasElement;
+    if(!ele_palette)return
     ele_palette.width = this.width;
     ele_palette.height = this.palette.dim.h;
     this.palette.ctx = ele_palette.getContext('2d') as CanvasRenderingContext2D;
+
     const ele_hue = document.getElementById('hue') as HTMLCanvasElement;
     ele_hue.width = this.width;
     ele_hue.height = this.hueSlider.dim.h;
     this.hueSlider.ctx = ele_hue.getContext('2d') as CanvasRenderingContext2D;
+
+    const ele_alpha = document.getElementById('alpha') as HTMLCanvasElement;
+    ele_alpha.width = this.width;
+    ele_alpha.height = this.alphaSlider.dim.h;
+    this.alphaSlider.ctx = ele_alpha.getContext(
+      '2d'
+    ) as CanvasRenderingContext2D;
 
     const animate = () => {
       this.drawHueSlider(this.hueSlider.ctx!);
       this.drawRefOnHueSlider();
       this.drawPalette(this.palette.ctx!);
       this.drawRefOnpalette();
+      this.drawAlphaSlider(this.alphaSlider.ctx!, this.color!);
+
+      this.drawRefOfAlphaSlider();
       requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
@@ -248,6 +276,22 @@ export class ColorContainerComponent implements OnChanges {
       this.onClickHueSlider(e.offsetX, e.offsetY);
     }
   }
+  touchMoveOnAlphaSlider(e: TouchEvent) {
+    const rect = (e.target as HTMLDivElement).getBoundingClientRect();
+    let x = e.targetTouches[0].pageX - rect.left;
+    let y = e.targetTouches[0].pageY - rect.top;
+    if (x < 0) {
+      x = 0;
+    } else if (x > rect.width) {
+      x = rect.width - 1;
+    }
+    this.onClickAlphaSlider(x, y);
+  }
+  mouseMoveOnAlphaSlider(e: MouseEvent) {
+    if (this.alphaSlider.mouseDown) {
+      this.onClickAlphaSlider(e.offsetX, e.offsetY);
+    }
+  }
 
   changeColor(val: string) {
     this.hue = null;
@@ -267,7 +311,7 @@ export class ColorContainerComponent implements OnChanges {
       ).toObject() as IncludePropertiesOnly<fabric.Gradient>;
 
       // const grad = obj.fill as fabric.Gradient;
-      fill.colorStops![this.gradientColorStopIndex].color = Color(color).hex();
+      fill.colorStops![this.gradientColorStopIndex].color = Color(color).hexa();
       const grad = new fabric.Gradient({
         ...fill,
       });
@@ -290,13 +334,49 @@ export class ColorContainerComponent implements OnChanges {
     } else if (formate == 'HSV') {
       return Color(color).hsv().string();
     } else if (formate == 'HEX') {
-      return Color(color).hex();
+      return Color(color).hexa();
     } else if (formate == 'CMYK') {
       return Color(color).cmyk().string();
     }
     return 'unknown formate';
   }
 
+  drawAlphaSlider(ctx: CanvasRenderingContext2D, color: string) {
+    const width = this.alphaSlider.dim.w;
+    const height = this.alphaSlider.dim.h;
+    ctx.clearRect(0, 0, width, height);
+
+    const whiteGrad = ctx.createLinearGradient(0, 0, width, 0);
+    whiteGrad.addColorStop(0.1, Color(color).alpha(0).hexa());
+    whiteGrad.addColorStop(1, Color(color).alpha(1).hexa());
+
+    ctx.fillStyle = whiteGrad;
+    ctx.fillRect(0, 0, width, height);
+  }
+  drawRefOfAlphaSlider() {
+    if (!this.alphaSlider.ctx) return;
+
+    if (!this.alphaSlider.lastMousePo) {
+      this.alphaSlider.lastMousePo = {
+        x: Color(this.color).alpha() * this.alphaSlider.dim.w - 3,
+        y: 0,
+      };
+    }
+
+    if (this.alphaSlider.lastMousePo) {
+      this.alphaSlider.ctx.strokeStyle = 'white';
+      this.alphaSlider.ctx.fillStyle = 'white';
+      this.alphaSlider.ctx.beginPath();
+      this.alphaSlider.ctx.moveTo(this.alphaSlider.lastMousePo.x, 0);
+      this.alphaSlider.ctx.lineTo(
+        this.alphaSlider.lastMousePo.x,
+        this.alphaSlider.dim.h
+      );
+      // this.hueSlider.ctx.fillRect(0,0,width,height)
+      this.alphaSlider.ctx.lineWidth = 3;
+      this.alphaSlider.ctx.stroke();
+    }
+  }
   drawPalette(
     ctx: CanvasRenderingContext2D,
     callback?: (ctx: CanvasRenderingContext2D) => void
@@ -352,7 +432,10 @@ export class ColorContainerComponent implements OnChanges {
     const ctx = ele.getContext('2d');
     if (!ctx) return;
     this.drawPalette(ctx);
-    this.setCurrentColor(this.pickColor(ctx, x, y)!);
+    // this.setCurrentColor(this.pickColor(ctx, x, y)!);
+
+    const co = this.pickColor(ctx, x, y)!;
+    this.setCurrentColor(Color(co).alpha(Color(this.color).alpha()).hexa());
     this.palette.lastMousePo = { x, y };
     // this.drawPalette();
   }
@@ -376,15 +459,24 @@ export class ColorContainerComponent implements OnChanges {
         this.palette.lastMousePo.y
       );
       // console.log(co)
-      co && this.setCurrentColor(co);
+      co &&
+        this.setCurrentColor(Color(co).alpha(Color(this.color).alpha()).hexa());
     }
     // this.drawHueSlider();
   }
-
+  onClickAlphaSlider(x: number, y: number) {
+    // if(this.alphaSlider)
+    this.alphaSlider.lastMousePo = { x, y };
+    const alpha = Math.max(
+      0,
+      Math.min(1, parseFloat((x / this.alphaSlider.dim.w).toFixed(2)))
+    );
+    // const co=Color(this.color).alpha(alpha).hexa()
+    this.setCurrentColor(Color(this.color).alpha(alpha).hexa());
+  }
   findHue(color: string) {
     try {
-      const obj = Color(color);
-      const hsl = obj.hsl().object();
+      const hsl = Color(color).hsl().object();
       this.hue = `hsl(${Math.floor(hsl['h'])}, 100%, 50%)`;
       return `hsl(${Math.floor(hsl['h'])}, 100%, 50%)`;
     } catch (error) {
@@ -437,6 +529,15 @@ export class ColorContainerComponent implements OnChanges {
       Math.abs(rgb1[2] - rgb2[2]) <= tolerance
     );
   }
+
+
+
+  ngOndestroy(){
+    document.removeEventListener('mouseup', this.reset);
+
+    console.log('dd')
+  }
+
 }
 
 type DefaultColorFormate = 'RGB' | 'HSL' | 'HSV' | 'CMYK' | 'HEX';

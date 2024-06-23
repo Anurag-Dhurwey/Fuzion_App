@@ -1,90 +1,102 @@
 <div
-style="
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  row-gap: 10px;
-"
-[style]="{width}"
->
-<canvas
-  (mousemove)="mouseMoveOnPalette($event)"
-  (mousedown)="palette.mouseDown = true"
-  (click)="onCLickPalette($event.offsetX,$event.offsetY)"
-  #palette_el
-  id="palette"
-  (touchmove)="$event.preventDefault();touchMoveOnPalette($event)"
-  ></canvas>
-  <!-- (touchstart)="$event.preventDefault()" -->
-  <!-- (touchend) -->
-<canvas
-  (mousedown)="hueSlider.mouseDown = true"
-  (mousemove)="mouseMoveOnHueSlider($event)"
-  [width]="width"
-  height="30px"
-  (click)="onClickHueSlider($event.offsetX,$event.offsetY)"
-  #hue
-  id="hue"
-  (touchmove)="$event.preventDefault(); touchMoveOnHueSlider($event)"
-></canvas>
-<!-- <canvas [width]="width" #alpha id="alpha" height="30px"></canvas> -->
-<div
-  [style]="{ width: width }"
   style="
-    height: fit-content;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  "
->
-  <select
-    (change)="onFormateChange(formate.value)"
-    #formate
-    name="color-formate"
-    id="color-formate"
-  >
-    <option value="HEX">HEX</option>
-    <option value="RGB">RGB</option>
-    <option value="HSL">HSL</option>
-    <option value="HSV">HSV</option>
-  </select>
-  <input
-    name="color"
-    #colorInput
-    (change)="changeColor(colorInput.value)"
-    type="text"
-    style="flex: auto"
-    [value]="convertFormate(color || '', defaultColorFormate)"
-  />
-</div>
-@if (colorPresets.length) {
-
-<div
-  style="
-    width: 100%;
-    height: fit-content;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 5px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    row-gap: 10px;
   "
+  [style]="{width}"
 >
-  <!-- <p style="width: 100%; height: fit-content">Presets</p> -->
-  @for (color of colorPresets; track $index) {
-  <button
-    (click)="changeColor(color)"
+  <canvas
+    (mousemove)="mouseMoveOnPalette($event)"
+    (mousedown)="palette.mouseDown = true"
+    (click)="onCLickPalette($event.offsetX, $event.offsetY)"
+    #palette_el
+    id="palette"
+    (touchmove)="$event.preventDefault(); touchMoveOnPalette($event)"
+    style="border: 2px solid lightcoral"
+  ></canvas>
+  <!-- (touchstart)="$event.preventDefault()" -->
+  <!-- (touchend) -->
+  <canvas
+    (mousedown)="hueSlider.mouseDown = true"
+    (mousemove)="mouseMoveOnHueSlider($event)"
+    [width]="width"
+    height="30px"
+    (click)="onClickHueSlider($event.offsetX, $event.offsetY)"
+    #hue
+    id="hue"
+    (touchmove)="$event.preventDefault(); touchMoveOnHueSlider($event)"
+    style="border: 2px solid lightcoral"
+  ></canvas>
+  <canvas
+    (mousedown)="alphaSlider.mouseDown = true"
+    (mousemove)="mouseMoveOnAlphaSlider($event)"
+    (click)="onClickAlphaSlider($event.offsetX, $event.offsetY)"
+    (touchmove)="$event.preventDefault(); touchMoveOnAlphaSlider($event)"
+    style="border: 2px solid lightcoral"
+    [width]="width"
+    #alpha
+    id="alpha"
+    height="10px"
+  ></canvas>
+  <div
+    [style]="{ width: width }"
     style="
-      width: 25px;
-      height: 25px;
-      outline: none;
-      border: none;
-      cursor: pointer;
+      height: fit-content;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     "
-    [style]="{ backgroundColor: color }"
-  ></button>
+  >
+    <select
+      (change)="onFormateChange(formate.value)"
+      #formate
+      name="color-formate"
+      id="color-formate"
+    >
+      <option value="HEX">HEX</option>
+      <option value="RGB">RGB</option>
+      <option value="HSL">HSL</option>
+      <option value="HSV">HSV</option>
+    </select>
+    <input
+      name="color"
+      #colorInput
+      (change)="changeColor(colorInput.value)"
+      type="text"
+      style="flex: auto"
+      [value]="convertFormate(color || '', defaultColorFormate)"
+    />
+  </div>
+  @if (colorPresets.length) {
+
+  <div
+    style="
+      width: 100%;
+      height: fit-content;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    "
+  >
+    <!-- <p style="width: 100%; height: fit-content">Presets</p> -->
+    @for (color of colorPresets; track $index) {
+    <button
+      (click)="changeColor(color)"
+      style="
+        width: 25px;
+        height: 25px;
+        outline: none;
+        border: none;
+        cursor: pointer;
+      "
+      [style]="{ backgroundColor: color }"
+    ></button>
+    }
+  </div>
   }
-</div>
-}
 </div>
