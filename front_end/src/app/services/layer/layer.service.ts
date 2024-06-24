@@ -31,16 +31,6 @@ export class LayerService {
   }
   exitLayerRenameForm() {
     if (this.renameLayerForm) {
-      // if (this.canvasService.activeObjects.type == 'activeSelection') {
-      //   const group = this.canvasService.getObjectById(
-      //     this.renameLayerForm.layerId
-      //   );
-      //   if (group) {
-      //     group.name = this.renameLayerForm.name;
-      //   }
-      // } else {
-      //   this.canvasService.activeObjects.name = this.renameLayerForm.name;
-      // }
       const found = this.canvasService.getObjectById(
         this.renameLayerForm.layerId
       );
@@ -52,10 +42,10 @@ export class LayerService {
             found._id,
             { name: this.renameLayerForm.name }
           );
+          this.canvasService.saveStateInHistory()
       }
     }
     this.renameLayerForm = null;
-    // this.canvasService.canvas?.renderAll()
   }
 
   private traveseAndSetToAll(
@@ -79,6 +69,7 @@ export class LayerService {
     }
     // this.canvasService.reRender();
     this.canvasService.canvas?.requestRenderAll();
+    this.canvasService.saveStateInHistory()
   }
   toggleControllability(obj: Fab_Objects, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
@@ -88,6 +79,7 @@ export class LayerService {
     }
     this.canvasService.canvas?.requestRenderAll();
     // this.canvasService.reRender();
+    this.canvasService.saveStateInHistory()
   }
 
   setActiveSelection(e: MouseEvent, object: Fab_Objects) {
@@ -322,6 +314,7 @@ export class LayerService {
     );
 
     this.canvasService.updateObjects(updatedStack, 'reset');
+    this.canvasService.saveStateInHistory()
   }
 
   setObjToMove(id: string, group_id: string | null, index: number) {
@@ -409,6 +402,7 @@ export class LayerService {
         this.changeOrder.to.index
       );
       this.canvasService.updateObjects(updatedStack, 'reset');
+      this.canvasService.saveStateInHistory()
     }
   }
   onContextClickAtLayer(e: MouseEvent, obj: Fab_Objects) {

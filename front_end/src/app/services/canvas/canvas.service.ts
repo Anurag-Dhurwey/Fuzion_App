@@ -159,7 +159,7 @@ export class CanvasService {
     if (this.history.redoStack.size) {
       const arr = [...this.history.redoStack];
       const state = arr.pop()!;
-      this.history.redoStack.delete(state)
+      this.history.redoStack.delete(state);
       this.history.undoStack.add(state);
       this.enliveObjs(JSON.parse(state), () => {}, 'reset');
     }
@@ -185,10 +185,6 @@ export class CanvasService {
   ) {
     if (!this.projectId) return;
     this.socketService.emit.set_object_property(this.projectId, _id, property);
-    // this.clonedObjsFromActiveObjs((objs) => {
-    //   if (!this.projectId) return;
-    //   this.socketService.emit.object_modified(this.projectId, objs, 'replace');
-    // });
   }
 
   grid: fabric.Line[] = [];
@@ -1185,11 +1181,13 @@ export class CanvasService {
     fabric.util.enlivenObjects(
       bojs,
       (res: Fab_Objects[]) => {
-        this.renderObjectsOnCanvas(exportable_canvas, res);
-        exportable_canvas.renderAll();
         if (format == 'jpeg' || format == 'png') {
+          this.renderObjectsOnCanvas(exportable_canvas, res);
+          exportable_canvas.renderAll();
           cb(exportable_canvas.toDataURL({ format }));
         } else if (format == 'json') {
+          res.forEach((ob) => exportable_canvas.add(ob));
+          exportable_canvas.renderAll();
           cb(exportable_canvas.toJSON(propertiesToInclude));
         } else {
           cb('unrecognized formate');
