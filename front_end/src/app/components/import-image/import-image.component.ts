@@ -124,6 +124,8 @@ export class ImportImageComponent {
   openBtn() {
     if (this.imageObject) {
       this.canvasService.updateObjects(this.imageObject, 'push');
+      this.canvasService.saveStateInHistory()
+      console.log('added')
     } else {
       alert('file not selected');
     }

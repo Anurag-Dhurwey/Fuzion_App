@@ -81,6 +81,7 @@ export class ColorPickerComponent {
     // this.palette.lastMousePo = null;
     // this.hueSlider.lastMousePo = null;
     // this.gradientColorStopIndex = null;
+    this.canvasService.saveStateInHistory()
   }
 
   linearGradient() {
@@ -132,6 +133,7 @@ export class ColorPickerComponent {
     // this.palette.lastMousePo = null;
     // this.hueSlider.lastMousePo = null;
     // this.gradientColorStopIndex = null;
+    this.canvasService.saveStateInHistory()
   }
   onChangeGradientType(val: string) {
     if (val == 'radial') {
@@ -144,6 +146,7 @@ export class ColorPickerComponent {
     } else if (val == 'linear') {
       this.setCurrentColor(this.linearGradient());
     }
+    this.canvasService.saveStateInHistory()
   }
 
   setCurrentColor(color: string | fabric.Gradient) {

@@ -9,8 +9,8 @@ import {
   possibleShapeType,
 } from '../../../../types/app.types';
 import { CanvasService } from '../../../services/canvas/canvas.service';
-import { propertiesToInclude } from '../../../constants';
-import { SocketService } from '../../../services/socket/socket.service';
+// import { propertiesToInclude } from '../../../constants';
+// import { SocketService } from '../../../services/socket/socket.service';
 // import { SocketService } from '../../../services/socket/socket.service';
 import { fabric } from 'fabric';
 // import Color from 'color';
@@ -27,7 +27,7 @@ export class CommomComponent {
 
   constructor(
     public canvasService: CanvasService,
-    private socketService: SocketService
+    // private socketService: SocketService
   ) {}
 
   addBtn = (keys: Keys[]) => {
@@ -38,6 +38,7 @@ export class CommomComponent {
     this.canvasService.oneDarrayOfObjects.forEach((ob) =>
       this.canvasService.totalChanges.add(ob._id)
     );
+    this.canvasService.saveStateInHistory()
     this.canvasService.canvas?.requestRenderAll();
   };
 
@@ -52,6 +53,7 @@ export class CommomComponent {
     this.canvasService.oneDarrayOfObjects.forEach((ob) =>
       this.canvasService.totalChanges.add(ob._id)
     );
+    this.canvasService.saveStateInHistory()
     this.canvasService.canvas?.requestRenderAll();
   };
 
@@ -685,10 +687,6 @@ export class CommomComponent {
   onChange(event: Event) {
     const target = event.target as HTMLInputElement;
     if (!target.value.length) {
-      // target.value =
-      //   this.canvasService.oneDarrayOfSelectedObj[0][
-      //     target.name as keyof fabric.Object
-      //   ];
       return;
     }
     const value = this.extractValueFromTarget(target);
@@ -701,7 +699,7 @@ export class CommomComponent {
         this.canvasService.oneDarrayOfSelectedObj[0]._id,
         { [target.name]: value }
       );
-      // this.socketService.emit.set_object_property(this.canvasService.pr)
+      this.canvasService.saveStateInHistory()
       this.canvasService.canvas?.requestRenderAll();
     }
   }
@@ -721,11 +719,6 @@ export class CommomComponent {
         'radius',
       ].includes(target.name)
     ) {
-      console.log(
-        (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.IText).toObject(
-          propertiesToInclude
-        )
-      );
       return parseFloat(target.value);
     } else if (
       [

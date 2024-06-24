@@ -110,7 +110,26 @@
   </span>
   <!-- </span> -->
 </div>
-} @if(layerService.context_menu){
+@if
+(canvasService.history.undoStack.size>1||canvasService.history.redoStack.size) {
+<div
+  style="
+    width: 100%;
+    height: 30px;
+    background-color: rgb(88, 130, 220);
+    /* position: relative; */
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+  "
+>
+  @if (canvasService.history.undoStack.size>1) {
+  <span (click)="canvasService.undoHistory()">undo</span>
+  } @if (canvasService.history.redoStack.size) {
+  <span (click)="canvasService.redoHistory()">redo</span>
+  }
+</div>
+} } @if(layerService.context_menu){
 <app-layer-panel-context-menu
   style="z-index: 2"
   (onGroup)="layerService.createGroup()"

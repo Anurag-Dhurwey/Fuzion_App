@@ -35,6 +35,7 @@ export class ColorContainerComponent implements OnChanges {
     this.palette.mouseDown = false;
     this.hueSlider.mouseDown = false;
     this.alphaSlider.mouseDown = false;
+    this.canvasService.saveStateInHistory()
   }
 
   hueColors = [

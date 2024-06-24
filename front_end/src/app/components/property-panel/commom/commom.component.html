@@ -139,18 +139,17 @@
         [id]="key.key"
         (input)="onChange($event)"
         [value]="key.pipe(getValue(key.key))"
-        [checked]="getValue(key.key)"
         (click)="onInputClick.emit($event)"
       />
       } @else {
       <input
-        [max]="key.max"
+        [max]="key.max"s
         [min]="key.min"
         [step]="key.step"
         [type]="key.inputBox_type"
         [name]="key.key"
         [id]="key.key"
-        (input)="onChange($event)"
+        (change)="onChange($event)"
         [value]="key.pipe(getValue(key.key))"
         [checked]="getValue(key.key)"
         (click)="onInputClick.emit($event)"

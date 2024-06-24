@@ -383,29 +383,8 @@ export class CanvasComponent implements OnInit {
       // this.canvasService.selectedObj = [];
       // (e.target as ActiveSelection).
     });
+
     this.canvasService.canvas?.on('object:moving', (e) => {
-      // this.canvasService.emitReplaceObjsEventToSocket();
-      // let x: number = 0;
-
-      // let y: number = 0;
-      // if (e.e.clientX && e.e.clientY) {
-      //   x = e.e.movementX;
-
-      //   y = e.e.movementY;
-      // } else if (
-      //   (e.e as unknown as TouchEvent).touches?.length &&
-      //   this.lastPosX &&
-      //   this.lastPosY
-      // ) {
-      //   // this.canvasService.transformViewPort(
-      //   x = (e.e as unknown as TouchEvent).touches[0].clientX - this.lastPosX;
-      //   y = (e.e as unknown as TouchEvent).touches[0].clientY - this.lastPosY;
-      //   // );
-      //   this.lastPosX = (e.e as unknown as TouchEvent).touches[0].clientX;
-      //   this.lastPosY = (e.e as unknown as TouchEvent).touches[0].clientY;
-      // }
-      // x = e.e.movementX || (e.e as unknown as TouchEvent).touches[0].clientX;
-      // y = e.e.movementY || (e.e as unknown as TouchEvent).touches[0].clientY;
       if (
         (e.target as QuadraticCurveControlPoint).ctrlOf &&
         e.target?.left &&
@@ -429,6 +408,7 @@ export class CanvasComponent implements OnInit {
     });
     this.canvasService.canvas?.on('object:modified', (e) => {
       this.canvasService.emitReplaceObjsEventToSocket();
+      this.canvasService.saveStateInHistory()
       this.canvasService.oneDarrayOfSelectedObj.forEach((ob) => {
         this.canvasService.totalChanges.add(ob._id);
       });
@@ -614,7 +594,7 @@ export class CanvasComponent implements OnInit {
         if (obj) {
           obj._id = uuidv4();
           obj.name = obj.type;
-          this.canvasService.updateObjects(obj);
+          this.canvasService.updateObjects(obj, 'push', false);
           this.canvasService.currentDrawingObject = obj;
           (obj as fabric.IText).enterEditing();
         }
@@ -665,7 +645,7 @@ export class CanvasComponent implements OnInit {
           obj.name = obj.type;
           obj.pathType = 'quadratic_curve';
           this.canvasService.currentDrawingObject = obj;
-          this.canvasService.updateObjects(obj);
+          this.canvasService.updateObjects(obj, 'push', false);
         }
       }
     } else if (
@@ -678,7 +658,7 @@ export class CanvasComponent implements OnInit {
       if (obj) {
         obj._id = uuidv4();
         obj.name = obj.type;
-        this.canvasService.updateObjects(obj);
+        this.canvasService.updateObjects(obj, 'push', false);
         this.canvasService.currentDrawingObject = obj;
       }
     }
@@ -749,7 +729,7 @@ export class CanvasComponent implements OnInit {
         default:
           break;
       }
-      this.canvasService.updateObjects(obj, 'popAndPush');
+      this.canvasService.updateObjects(obj, 'popAndPush', false);
     }
     if (
       this.canvasService?.role === 'pen' &&
@@ -811,6 +791,10 @@ export class CanvasComponent implements OnInit {
 
   onMouseUp(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
+    if (this.isDrawing) {
+      this.canvasService.saveStateInHistory()
+      this.canvasService.emitPushObjsEventToSocket();
+    }
     this.isDrawing = false;
     this.isPathControlPointMoving = false;
 

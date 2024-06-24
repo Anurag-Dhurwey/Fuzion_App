@@ -92,9 +92,20 @@ export class CanvasService {
       property_panel: 15,
     },
   };
+
+  history: {
+    undoStack: Set<string>;
+    redoStack: Set<string>;
+  } = {
+    undoStack: new Set(),
+    redoStack: new Set(),
+  };
+
   constructor(
     private socketService: SocketService // private authService: AuthService
-  ) {}
+  ) {
+    this.history.undoStack.add('[]');
+  }
 
   // get projectId(){
   //   return this._projectId
@@ -115,11 +126,57 @@ export class CanvasService {
     return this._viewport_refs;
   }
 
+  public saveStateInHistory() {
+    // if (!this.canvas) return;
+    this.history.redoStack.clear(); // Clear redo stack on new action
+    this.export(
+      'json',
+      (data) => {
+        if (typeof data == 'string') {
+          this.history.undoStack.add(JSON.stringify(JSON.parse(data).objects));
+        } else {
+          this.history.undoStack.add(JSON.stringify(data.objects));
+        }
+      },
+      false
+    );
+    if (this.history.undoStack.size > 50) {
+      this.history.undoStack.delete(
+        this.history.undoStack.values().next().value
+      );
+    }
+  }
+  public undoHistory() {
+    if (this.history.undoStack.size > 1) {
+      const arr = [...this.history.undoStack];
+      const currentState = arr.pop()!;
+      this.history.undoStack.delete(currentState);
+      this.history.redoStack.add(currentState);
+      this.enliveObjs(JSON.parse(arr[arr.length - 1]), (objs) => {}, 'reset');
+    }
+  }
+  public redoHistory() {
+    if (this.history.redoStack.size) {
+      const arr = [...this.history.redoStack];
+      const state = arr.pop()!;
+      this.history.redoStack.delete(state)
+      this.history.undoStack.add(state);
+      this.enliveObjs(JSON.parse(state), () => {}, 'reset');
+    }
+  }
+
   emitReplaceObjsEventToSocket() {
     if (!this.projectId) return;
     this.clonedObjsFromActiveObjs((objs) => {
       if (!this.projectId) return;
       this.socketService.emit.object_modified(this.projectId, objs, 'replace');
+    });
+  }
+  emitPushObjsEventToSocket() {
+    if (!this.projectId) return;
+    this.clonedObjsFromActiveObjs((objs) => {
+      if (!this.projectId) return;
+      this.socketService.emit.object_modified(this.projectId, objs, 'push');
     });
   }
   emitSetObjPropertyEventToSocket(
@@ -843,31 +900,16 @@ export class CanvasService {
           this._objects.unshift(item);
           this.canvas?.add(this._objects[0]);
         }
-        // if (Number.isInteger(isReplaced)) {
-        //   this.canvas?.remove(this._objects[i]);
-        //   this._objects[i] = item;
-        //   this.canvas?.insertAt(this._objects[i], i, false);
-        // } else {
-        //   this._objects.unshift(item);
-        //   this.canvas?.add(this._objects[0]);
-        // }
         if (item.type === 'path') {
           this.reRender();
         }
       });
     } else if (method === 'delete') {
-      // this.canvas?.discardActiveObject();
       objs.forEach((obj) => {
         this.deleteObject(obj);
-        // const index = this._objects.findIndex(
-        //   (element) => element._id === obj._id
-        // );
-        // if (index >= 0) {
-        //   this.canvas?.remove(this._objects[index]);
-        //   this._objects.splice(index, 1);
-        // }
       });
       this.reRender();
+      this.saveStateInHistory();
     }
     this.canvas?.requestRenderAll();
 
@@ -890,21 +932,6 @@ export class CanvasService {
       }
     }
   };
-
-  // filterSelectedObjByIds(ids: string[]) {
-  //   this.removeElements(this.selectedObj, ids);
-  // }
-
-  // filterObjectsByIds(ids: string[]) {
-  //   // there is problem neet to delete from other user
-  //   this.removeElements(this.objects, ids);
-  //   this.reRender();
-  //   // this.projectId &&
-  //   //   this.socketService.emit.object_modified(
-  //   //     this.projectId,
-  //   //     this.selectedObj
-  //   //   );
-  // }
 
   renderObjectsOnCanvas(
     canvas: fabric.Canvas | fabric.StaticCanvas,
@@ -1142,9 +1169,10 @@ export class CanvasService {
             version: string;
             objects: fabric.Object[];
           }
-    ) => void
+    ) => void,
+    discardSelection: boolean = true
   ) {
-    this.canvas?.discardActiveObject();
+    discardSelection && this.canvas?.discardActiveObject();
     const canvas = document.createElement('canvas');
     canvas.id = 'exportable_canvas';
     canvas.width = this.frame.x;
