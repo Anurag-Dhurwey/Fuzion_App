@@ -9,7 +9,6 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth/auth.service';
 import { DbService } from '../../services/db/db.service';
 import { PreviewCardComponent } from '../preview-card/preview-card.component';
-import { environment } from '../../../../environment';
 import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-selection-panel.component';
 import { CanvasService } from '../../services/canvas/canvas.service';
 @Component({
@@ -48,10 +47,10 @@ export class DashboardComponent implements OnInit {
 
   async ngOnInit() {
     if (!this.dbService.projects.length) {
-      const projects = await this.dbService.getProjects();
+       await this.dbService.getProjects();
     }
   }
-
+ 
   async signOut() {
     try {
       await this.authService.signOutUser();
@@ -67,9 +66,8 @@ export class DashboardComponent implements OnInit {
     this.router.navigate([`/canvas/${id}`]);
   }
 
-  async onClickPromotionalTab() {
-    // await this.dbService.getDemoProjects();
-  }
+
+
 }
 
 type file = { type: 'file'; data: any };

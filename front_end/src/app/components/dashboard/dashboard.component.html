@@ -271,7 +271,7 @@
             cursor: 'pointer',
             backgroundColor: projectType == 'promotional' ? 'gray' : ''
           }"
-          (click)="onClickPromotionalTab(); projectType = 'promotional'"
+          (click)="projectType = 'promotional'"
         >
           Promotional
         </span>
@@ -306,8 +306,6 @@
         "
       >
         @for (project of myProject; track $index) {
-
-        <!-- [routerLink]="'/canvas/' + project.id" -->
         <app-preview-card
           class="card"
           style="overflow: hidden"
@@ -316,15 +314,6 @@
           [id]="project.id"
           [admin_controls]="true"
         />
-        <!-- <app-preview-card
-          class="card"
-          style="overflow: hidden"
-          [style]="{ backgroundColor: 'dimgray' }"
-          [project]="project"
-          [id]="project.id"
-          [dimension]="{ width: 250, height: 150 }"
-          [admin_controls]="true"
-        /> -->
         } @empty {
         <p style="align-self: flex-start; font-size: x-large">empty</p>
         }

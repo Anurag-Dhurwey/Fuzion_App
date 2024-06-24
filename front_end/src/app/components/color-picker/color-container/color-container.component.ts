@@ -35,8 +35,15 @@ export class ColorContainerComponent implements OnChanges {
     this.palette.mouseDown = false;
     this.hueSlider.mouseDown = false;
     this.alphaSlider.mouseDown = false;
-    this.canvasService.saveStateInHistory()
+
+    // if (this.initialColor != this.color) {
+      this.canvasService.emitReplaceObjsEventToSocket();
+      // this.initialColor=this.color
+    // }
+    this.canvasService.saveStateInHistory();
   }
+
+  // initialColor: string | undefined = '';
 
   hueColors = [
     'hsl(0, 100%, 50%)',
@@ -117,11 +124,15 @@ export class ColorContainerComponent implements OnChanges {
   // colorCatch: string | fabric.Gradient | fabric.Pattern | null = null;
 
   ngAfterViewInit() {
+    // if (!this.initialColor) {
+    //   this.initialColor = this.color;
+    // }
+
     this.palette.dim.w = this.width;
     this.hueSlider.dim.w = this.width;
     this.alphaSlider.dim.w = this.width;
     const ele_palette = document.getElementById('palette') as HTMLCanvasElement;
-    if(!ele_palette)return
+    if (!ele_palette) return;
     ele_palette.width = this.width;
     ele_palette.height = this.palette.dim.h;
     this.palette.ctx = ele_palette.getContext('2d') as CanvasRenderingContext2D;
@@ -531,14 +542,11 @@ export class ColorContainerComponent implements OnChanges {
     );
   }
 
-
-
-  ngOndestroy(){
+  ngOndestroy() {
     document.removeEventListener('mouseup', this.reset);
 
-    console.log('dd')
+    console.log('dd');
   }
-
 }
 
 type DefaultColorFormate = 'RGB' | 'HSL' | 'HSV' | 'CMYK' | 'HEX';

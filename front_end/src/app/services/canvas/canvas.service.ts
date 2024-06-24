@@ -4,7 +4,6 @@ import {
   SocketService,
   object_modified_method,
 } from '../socket/socket.service';
-// import { Observable, Subscriber } from 'rxjs';
 import {
   Fab_Group,
   Fab_Objects,
@@ -17,23 +16,17 @@ import {
 } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
-import { v4 as uuidv4 } from 'uuid';
 import {
   Layout,
   PreviousCustomizationState,
   PropertiesToInclude,
   UpdateObjectsMethods,
-  Visibility,
 } from '../../../types/canvas.service.types';
-// import { doc, updateDoc } from 'firebase/firestore';
-// import { DbService } from '../db/db.service';
 import { propertiesToInclude } from '../../constants';
-// import { AuthService } from '../auth/auth.service';
 @Injectable({
   providedIn: 'root',
 })
 export class CanvasService {
-  // propertiesToInclude = ['_id', 'type','pathType','clipStartEndPoint'];
   private _role: Roles = 'select';
   private _objects: Fab_Objects[] = [];
   canvas: fabric.Canvas | undefined;
@@ -42,14 +35,10 @@ export class CanvasService {
   background: string | undefined = '#282829';
   members: string[] = [];
   adminId: string | undefined;
-  // objectsObserver: Subscriber<'objects' | 'role'> | undefined;
   tempRefObj: (
     | fabric.Line
     | (fabric.Circle & { _refTo: string; _refIndex: [number, number] })
   )[] = [];
-  // private _viewport_status = {
-  //   preview_scence: false,
-  // };
   private _viewport_refs: {
     preview_scence: null | {
       pre_trans_target: { x: number; y: number };
@@ -63,7 +52,6 @@ export class CanvasService {
   editingPath: Fab_Path | null = null;
   quadraticCurveRefLine: fabric.Line | null = null;
   quadraticCurveControlPoints: QuadraticCurveControlPoint[] = [];
-  // selectedObj: Fab_Objects[] = [];
 
   totalChanges = new Set<string>();
 
@@ -127,7 +115,6 @@ export class CanvasService {
   }
 
   public saveStateInHistory() {
-    // if (!this.canvas) return;
     this.history.redoStack.clear(); // Clear redo stack on new action
     this.export(
       'json',
@@ -152,7 +139,7 @@ export class CanvasService {
       const currentState = arr.pop()!;
       this.history.undoStack.delete(currentState);
       this.history.redoStack.add(currentState);
-      this.enliveObjs(JSON.parse(arr[arr.length - 1]), (objs) => {}, 'reset');
+      this.enliveObjs(JSON.parse(arr[arr.length - 1]), () => {}, 'reset');
     }
   }
   public redoHistory() {
@@ -914,7 +901,7 @@ export class CanvasService {
       this.socketService.emit.object_modified(this.projectId, objs, method);
   }
 
-  removeElements = (array: Fab_Objects[], ids: string[]) => {
+  static removeElements = (array: Fab_Objects[], ids: string[]) => {
     ids.forEach((Id) => {
       const index = array.findIndex((element) => element._id === Id);
       if (index !== -1) {
@@ -924,12 +911,12 @@ export class CanvasService {
 
     for (const element of array) {
       if (element.type === 'group' && element._objects) {
-        this.removeElements(element._objects, ids);
+        CanvasService.removeElements(element._objects, ids);
       }
     }
   };
 
-  renderObjectsOnCanvas(
+  static renderObjectsOnCanvas(
     canvas: fabric.Canvas | fabric.StaticCanvas,
     objects: Fab_Objects[],
     options?: { backgroungColor?: string }
@@ -952,12 +939,23 @@ export class CanvasService {
 
   reRender() {
     if (!this.canvas) return;
-    this.renderObjectsOnCanvas(this.canvas, this.objects, {
+    CanvasService.renderObjectsOnCanvas(this.canvas, this.objects, {
       backgroungColor: '#282829',
     });
     this.tempRefObj?.forEach((ref) => {
       this.canvas?.add(ref);
     });
+
+    // this below operation is intentional
+    // adding ActiveSelection and discarding it resolves some canvas error
+    // error is when i do unde redo with multiple groups of objects then after rendering on canvas, controls of individual objects of groups are not working
+    // currenty i did not found any thing why that bug occurs
+    const select = new fabric.ActiveSelection([...this.oneDarrayOfObjects], {
+      canvas: this.canvas,
+    });
+    this.canvas?.setActiveObject(select);
+    this.canvas?.discardActiveObject();
+    console.log('reRendered');
   }
   isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -992,23 +990,6 @@ export class CanvasService {
       }
     }
   }
-
-  // exitTextEditing() {
-  //   if (
-  //     !this.currentDrawingObject ||
-  //     this.currentDrawingObject.type != 'i-text'
-  //   ) {
-  //     return;
-  //   }
-
-  //   if (this.currentDrawingObject.text?.length) {
-  //     this.currentDrawingObject.exitEditing();
-  //     this.updateObjects([this.currentDrawingObject], 'replace');
-  //   } else {
-  //     this.currentDrawingObject.exitEditing();
-  //     this.updateObjects([this.currentDrawingObject], 'delete');
-  //   }
-  // }
 
   setRole(role: Roles) {
     if (!this.canvas) return;
@@ -1182,7 +1163,7 @@ export class CanvasService {
       bojs,
       (res: Fab_Objects[]) => {
         if (format == 'jpeg' || format == 'png') {
-          this.renderObjectsOnCanvas(exportable_canvas, res);
+          CanvasService.renderObjectsOnCanvas(exportable_canvas, res);
           exportable_canvas.renderAll();
           cb(exportable_canvas.toDataURL({ format }));
         } else if (format == 'json') {
@@ -1217,5 +1198,24 @@ export class CanvasService {
       this.downloadSrc(url, name);
       URL.revokeObjectURL(url);
     });
+  }
+
+  static getImageData(project: Project, cb: (data: string) => void) {
+    const board = document.createElement('canvas');
+    board.width = project.width;
+    board.height = project.height;
+    const canvas = new fabric.StaticCanvas(board, {});
+
+    // if (project.objects && typeof project.objects === 'string') {
+    fabric.util.enlivenObjects(
+      JSON.parse(project.objects),
+      (live: any) => {
+        CanvasService.renderObjectsOnCanvas(canvas, live);
+        canvas?.renderAll();
+        cb(canvas.toDataURL({ format: 'png' }));
+      },
+      'fabric'
+    );
+    // }
   }
 }

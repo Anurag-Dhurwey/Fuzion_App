@@ -9,7 +9,7 @@ import { SocketService } from '../socket/socket.service';
   providedIn: 'root',
 })
 export class LayerService {
-  context_menu: Position | null = null;
+  context_menu: { position: Position; refObj: Fab_Objects } | null = null;
   changeOrder: null | {
     from: { obj_id: string; group_id: string | null; index: number };
     to?: { group_id: string | null; index: number };
@@ -42,7 +42,8 @@ export class LayerService {
             found._id,
             { name: this.renameLayerForm.name }
           );
-          this.canvasService.saveStateInHistory()
+        this.canvasService.reRender();
+        this.canvasService.saveStateInHistory();
       }
     }
     this.renameLayerForm = null;
@@ -69,7 +70,7 @@ export class LayerService {
     }
     // this.canvasService.reRender();
     this.canvasService.canvas?.requestRenderAll();
-    this.canvasService.saveStateInHistory()
+    this.canvasService.saveStateInHistory();
   }
   toggleControllability(obj: Fab_Objects, arg?: boolean) {
     obj.selectable = arg !== undefined ? arg : !obj.selectable;
@@ -79,7 +80,7 @@ export class LayerService {
     }
     this.canvasService.canvas?.requestRenderAll();
     // this.canvasService.reRender();
-    this.canvasService.saveStateInHistory()
+    this.canvasService.saveStateInHistory();
   }
 
   setActiveSelection(e: MouseEvent, object: Fab_Objects) {
@@ -283,6 +284,7 @@ export class LayerService {
       } as IGroupOptions) as Fab_Group;
       newGroup.setCoords();
       newGroup.name = newGroup.type;
+      newGroup.isMinimized = true;
       // newGroup._objects = selectedElements;
       // Function to recursively insert the new group
       const insertGroup = (array: Fab_Objects[]): Fab_Objects[] => {
@@ -314,7 +316,7 @@ export class LayerService {
     );
 
     this.canvasService.updateObjects(updatedStack, 'reset');
-    this.canvasService.saveStateInHistory()
+    this.canvasService.saveStateInHistory();
   }
 
   setObjToMove(id: string, group_id: string | null, index: number) {
@@ -402,12 +404,15 @@ export class LayerService {
         this.changeOrder.to.index
       );
       this.canvasService.updateObjects(updatedStack, 'reset');
-      this.canvasService.saveStateInHistory()
+      this.canvasService.saveStateInHistory();
     }
   }
   onContextClickAtLayer(e: MouseEvent, obj: Fab_Objects) {
     e.preventDefault();
-    this.context_menu = { x: e.clientX, y: e.clientY };
+    this.context_menu = {
+      position: { x: e.clientX, y: e.clientY },
+      refObj: obj,
+    };
     if (this.canvasService.oneDarrayOfSelectedObj.length) {
       if (!this.canvasService.idsOfSelectedObj.includes(obj._id)) {
         this.setActiveSelection(e, obj);

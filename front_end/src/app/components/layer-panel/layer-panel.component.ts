@@ -11,7 +11,6 @@ import { LayerPanelContextMenuComponent } from './layer-panel-context-menu/layer
 
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { LayerService } from '../../services/layer/layer.service';
-// import { FormControl } from '@angular/forms';
 
 @Component({
   selector: 'app-layer-panel',
@@ -26,19 +25,11 @@ export class LayerPanelComponent implements OnInit {
   @Input() group_id: string | null = null;
   @Output() saveObjectsToDB = new EventEmitter<void>();
 
-  // renaming:boolean=false
-
-  // name=new FormControl('')
-
   constructor(
     public canvasService: CanvasService,
     public layerService: LayerService
   ) {}
 
-  // onRename(name:Event){
-  //   console.log('name',name.target)
-  //   this.layerService.renameLayerForm!.name=(name.target as HTMLInputElement).value
-  // }
 
 
   @HostListener('window:mouseup', ['$event'])

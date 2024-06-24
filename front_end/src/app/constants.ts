@@ -7,6 +7,7 @@ export const propertiesToInclude = [
   'ctrlType',
   'ctrlOf',
   'index',
+  'isMinimized'
 ];
 export const defaultObjProprty = {
   fill: '#07a4b0',

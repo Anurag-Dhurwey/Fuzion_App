@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   Router,
   RouterLink,
@@ -7,12 +7,8 @@ import {
 } from '@angular/router';
 import { DbService } from '../../services/db/db.service';
 import { AuthService } from '../../services/auth/auth.service';
-import { Store } from '@ngrx/store';
-// import { appSelector } from '../../store/selectors/app.selector';
-import { Project } from '../../../types/app.types';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { PreviewCardComponent } from '../preview-card/preview-card.component';
-import { environment } from '../../../../environment';
 @Component({
   selector: 'app-welcome',
   standalone: true,
@@ -21,18 +17,12 @@ import { environment } from '../../../../environment';
   styleUrl: './welcome.component.css',
 })
 export class WelcomeComponent implements OnInit {
-  // app$: appState | undefined;
-  // private store = inject(Store);
-  // demo_projects: Project[] = [];
-
   constructor(
     public authService: AuthService,
     private router: Router,
     public canvasService: CanvasService,
     public dbService: DbService
-  ) {
-    // this.store.select(appSelector).subscribe((state) => (this.app$ = state));
-  }
+  ) {}
 
   async ngOnInit() {
     try {
@@ -62,15 +52,4 @@ export class WelcomeComponent implements OnInit {
       console.error(error);
     }
   }
-
-  // initializeCanvases() {
-  //   this.projects = this.projects?.map((objects) => {
-  //     if (typeof objects.objects === 'string') {
-  //       objects.objects =
-  //         this.canvasService.enliveObjcts(JSON.parse(objects.objects), null) ||
-  //         [];
-  //     }
-  //     return objects;
-  //   });
-  // }
 }

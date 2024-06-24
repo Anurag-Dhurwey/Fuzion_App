@@ -19,16 +19,11 @@ import {
   query,
   where,
   documentId,
-  getDoc,
   deleteDoc,
 } from 'firebase/firestore';
-// import { getAnalytics } from 'firebase/analytics';
 import { environment } from '../../../../environment';
-// front_end/environment.ts
-// import { SocketService } from '../socket/socket.service';
 import { Project } from '../../../types/app.types';
 import { v4 } from 'uuid';
-// import { CanvasService } from '../canvas/canvas.service';
 import { Observable, of, from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 @Injectable({
@@ -41,9 +36,9 @@ export class DbService {
   storage;
   private _projects: Project[] = [];
   private _promotional_projects: Project[] = [];
-   images$: Observable<string[]> = new Observable();
-   imageRequestDone:boolean=false
-  constructor() { // private canvasService: CanvasService // private socketService: SocketService,
+  images$: Observable<string[]> = new Observable();
+  imageRequestDone: boolean = false;
+  constructor() {
     this.app = initializeApp(environment.firebaseConfig);
     this.store = getFirestore(this.app);
     this.auth = getAuth(this.app);
@@ -165,8 +160,8 @@ export class DbService {
   }
 
   getMyImages() {
-    if(this.imageRequestDone){
-      return
+    if (this.imageRequestDone) {
+      return;
     }
     if (this.auth.currentUser) {
       const storageRef = ref(
@@ -180,7 +175,7 @@ export class DbService {
         }),
         map((downloadUrls) => downloadUrls) // Ensure type safety
       );
-      this.imageRequestDone=true
+      this.imageRequestDone = true;
     } else {
       this.images$ = of([]); // Return an empty array if no user is logged in
     }
@@ -188,10 +183,6 @@ export class DbService {
   }
 
   get myImages() {
-    // if (!this.images$.pipe.length) {
-    //   this.getMyImages();
-    // }
-    console.log(this.images$.pipe.length)
     return this.images$;
   }
 
@@ -279,4 +270,6 @@ export class DbService {
       this._projects = this.projects.filter((pro) => pro.id != id);
     } catch (error) {}
   }
+
+
 }

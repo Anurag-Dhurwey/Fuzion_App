@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Position } from '../../../../types/app.types';
+import { Fab_Objects, Position } from '../../../../types/app.types';
 import { CanvasService } from '../../../services/canvas/canvas.service';
 
 @Component({
@@ -10,12 +10,16 @@ import { CanvasService } from '../../../services/canvas/canvas.service';
   styleUrl: './layer-panel-context-menu.component.css',
 })
 export class LayerPanelContextMenuComponent {
-  @Input() position: Position | undefined | null;
-  @Input() object: Object | undefined;
+  @Input({ required: true }) position: Position | undefined | null;
+  @Input({ required: true }) object: Fab_Objects | undefined;
   @Output() onGroup = new EventEmitter();
   constructor(public canvasService: CanvasService) {}
 
   onDeleteClick() {
-    this.canvasService.updateObjects(this.canvasService.oneDarrayOfSelectedObj,"delete");
+    this.canvasService.updateObjects(
+      this.canvasService.oneDarrayOfSelectedObj,
+      'delete'
+    );
+    this.object && this.canvasService.updateObjects(this.object, 'delete');
   }
 }

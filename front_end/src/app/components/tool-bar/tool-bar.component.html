@@ -20,9 +20,9 @@
   div > #importBtn {
     transform: rotate(180deg);
   }
-  #setting {
+  /* #setting {
     position: relative;
-  }
+  } */
   #settingPanel {
     padding: 0px 5px;
     position: absolute;
@@ -56,37 +56,23 @@
     border-radius: 5px;
     background: transparent;
   }
-  /* .menu {
-    cursor: default;
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    width: 250ox;
-    min-height: 400px;
-    min-width: 200px;
-    padding: 10px 5px;
-    font-size: small;
-    background-color: gray;
-    border-radius: 10px;
-    justify-content: flex-start;
-    align-items: center;
-    flex-direction: column;
-    row-gap: 10px;
-  }
-  .menu > button {
-    width: 100%;
-  } */
 </style>
-
-<!-- <input
-  type="file"
-  name="fileInput"
-  id="fileInput"
-  #fileInput
-  style="display: none"
-  accept="image/*"
-  (change)="onImageInput(fileInput.files)"
-/> -->
+<div>
+  <button
+    [disabled]="canvasService.history.undoStack.size <= 1"
+    class="material-symbols-outlined"
+    (click)="canvasService.undoHistory()"
+  >
+    undo
+  </button>
+  <button
+    [disabled]="!canvasService.history.redoStack.size"
+    class="material-symbols-outlined"
+    (click)="canvasService.redoHistory()"
+  >
+    redo
+  </button>
+</div>
 
 <div class="menuIcon">
   <button
@@ -96,7 +82,7 @@
     menu
   </button>
 </div>
-<div id="setting">
+<div>
   <button
     (click)="canvasService.layout.visibility.frame_selection_panel = true"
     class="material-symbols-outlined"
@@ -116,7 +102,7 @@
   }
 </div>
 
-<div id="setting">
+<div>
   <button
     class="material-symbols-outlined"
     (click)="canvasService.toggleLayoutVisibility(['setting_panel'], true)"

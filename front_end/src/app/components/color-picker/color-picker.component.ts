@@ -64,7 +64,7 @@ export class ColorPickerComponent {
     this.setCurrentColor(grad);
   }
   onColorStopModified(stop: ColorStop) {
-    // console.log(stop);
+    this.canvasService.emitReplaceObjsEventToSocket();
   }
   onColorStopSelectionCleared() {
     this.gradientColorStopIndex = null;
@@ -81,7 +81,8 @@ export class ColorPickerComponent {
     // this.palette.lastMousePo = null;
     // this.hueSlider.lastMousePo = null;
     // this.gradientColorStopIndex = null;
-    this.canvasService.saveStateInHistory()
+    this.canvasService.saveStateInHistory();
+    this.canvasService.emitReplaceObjsEventToSocket();
   }
 
   linearGradient() {
@@ -133,7 +134,8 @@ export class ColorPickerComponent {
     // this.palette.lastMousePo = null;
     // this.hueSlider.lastMousePo = null;
     // this.gradientColorStopIndex = null;
-    this.canvasService.saveStateInHistory()
+    this.canvasService.saveStateInHistory();
+    this.canvasService.emitReplaceObjsEventToSocket();
   }
   onChangeGradientType(val: string) {
     if (val == 'radial') {
@@ -146,7 +148,8 @@ export class ColorPickerComponent {
     } else if (val == 'linear') {
       this.setCurrentColor(this.linearGradient());
     }
-    this.canvasService.saveStateInHistory()
+    this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.saveStateInHistory();
   }
 
   setCurrentColor(color: string | fabric.Gradient) {
