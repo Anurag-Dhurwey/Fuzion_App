@@ -152,29 +152,85 @@ export class CanvasService {
     }
   }
 
-  emitReplaceObjsEventToSocket() {
-    if (!this.projectId) return;
-    this.clonedObjsFromActiveObjs((objs) => {
-      if (!this.projectId) return;
-      this.socketService.emit.object_modified(this.projectId, objs, 'replace');
-    });
-  }
-  emitPushObjsEventToSocket() {
-    if (!this.projectId) return;
-    this.clonedObjsFromActiveObjs((objs) => {
-      if (!this.projectId) return;
-      this.socketService.emit.object_modified(this.projectId, objs, 'push');
-    });
-  }
-  emitSetObjPropertyEventToSocket(
-    _id: string,
-    property: FabObjectsPropertiesOnly
-  ) {
-    if (!this.projectId) return;
-    this.socketService.emit.set_object_property(this.projectId, _id, property);
-  }
+  lastContinousEventTime: number = Date.now();
 
-  grid: fabric.Line[] = [];
+  // emitContiniousReplaceEvent() {
+  //   if (this.socketService.setting.continuous_broadcasting) {
+  //     this.emitReplaceObjsEventToSocket(true);
+  //   }
+  // }
+
+  // emitReplaceObjsEventToSocket(isContinous: boolean = false) {
+  //   if (!this.projectId) return;
+  //   const emit = () => {
+  //     this.clonedObjsFromActiveObjs((objs) => {
+  //       this.socketService.emit.object_modified(
+  //         this.projectId!,
+  //         objs,
+  //         'replace'
+  //       );
+  //     });
+  //   };
+  //   if (isContinous) {
+  //     if (Date.now() - this.lastContinousEventTime >= 200) {
+  //       emit();
+  //     }
+  //     return;
+  //   } else {
+  //     emit();
+  //   }
+  // }
+  // emitPushObjsEventToSocket() {
+  //   if (!this.projectId) return;
+  //   this.clonedObjsFromActiveObjs((objs) => {
+  //     this.socketService.emit.object_modified(this.projectId!, objs, 'push');
+  //   });
+  // }
+  // emitSetObjPropertyEventToSocket(
+  //   _id: string,
+  //   property: FabObjectsPropertiesOnly
+  // ) {
+  //   if (!this.projectId) return;
+  //   this.socketService.emit.set_object_property(this.projectId, _id, property);
+  // }
+
+  socketEvents = {
+    set_object_property: (_id: string, property: FabObjectsPropertiesOnly) => {
+      if (!this.projectId) return;
+      this.socketService.emit.set_object_property(
+        this.projectId,
+        _id,
+        property
+      );
+    },
+    object_modified: (
+      method: UpdateObjectsMethods,
+      isContinous: boolean = false
+    ) => {
+      if (!this.projectId) return;
+      const emit = () => {
+        this.clonedObjsFromActiveObjs((objs) => {
+          this.socketService.emit.object_modified(
+            this.projectId!,
+            objs,
+            method
+          );
+        });
+      };
+      if (isContinous) {
+        if (!this.socketService.setting.continuous_broadcasting) return;
+        if (Date.now() - this.lastContinousEventTime >= 200) {
+          emit();
+          this.lastContinousEventTime = Date.now();
+        }
+        return;
+      } else {
+        emit();
+      }
+    },
+  };
+
+  // grid: fabric.Line[] = [];
 
   // removeGrid() {
   //   this.grid.forEach((line) => {
@@ -651,9 +707,13 @@ export class CanvasService {
       'fabric'
     );
   }
-
+  clearHistory() {
+    this.history.redoStack.clear();
+    this.history.undoStack.clear();
+  }
   mountProject(project: Omit<Project, 'objects'> & { objects: Fab_Objects[] }) {
     this.totalChanges.clear();
+    this.clearHistory();
     this._objects = project.objects;
     this.members = project.members;
     this.projectId = project.id;
@@ -668,6 +728,7 @@ export class CanvasService {
 
   unMountProject() {
     this.totalChanges.clear();
+    this.clearHistory();
     this._objects = [];
     this.members = [];
     this.adminId = undefined;

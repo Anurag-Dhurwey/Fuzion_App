@@ -3,9 +3,8 @@ import { CommomComponent } from './commom/commom.component';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { EditPathComponent } from './edit-path/edit-path.component';
 import { ColorPickerComponent } from '../color-picker/color-picker.component';
-// import { Fab_Objects } from '../../../types/app.types';
-// import { QuadraticCurveControlPoint } from '../../../types/app.types';
 import { fabric } from 'fabric';
+import { SocketService } from '../../services/socket/socket.service';
 @Component({
   selector: 'app-property-panel',
   standalone: true,
@@ -14,11 +13,13 @@ import { fabric } from 'fabric';
   styleUrl: './property-panel.component.css',
 })
 export class PropertyPanelComponent {
-  constructor(public canvasService: CanvasService) {}
+  constructor(
+    public canvasService: CanvasService,
+    private socketService: SocketService
+  ) {}
 
   showColorPicker = false;
   targetNameToColor: keyof fabric.Object | null = null;
-
 
   ngAfterViewInit() {
     this.canvasService.canvas?.on('selection:cleared', () => {
@@ -44,15 +45,16 @@ export class PropertyPanelComponent {
       this.showColorPicker = true;
     }
   }
-  onColorChange(val: string|fabric.Gradient) {
+  onColorChange(val: string | fabric.Gradient) {
     if (!this.targetNameToColor) return;
     (this.canvasService.oneDarrayOfSelectedObj[0] as fabric.Object).set(
       this.targetNameToColor,
       val
     );
-    // this.canvasService.canvas?.renderAll();
     this.canvasService.canvas?.requestRenderAll();
-    // this.canvasService.em
+    if (this.socketService.setting.continuous_broadcasting) {
+      this.canvasService.socketEvents.object_modified('replace',true);
+    }
   }
 
   get getEleWidth() {
@@ -63,8 +65,5 @@ export class PropertyPanelComponent {
   closeColorPicker() {
     this.showColorPicker = false;
     this.targetNameToColor = null;
-
-    // this.gradientColorStopIndex=null
   }
-
 }

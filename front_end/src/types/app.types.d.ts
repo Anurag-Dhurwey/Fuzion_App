@@ -173,6 +173,7 @@ export type Project = {
   width: number;
   height: number;
   members: string[];
+  name:string
   promotional?: boolean;
 };
 

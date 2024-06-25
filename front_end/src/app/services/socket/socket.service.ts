@@ -1,4 +1,3 @@
-// socket.service.ts
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { fabric } from 'fabric';
@@ -7,9 +6,6 @@ import {
   FabObjectsPropertiesOnly,
   Position,
   Project,
-  // Project,
-  // SocketEmitEvents,
-  // SocketOnEvents,
 } from '../../../types/app.types';
 import { environment } from '../../../../environment';
 import { propertiesToInclude } from '../../constants';
@@ -24,7 +20,13 @@ export class SocketService {
     emit: true,
   };
   constructor() {}
-
+  setting: {
+    continuous_broadcasting: boolean;
+    // discrete_broadcasting: boolean;
+  } = {
+    continuous_broadcasting: false,
+    // discrete_broadcasting: false,
+  };
   connect(
     id: string,
     email: string,

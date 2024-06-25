@@ -24,12 +24,15 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 5px;
+
+      padding: 2px 0px;
+      background: #faebd785;
     "
   >
     <span
       (click)="deleteProject()"
       class="material-symbols-outlined"
-      style="cursor: pointer; z-index: 3"
+      style="cursor: pointer; z-index: 3; font-size: 20px"
     >
       delete
     </span>
@@ -38,7 +41,7 @@
     <span
       (click)="markPromotional()"
       class="material-symbols-outlined"
-      style="cursor: pointer; z-index: 3"
+      style="cursor: pointer; z-index: 3; font-size: 20px"
       [style]="{ color: project?.promotional ? 'yellow' : '' }"
     >
       public
@@ -49,11 +52,52 @@
 
   <img
     [src]="_imageToPreview"
-    style="object-fit: contain; cursor: pointer;"
+    style="object-fit: contain; cursor: pointer"
     width="250px"
     height="150px"
     alt="imageToPreview"
     [routerLink]="admin_controls ? '/canvas/' + id : '/canvas/demo/' + id"
   />
-</div>
+  <span
+    style="
+      position: absolute;
+      bottom: 0%;
+      right: 0%;
+      width: 100%;
+      height: fit-content;
+      text-align: center;
+      padding: 2px 0px;
+      background: #faebd785;
+      font-size: 16px;
+    "
+    (dblclick)="onDblClickAtProjectName()"
+  >
+    @if (renameProjectForm) {
+    <input
+      (input)="onProjectRename(projectRename.value)"
+      #projectRename
+      [value]="renameProjectForm.name"
+      type="text"
+      style="
+        width: 80%;
+        outline: none;
+        border: none;
+        text-align: center;
+        padding: 2px 2px;
+        margin: 2px 2px;
+        border-radius: 2px;
+      "
+    />
 
+    <button
+      style="width: fit-content; padding: 2px 2px; margin: 2px 2px"
+      (click)="saveAndExitRenameProjectForm()"
+    >
+      ok
+    </button>
+    }@else {
+    {{ project?.name || "name" }}
+
+    }
+  </span>
+</div>

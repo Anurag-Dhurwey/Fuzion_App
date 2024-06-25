@@ -1,7 +1,5 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import {
-  Fab_Objects,
-  Fab_Path,
   Fields,
   Keys,
   PossibleKeysOfObject,
@@ -9,11 +7,7 @@ import {
   possibleShapeType,
 } from '../../../../types/app.types';
 import { CanvasService } from '../../../services/canvas/canvas.service';
-// import { propertiesToInclude } from '../../../constants';
-// import { SocketService } from '../../../services/socket/socket.service';
-// import { SocketService } from '../../../services/socket/socket.service';
 import { fabric } from 'fabric';
-// import Color from 'color';
 @Component({
   selector: 'app-commom',
   standalone: true,
@@ -26,19 +20,19 @@ export class CommomComponent {
   @Output() onValueChange = new EventEmitter<Event>();
 
   constructor(
-    public canvasService: CanvasService,
-    // private socketService: SocketService
-  ) {}
+    public canvasService: CanvasService
+  ) 
+  {}
 
   addBtn = (keys: Keys[]) => {
     for (let key of keys) {
       this.addInitialValueToField(key.key as keyof fabric.Object);
     }
-    this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.socketEvents.object_modified('replace');
     this.canvasService.oneDarrayOfObjects.forEach((ob) =>
       this.canvasService.totalChanges.add(ob._id)
     );
-    this.canvasService.saveStateInHistory()
+    this.canvasService.saveStateInHistory();
     this.canvasService.canvas?.requestRenderAll();
   };
 
@@ -49,11 +43,11 @@ export class CommomComponent {
         ''
       );
     }
-    this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.socketEvents.object_modified('replace');
     this.canvasService.oneDarrayOfObjects.forEach((ob) =>
       this.canvasService.totalChanges.add(ob._id)
     );
-    this.canvasService.saveStateInHistory()
+    this.canvasService.saveStateInHistory();
     this.canvasService.canvas?.requestRenderAll();
   };
 
@@ -695,11 +689,11 @@ export class CommomComponent {
         target.name as keyof fabric.Object,
         value
       );
-      this.canvasService.emitSetObjPropertyEventToSocket(
+      this.canvasService.socketEvents.set_object_property(
         this.canvasService.oneDarrayOfSelectedObj[0]._id,
         { [target.name]: value }
       );
-      this.canvasService.saveStateInHistory()
+      this.canvasService.saveStateInHistory();
       this.canvasService.canvas?.requestRenderAll();
     }
   }

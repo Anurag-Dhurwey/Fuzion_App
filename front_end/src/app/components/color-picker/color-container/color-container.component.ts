@@ -37,7 +37,7 @@ export class ColorContainerComponent implements OnChanges {
     this.alphaSlider.mouseDown = false;
 
     // if (this.initialColor != this.color) {
-      this.canvasService.emitReplaceObjsEventToSocket();
+      this.canvasService.socketEvents.object_modified('replace');
       // this.initialColor=this.color
     // }
     this.canvasService.saveStateInHistory();

@@ -22,7 +22,7 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { environment } from '../../../../environment';
-import { Project } from '../../../types/app.types';
+import { IncludePropertiesOnly, Project } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { Observable, of, from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
@@ -61,6 +61,7 @@ export class DbService {
         members: [],
         width,
         height,
+        name: `project_${Date.now()}`,
       };
       const docRef = await addDoc(collection(this.store, 'projects'), pro);
 
@@ -70,6 +71,28 @@ export class DbService {
     } catch (error) {
       console.error(error);
       return;
+    }
+  }
+  async renameProjectById(name: string, id: string) {
+    this.updateProject({ name }, id);
+  }
+
+  async updateProject(props: Partial<Project>, id: string) {
+    try {
+      await updateDoc(doc(this.store, 'projects', id), {
+        ...props,
+      });
+      this.client_methods.updateProjectById(props,id)
+      // const found = this.projects.find((pr) => pr.id == id) as any;
+      // console.log(found);
+      // for (const [key, val] of Object.entries(pros)) {
+      //   ``;
+      //   found[key] = val;
+      // }
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
     }
   }
 
@@ -101,7 +124,7 @@ export class DbService {
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      this.setProjects({ ...data, id: doc.id } as Project, 'push');
+      this.client_methods.setProjects({ ...data, id: doc.id } as Project, 'push');
     });
     // this.projects=projects
     return this.projects;
@@ -188,10 +211,10 @@ export class DbService {
 
   async updateObjects(objects: string, id: string) {
     try {
-      await updateDoc(doc(this.store, 'projects', id), {
-        objects,
-      });
-      return true;
+      // await updateDoc(doc(this.store, 'projects', id), {
+      //   objects,
+      // });
+      return this.updateProject({ objects }, id);
     } catch (error) {
       console.error(error);
       return false;
@@ -245,24 +268,26 @@ export class DbService {
     // return await getDownloadURL(uploadTask.snapshot.ref);
   }
 
-  setProjects(
-    project: Project | Project[],
-    method: 'reset' | 'push' | 'replace'
-  ) {
-    if (!Array.isArray(project)) project = [project];
-    if (method === 'reset' && Array.isArray(project)) {
-      this._projects = project;
-    } else if (method === 'push') {
-      this._projects = [...this.projects, ...project];
-    } else if (method === 'replace') {
-      this._projects = this.projects.map((pro) => {
-        for (const its of project as Project[]) {
-          if (its.id == pro.id) return its;
-        }
-        return pro;
-      });
-    }
-  }
+  //  private setProjects(
+  //     project: Project | Project[],
+  //     method: 'reset' | 'push' | 'replace'
+  //   ) {
+  //     if (!Array.isArray(project)) project = [project];
+  //     if (method === 'reset' && Array.isArray(project)) {
+  //       this._projects = project;
+  //     } else if (method === 'push') {
+  //       this._projects = [...this.projects, ...project];
+  //     } else if (method === 'replace') {
+  //       project.forEach((new_pr) => {
+  //         this._projects = this._projects.map((pr) => {
+  //           if (pr.id === new_pr.id) {
+  //             return new_pr;
+  //           }
+  //           return pr;
+  //         });
+  //       });
+  //     }
+  //   }
 
   async deleteProject(id: string) {
     try {
@@ -271,5 +296,31 @@ export class DbService {
     } catch (error) {}
   }
 
-
+  client_methods = {
+    setProjects: (project: Project | Project[], method: SetProjectsMethods) => {
+      if (!Array.isArray(project)) project = [project];
+      if (method === 'reset' && Array.isArray(project)) {
+        this._projects = project;
+      } else if (method === 'push') {
+        this._projects = [...this.projects, ...project];
+      } else if (method === 'replace') {
+        project.forEach((new_pr) => {
+          this._projects = this._projects.map((pr) => {
+            if (pr.id === new_pr.id) {
+              return new_pr;
+            }
+            return pr;
+          });
+        });
+      }
+    },
+    updateProjectById: (props: Partial<Project>, id: string) => {
+      const found = this.projects.find((pr) => pr.id == id) as any;
+      for (const [key, val] of Object.entries(props)) {
+        found[key] = val;
+      }
+    },
+  };
 }
+
+type SetProjectsMethods = 'reset' | 'push' | 'replace';

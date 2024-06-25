@@ -281,6 +281,7 @@ export class CanvasComponent implements OnInit {
         new_objects = [new_objects];
       }
       this.canvasService.enliveObjs(new_objects, () => {}, method);
+      this.canvasService.clearHistory();
     });
     this.socketService.on.saveObjectsToDB_succeeded((roomId) => {
       if (this.canvasService.projectId === roomId) {
@@ -291,6 +292,7 @@ export class CanvasComponent implements OnInit {
       const found = this.canvasService.getObjectById(_id);
       if (found) {
         (found as fabric.Object).set(property);
+        this.canvasService.clearHistory();
         this.canvasService.canvas?.requestRenderAll();
       }
     });
@@ -302,12 +304,7 @@ export class CanvasComponent implements OnInit {
     const board = document.getElementById('canvas') as HTMLCanvasElement;
     board.width = this.canvasService.frame.x;
     board.height = this.canvasService.frame.y;
-    // fabric.Object.prototype.toObject = function (additionalProperties) {
-    //   return fabric.Object.prototype.toObject.call(
-    //     this,
-    //     ['_id', 'pathType'].concat(additionalProperties || [])
-    //   );
-    // };
+
     this.canvasService.canvas = new fabric.Canvas(board, {
       backgroundColor: this.canvasService.background || '#282829',
       stopContextMenu: true,
@@ -396,19 +393,21 @@ export class CanvasComponent implements OnInit {
           e.target.top
         );
       }
+      this.canvasService.socketEvents.object_modified('replace', true);
     });
-    this.canvasService.canvas?.on('object:resizing', () => {
-      // this.canvasService.emitReplaceObjsEventToSocket();
+
+    this.canvasService.canvas.on('object:resizing', () => {
+      this.canvasService.socketEvents.object_modified('replace', true);
     });
-    this.canvasService.canvas?.on('object:rotating', (e) => {
-      // this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.canvas.on('object:rotating', (e) => {
+      this.canvasService.socketEvents.object_modified('replace', true);
     });
-    this.canvasService.canvas?.on('object:scaling', () => {
-      // this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.canvas.on('object:scaling', () => {
+      this.canvasService.socketEvents.object_modified('replace', true);
     });
-    this.canvasService.canvas?.on('object:modified', (e) => {
-      this.canvasService.emitReplaceObjsEventToSocket();
-      this.canvasService.saveStateInHistory()
+    this.canvasService.canvas.on('object:modified', (e) => {
+      this.canvasService.socketEvents.object_modified('replace');
+      this.canvasService.saveStateInHistory();
       this.canvasService.oneDarrayOfSelectedObj.forEach((ob) => {
         this.canvasService.totalChanges.add(ob._id);
       });
@@ -594,7 +593,11 @@ export class CanvasComponent implements OnInit {
         if (obj) {
           obj._id = uuidv4();
           obj.name = obj.type;
-          this.canvasService.updateObjects(obj, 'push', false);
+          this.canvasService.updateObjects(
+            obj,
+            'push',
+            this.socketService.setting.continuous_broadcasting
+          );
           this.canvasService.currentDrawingObject = obj;
           (obj as fabric.IText).enterEditing();
         }
@@ -645,7 +648,11 @@ export class CanvasComponent implements OnInit {
           obj.name = obj.type;
           obj.pathType = 'quadratic_curve';
           this.canvasService.currentDrawingObject = obj;
-          this.canvasService.updateObjects(obj, 'push', false);
+          this.canvasService.updateObjects(
+            obj,
+            'push',
+            this.socketService.setting.continuous_broadcasting
+          );
         }
       }
     } else if (
@@ -658,7 +665,11 @@ export class CanvasComponent implements OnInit {
       if (obj) {
         obj._id = uuidv4();
         obj.name = obj.type;
-        this.canvasService.updateObjects(obj, 'push', false);
+        this.canvasService.updateObjects(
+          obj,
+          'push',
+          this.socketService.setting.continuous_broadcasting
+        );
         this.canvasService.currentDrawingObject = obj;
       }
     }
@@ -729,7 +740,11 @@ export class CanvasComponent implements OnInit {
         default:
           break;
       }
-      this.canvasService.updateObjects(obj, 'popAndPush', false);
+      this.canvasService.updateObjects(
+        obj,
+        'popAndPush',
+        this.socketService.setting.continuous_broadcasting
+      );
     }
     if (
       this.canvasService?.role === 'pen' &&
@@ -792,8 +807,10 @@ export class CanvasComponent implements OnInit {
   onMouseUp(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
     if (this.isDrawing) {
-      this.canvasService.saveStateInHistory()
-      this.canvasService.emitPushObjsEventToSocket();
+      this.canvasService.saveStateInHistory();
+      if (!this.socketService.setting.continuous_broadcasting) {
+        this.canvasService.socketEvents.object_modified('push');
+      }
     }
     this.isDrawing = false;
     this.isPathControlPointMoving = false;
@@ -1002,6 +1019,17 @@ export class CanvasComponent implements OnInit {
 
   ngOnDestroy() {
     if (this.canvasService.projectId) {
+      this.canvasService.export('json', (json) => {
+        if (typeof json === 'string') {
+          json = JSON.stringify(JSON.parse(json).objects);
+        } else {
+          json = JSON.stringify(json.objects);
+        }
+        this.dbService.client_methods.updateProjectById(
+          { objects: json },
+          this.canvasService.projectId!
+        );
+      });
       this.socketService.emit.room_leave(this.canvasService.projectId);
     }
     this.socketService.socket?.disconnect();

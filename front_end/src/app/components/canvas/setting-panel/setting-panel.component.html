@@ -1,69 +1,104 @@
-<div
-style="
-  width: 15vw;
-  min-width: 230px;
-  height: 100vh;
-  background-color: rgba(89, 89, 89, 1);
-  position: absolute;
-  right: 0%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex-direction: column;
-  row-gap: 20px;
-"
-(click)="$event.stopPropagation()"
->
-<div
-  style="
+<style>
+  .innerDiv {
     display: flex;
     justify-content: flex-start;
     align-items: center;
     flex-direction: column;
     width: 100%;
+  }
+  .h3 {
+    width: 100%;
+    font-size: medium;
+    font-weight: bold;
+    text-align: center;
+    background-color: rgba(131, 131, 131, 1);
+    padding: 5px 0px;
+    margin: 0%;
+  }
+  .spanInput {
+    width: 100%;
+    font-size: large;
+    text-align: start;
+    padding: 4px 4px;
+    font-weight: bold;
+    color: white;
+    outline: none;
+    border: none;
+    background: none;
+    display: flex;
+    justify-content: space-between;
+  }
+  label {
+    font-size: small;
+    cursor: pointer;
+  }
+  input {
+    cursor: pointer;
+  }
+</style>
+<div
+  style="
+    width: 15vw;
+    min-width: 230px;
+    height: 100vh;
+    background-color: rgba(89, 89, 89, 1);
+    position: absolute;
+    right: 0%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    row-gap: 20px;
   "
+  (click)="$event.stopPropagation()"
 >
-  <h3
-    style="
-      width: 100%;
-      font-size: large;
-      font-weight: bold;
-      text-align: center;
-      background-color: rgba(131, 131, 131, 1);
-      padding: 5px 0px;
-      margin: 0%;
-    "
-  >
-    Setting
-  </h3>
-  <button
-    style="
-      width: 100%;
-      font-size: large;
-      text-align: start;
-      padding: 4px 4px;
-      font-weight: bold;
-      color: white;
-      outline: none;
-      border: none;
-      background: none;
-      display: flex;
-      justify-content: space-between;
-    "
-  >
-    <label for="background-color">Background</label>
-    <input
-      style="
-        outline: none;
-        border: none;
-        padding: 0%;
-        width: 20px;
-        height: 20px;
-      "
-      type="color"
-      name=""
-      id="background-color"
-    />
-  </button>
-</div>
+  <div class="innerDiv">
+    <h3 class="h3">Setting</h3>
+    <span class="spanInput">
+      <label for="background-color">Theme</label>
+      <input
+        style="
+          outline: none;
+          border: none;
+          padding: 0%;
+          width: 20px;
+          height: 20px;
+        "
+        type="color"
+        name=""
+        id="background-color"
+      />
+    </span>
+  </div>
+  <div class="innerDiv">
+    <h3 class="h3">Broadcasting Type</h3>
+    <span class="spanInput">
+      <span style="width: 45%; cursor: pointer">
+        <label for="continious_broadcasting">Continious</label>
+        <input
+          [checked]="socketService.setting.continuous_broadcasting"
+          (change)="
+            socketService.setting.continuous_broadcasting =
+              !socketService.setting.continuous_broadcasting
+          "
+          type="checkbox"
+          name="continious_broadcasting"
+          id="continious_broadcasting"
+        />
+      </span>
+      <span style="width: 45%; cursor: pointer">
+        <label for="descreate_broadcasting">Descreate</label>
+        <input
+          [checked]="!socketService.setting.continuous_broadcasting"
+          (change)="
+            socketService.setting.continuous_broadcasting =
+              !socketService.setting.continuous_broadcasting
+          "
+          type="checkbox"
+          name="descreate_broadcasting"
+          id="descreate_broadcasting"
+        />
+      </span>
+    </span>
+  </div>
 </div>

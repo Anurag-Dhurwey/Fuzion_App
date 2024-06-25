@@ -64,7 +64,7 @@ export class ColorPickerComponent {
     this.setCurrentColor(grad);
   }
   onColorStopModified(stop: ColorStop) {
-    this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.socketEvents.object_modified('replace',true);
   }
   onColorStopSelectionCleared() {
     this.gradientColorStopIndex = null;
@@ -82,7 +82,7 @@ export class ColorPickerComponent {
     // this.hueSlider.lastMousePo = null;
     // this.gradientColorStopIndex = null;
     this.canvasService.saveStateInHistory();
-    this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.socketEvents.object_modified('replace');
   }
 
   linearGradient() {
@@ -135,7 +135,7 @@ export class ColorPickerComponent {
     // this.hueSlider.lastMousePo = null;
     // this.gradientColorStopIndex = null;
     this.canvasService.saveStateInHistory();
-    this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.socketEvents.object_modified('replace');
   }
   onChangeGradientType(val: string) {
     if (val == 'radial') {
@@ -148,7 +148,7 @@ export class ColorPickerComponent {
     } else if (val == 'linear') {
       this.setCurrentColor(this.linearGradient());
     }
-    this.canvasService.emitReplaceObjsEventToSocket();
+    this.canvasService.socketEvents.object_modified('replace');
     this.canvasService.saveStateInHistory();
   }
 
