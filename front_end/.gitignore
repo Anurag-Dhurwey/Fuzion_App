@@ -2,6 +2,7 @@
 
 **/environments/
 **/environment.ts
+**/environments.ts
 .env
 
 # Compiled output

@@ -115,21 +115,23 @@ export class CanvasComponent implements OnInit {
       this.canvasService.canvas!.skipTargetFind = false;
       this._recentRole && this.canvasService.setRole(this._recentRole);
       this._recentRole = undefined;
-    } else if (event.key == 'c') {
-      this.canvasService.setRole('circle');
-    } else if (event.key == 'r') {
-      this.canvasService.setRole('rectangle');
-    } else if (event.key == 'l') {
-      this.canvasService.setRole('line');
-    } else if (event.key == 't') {
-      this.canvasService.setRole('text');
-    } else if (event.key == 'p') {
-      this.canvasService.setRole('pencil');
-    } else if (event.key == 's') {
-      this.canvasService.setRole('pen');
-    } else if (event.key == 'a') {
-      this.layerService.setAllObjsToActiveSelection();
     }
+    
+    // else if (event.key == 'c') {
+    //   this.canvasService.setRole('circle');
+    // } else if (event.key == 'r') {
+    //   this.canvasService.setRole('rectangle');
+    // } else if (event.key == 'l') {
+    //   this.canvasService.setRole('line');
+    // } else if (event.key == 't') {
+    //   this.canvasService.setRole('text');
+    // } else if (event.key == 'p') {
+    //   this.canvasService.setRole('pencil');
+    // } else if (event.key == 's') {
+    //   this.canvasService.setRole('pen');
+    // } else if (event.key == 'a') {
+    //   this.layerService.setAllObjsToActiveSelection();
+    // }
   }
 
   get window() {
@@ -433,6 +435,7 @@ export class CanvasComponent implements OnInit {
   }
 
   get is_goodToGo() {
+    // console.log(this.projectResFromServer,this.canvasService.projectId,this.authService.auth.currentUser)
     return (
       (this.authService.auth.currentUser &&
         this.canvasService.projectId &&

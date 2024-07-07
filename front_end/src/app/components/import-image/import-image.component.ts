@@ -67,7 +67,7 @@ export class ImportImageComponent {
           img.onload = () => {
             const imgInstance = new fabric.Image(img, {
               left: 200,
-              top: 200,
+              top: 200,crossOrigin:'anonymous'
             }) as fabric.Image & { type: 'image'; _id: string };
             imgInstance._id = v4();
             // this.canvasService.updateObjects(imgInstance, 'push');

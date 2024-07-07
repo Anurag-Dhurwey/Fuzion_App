@@ -52,5 +52,6 @@ Thumbs.db
 
 **/environments
 **/environment.ts
+**/environments.ts
 
 .env

@@ -18,6 +18,6 @@ export const routes: Routes = [
   { path: 'experimaental/canvas', component: ExperimentalCanvasComponent},
   { path: 'canvas/demo/:id', component: CanvasComponent},
   { path: 'welcome', component: WelcomeComponent},
-  { path: '', redirectTo: 'canvas', pathMatch: 'full' },
+  { path: '', redirectTo: 'welcome', pathMatch: 'full' },
   // { path: '', redirectTo: 'experimaental/canvas', pathMatch: 'full' },
 ];
