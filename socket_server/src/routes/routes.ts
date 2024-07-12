@@ -1,27 +1,10 @@
 import { Router } from "express";
 import { db,admin } from "../firebase.config";
+import { preview_project } from "../controllers/preview_image";
 
 const routes = Router();
 
-routes.post("/test",async (req, res) => {
-  const data = {
-    name: "John Doe",
-    age: 30,
-    city: "New York"
-  };
-  
-  db.collection('users').add(data)
-    .then(ref => {
-      console.log('Document written with ID:', ref.id);
-
-    })
-    .catch(err => {
-      // res.json({message:'error'})
-      console.error('Error adding document:', err);
-    });
-  res.json({message:'done'})
-  
-});
+routes.get("/preview-project-image/:id",preview_project);
 routes.post("/login",async (req, res) => {
 //   admin.auth().createUser({
 //     email: "user@example.com",

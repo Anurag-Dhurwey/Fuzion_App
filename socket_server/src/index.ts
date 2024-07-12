@@ -22,7 +22,7 @@ const port = 3000;
 
 app.use(cors({ origin: "*" }));
 
-app.use("/", routes);
+app.use("/api", routes);
 
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");

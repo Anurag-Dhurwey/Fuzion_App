@@ -50,14 +50,17 @@
   </span>
   }
 
-  <img
-    [src]="_imageToPreview"
-    style="object-fit: contain; cursor: pointer"
-    width="250px"
-    height="150px"
-    alt="imageToPreview"
-    [routerLink]="admin_controls ? '/canvas/' + id : '/canvas/demo/' + id"
-  />
+  <!-- @if(_imageToPreview | async; as image){ -->
+
+    <img
+      [src]="_imageToPreview"
+      style="object-fit: contain; cursor: pointer"
+      width="250px"
+      height="150px"
+      alt="imageToPreview"
+      [routerLink]="admin_controls ? '/canvas/' + id : '/canvas/demo/' + id"
+    />
+  <!-- } -->
   <span
     style="
       position: absolute;

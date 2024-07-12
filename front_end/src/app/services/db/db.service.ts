@@ -26,6 +26,7 @@ import { IncludePropertiesOnly, Project } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { Observable, of, from } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
 @Injectable({
   providedIn: 'root',
 })
@@ -38,7 +39,7 @@ export class DbService {
   private _promotional_projects: Project[] = [];
   images$: Observable<string[]> = new Observable();
   imageRequestDone: boolean = false;
-  constructor() {
+  constructor(private http: HttpClient) {
     this.app = initializeApp(environment.firebaseConfig);
     this.store = getFirestore(this.app);
     this.auth = getAuth(this.app);
@@ -82,7 +83,7 @@ export class DbService {
       await updateDoc(doc(this.store, 'projects', id), {
         ...props,
       });
-      this.client_methods.updateProjectById(props,id)
+      this.client_methods.updateProjectById(props, id);
       // const found = this.projects.find((pr) => pr.id == id) as any;
       // console.log(found);
       // for (const [key, val] of Object.entries(pros)) {
@@ -124,7 +125,10 @@ export class DbService {
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      this.client_methods.setProjects({ ...data, id: doc.id } as Project, 'push');
+      this.client_methods.setProjects(
+        { ...data, id: doc.id } as Project,
+        'push'
+      );
     });
     // this.projects=projects
     return this.projects;
@@ -268,26 +272,7 @@ export class DbService {
     // return await getDownloadURL(uploadTask.snapshot.ref);
   }
 
-  //  private setProjects(
-  //     project: Project | Project[],
-  //     method: 'reset' | 'push' | 'replace'
-  //   ) {
-  //     if (!Array.isArray(project)) project = [project];
-  //     if (method === 'reset' && Array.isArray(project)) {
-  //       this._projects = project;
-  //     } else if (method === 'push') {
-  //       this._projects = [...this.projects, ...project];
-  //     } else if (method === 'replace') {
-  //       project.forEach((new_pr) => {
-  //         this._projects = this._projects.map((pr) => {
-  //           if (pr.id === new_pr.id) {
-  //             return new_pr;
-  //           }
-  //           return pr;
-  //         });
-  //       });
-  //     }
-  //   }
+  
 
   async deleteProject(id: string) {
     try {
@@ -321,6 +306,19 @@ export class DbService {
       }
     },
   };
+
+  async previewProjectImage(id: string) {
+    // const data= this.http.get<string>(`${environment.socket_url}/api/preview-project-image/${id}`)
+    // data.subscribe(v=>console.log({v}))
+    // console.log({data})
+    // return data
+    const data =await (
+      await fetch(`${environment.socket_url}/api/preview-project-image/${id}`)
+    ).json();
+
+    return await data.data
+
+  }
 }
 
 type SetProjectsMethods = 'reset' | 'push' | 'replace';

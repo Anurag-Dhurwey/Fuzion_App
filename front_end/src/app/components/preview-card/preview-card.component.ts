@@ -5,10 +5,12 @@ import { RouterLink } from '@angular/router';
 import { DbService } from '../../services/db/db.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { CanvasService } from '../../services/canvas/canvas.service';
+import { Observable } from 'rxjs';
+import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-preview-card',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, CommonModule],
   templateUrl: './preview-card.component.html',
   styleUrl: './preview-card.component.css',
 })
@@ -17,7 +19,7 @@ export class PreviewCardComponent implements OnInit {
   @Input({ required: true }) id: string = v4();
   @Input() admin_controls: boolean = false;
 
-  _imageToPreview: string = '';
+  _imageToPreview = '';
 
   renameProjectForm: { name: string; id: string } | null = null;
 
@@ -57,11 +59,15 @@ export class PreviewCardComponent implements OnInit {
     this.renameProjectForm = null;
   }
 
-  ngOnInit(): void {
-    this.project &&
-      CanvasService.getImageData(this.project, (imgData) => {
-        this._imageToPreview = imgData;
-      });
+  async ngOnInit() {
+    if (!this.project) return;
+    this._imageToPreview = await this._dbService.previewProjectImage(
+      this.project.id
+    );
+
+    // CanvasService.getImageData(this.project, (imgData) => {
+    //   this._imageToPreview = imgData;
+    // });
   }
 
   deleteProject() {

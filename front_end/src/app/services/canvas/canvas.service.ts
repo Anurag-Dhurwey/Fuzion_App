@@ -23,6 +23,7 @@ import {
   UpdateObjectsMethods,
 } from '../../../types/canvas.service.types';
 import { propertiesToInclude } from '../../constants';
+import { HttpClient } from '@angular/common/http';
 @Injectable({
   providedIn: 'root',
 })
@@ -91,6 +92,7 @@ export class CanvasService {
 
   constructor(
     private socketService: SocketService // private authService: AuthService
+    ,private http: HttpClient
   ) {
     this.history.undoStack.add('[]');
   }
