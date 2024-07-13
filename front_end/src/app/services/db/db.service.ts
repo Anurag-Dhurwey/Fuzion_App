@@ -272,8 +272,6 @@ export class DbService {
     // return await getDownloadURL(uploadTask.snapshot.ref);
   }
 
-  
-
   async deleteProject(id: string) {
     try {
       await deleteDoc(doc(this.store, 'projects', id));
@@ -307,18 +305,7 @@ export class DbService {
     },
   };
 
-  async previewProjectImage(id: string) {
-    // const data= this.http.get<string>(`${environment.socket_url}/api/preview-project-image/${id}`)
-    // data.subscribe(v=>console.log({v}))
-    // console.log({data})
-    // return data
-    const data =await (
-      await fetch(`${environment.socket_url}/api/preview-project-image/${id}`)
-    ).json();
 
-    return await data.data
-
-  }
 }
 
 type SetProjectsMethods = 'reset' | 'push' | 'replace';

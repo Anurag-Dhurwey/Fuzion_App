@@ -8,7 +8,9 @@ import { admin, db } from "./firebase.config";
 import { socket_middleware } from "./middleware/socket_middleware";
 import { Fab_Objects, Project } from "../types";
 import { DefaultEventsMap } from "socket.io/dist/typed-events";
-require("dotenv").config();
+import { environments } from "../environment";
+require("dotenv").config(); 
+// import {} from ''
 
 const app = express();
 const server = createServer(app);
@@ -17,10 +19,12 @@ client.connect().catch((err) => {
 });
 // client.on("error", (err) => console.log("Redis Client Error", err));
 
-const io = new Server(server, { cors: { origin: ["http://localhost:4200"] } });
+const io = new Server(server, {
+  cors: { origin: environments.allowedOrigins },
+});
 const port = 3000;
 
-app.use(cors({ origin: "*" }));
+app.use(cors({ origin: environments.allowedOrigins }));
 
 app.use("/api", routes);
 
@@ -116,7 +120,7 @@ const findObject = (_id: string, data: Fab_Objects[]): Fab_Objects | null => {
     if (ob._id == _id) {
       return ob;
     }
-    if (ob.type === "group"&&!ob.isJoined) {
+    if (ob.type === "group" && !ob.isJoined) {
       const res = findObject(_id, ob.objects);
       if (res) {
         return res;
@@ -289,10 +293,10 @@ io.on("connection", async (socket) => {
           (await client.hGet(`room:${roomId}`, "objects")) || "[]"
         );
 
-        const found=findObject(_id,data) as any
-        if(found){
-          for (const [key,val] of Object.entries(property)) {
-            found[key]=val
+        const found = findObject(_id, data) as any;
+        if (found) {
+          for (const [key, val] of Object.entries(property)) {
+            found[key] = val;
           }
           await client.hSet(`room:${roomId}`, {
             objects: JSON.stringify(data),
@@ -300,9 +304,8 @@ io.on("connection", async (socket) => {
           // console.log( (await client.hGet(`room:${roomId}`, "objects")) )
           socket.to(roomId).emit("set:object:property", _id, property);
         }
-
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
     }
   );

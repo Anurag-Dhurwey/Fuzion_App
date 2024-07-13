@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth/auth.service';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { Observable } from 'rxjs';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../../../environment';
 @Component({
   selector: 'app-preview-card',
   standalone: true,
@@ -14,12 +15,11 @@ import { CommonModule } from '@angular/common';
   templateUrl: './preview-card.component.html',
   styleUrl: './preview-card.component.css',
 })
-export class PreviewCardComponent implements OnInit {
+export class PreviewCardComponent {
   @Input({ required: true }) project: Project | undefined;
   @Input({ required: true }) id: string = v4();
   @Input() admin_controls: boolean = false;
 
-  _imageToPreview = '';
 
   renameProjectForm: { name: string; id: string } | null = null;
 
@@ -59,17 +59,13 @@ export class PreviewCardComponent implements OnInit {
     this.renameProjectForm = null;
   }
 
-  async ngOnInit() {
-    if (!this.project) return;
-    this._imageToPreview = await this._dbService.previewProjectImage(
-      this.project.id
-    );
 
-    // CanvasService.getImageData(this.project, (imgData) => {
-    //   this._imageToPreview = imgData;
-    // });
+  get src(){
+    if(!this.project?.id){
+      return ''
+    }
+    return `${environment.socket_url}/api/preview-project-image/${this.project.id}`
   }
-
   deleteProject() {
     this._dbService.deleteProject(this.id);
   }

@@ -1,14 +1,22 @@
-import { RedisClientType, createClient, RedisFunctions, RedisModules, RedisScripts  } from "redis";
+import {
+  RedisClientType,
+  createClient,
+  RedisFunctions,
+  RedisModules,
+  RedisScripts,
+} from "redis";
+import { environments } from "../environment";
 require("dotenv").config();
 
 export const client = createClient({
-  password: process.env.redis_password,
+  password: environments.redis.password,
   socket: {
-    host: process.env.redis_host,
-    port: parseInt(process.env.redis_port || "18090"),
+    host: environments.redis.host,
+    port: environments.redis.port,
   },
 });
 
-
-
-export type clientType=RedisClientType & RedisModules& RedisFunctions& RedisScripts
+export type clientType = RedisClientType &
+  RedisModules &
+  RedisFunctions &
+  RedisScripts;
