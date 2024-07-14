@@ -299,6 +299,7 @@ export class DbService {
     },
     updateProjectById: (props: Partial<Project>, id: string) => {
       const found = this.projects.find((pr) => pr.id == id) as any;
+      if(!found)return
       for (const [key, val] of Object.entries(props)) {
         found[key] = val;
       }

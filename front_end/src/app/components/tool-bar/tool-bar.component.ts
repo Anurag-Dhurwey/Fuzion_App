@@ -18,12 +18,12 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   styleUrl: './tool-bar.component.css',
 })
 export class ToolBarComponent {
-  @HostListener('window:keyup', ['$event'])
-  keyUp(event: KeyboardEvent) {
-    if (event.key == 'i') {
-      this.onClickRoleButton('image')
-    }
-  }
+  // @HostListener('window:keyup', ['$event'])
+  // keyUp(event: KeyboardEvent) {
+  //   if (event.key == 'i') {
+  //     this.onClickRoleButton('image')
+  //   }
+  // }
 
   constructor(
     public canvasService: CanvasService,

@@ -31,8 +31,9 @@ import { MenuPanelComponent } from './menu-panel/menu-panel.component';
 import { SettingPanelComponent } from './setting-panel/setting-panel.component';
 import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-selection-panel.component';
 import { ImportImageComponent } from '../import-image/import-image.component';
-import { ColorPickerComponent } from '../color-picker/color-picker.component';
-import Color from 'color';
+// import { ColorPickerComponent } from '../color-picker/color-picker.component';
+// import Color from 'color';
+import { User } from 'firebase/auth';
 // import { ActiveSelection } from 'fabric/fabric-impl';
 
 @Component({
@@ -58,7 +59,6 @@ import Color from 'color';
 })
 export class CanvasComponent implements OnInit {
   title = 'Fuzion';
-  // canvasService: appState | undefined;
   private _recentRole: Roles | undefined;
   isDrawing: boolean = false;
   isPathControlPointMoving: boolean = false;
@@ -66,16 +66,13 @@ export class CanvasComponent implements OnInit {
   pathPointToAdjust:
     | { _refTo: fabric.Path; points: [number, number] }
     | undefined;
-  // private store = inject(Store);
-  // targetObjectStroke: string | undefined = '';
   isDragging: boolean = false;
   private lastPosX: undefined | number;
   private lastPosY: undefined | number;
-  // window = window;
 
   projectResFromServer: boolean = false;
 
-  private webWorker: Worker | null = null;
+  // private webWorker: Worker | null = null;
 
   constructor(
     public socketService: SocketService,
@@ -84,9 +81,7 @@ export class CanvasComponent implements OnInit {
     private dbService: DbService,
     public authService: AuthService,
     private route: ActivatedRoute
-  ) {
-    // this.store.select(appSelector).subscribe((state) => (this.canvasService = state));
-  }
+  ) {}
 
   @HostListener('window:keydown', ['$event'])
   keyDown(event: KeyboardEvent) {
@@ -116,7 +111,7 @@ export class CanvasComponent implements OnInit {
       this._recentRole && this.canvasService.setRole(this._recentRole);
       this._recentRole = undefined;
     }
-    
+
     // else if (event.key == 'c') {
     //   this.canvasService.setRole('circle');
     // } else if (event.key == 'r') {
@@ -158,7 +153,7 @@ export class CanvasComponent implements OnInit {
         this.window.innerWidth < 600 ? 90 : 50
       );
     };
-    // console.log(e.clientX);
+
     if (e instanceof MouseEvent) {
       set(e.clientX);
     } else {
@@ -209,31 +204,31 @@ export class CanvasComponent implements OnInit {
     }
   }
 
-  createWebWorker() {
-    // createWorker(): void {
-    const workerBlob = new Blob(
-      [
-        `
-        onmessage = function(e) {
-          const data = e.data;
-          // Perform heavy computation
-          const result = performHeavyComputation(data);
-          postMessage(result);
-        };
-  
-        function performHeavyComputation(data) {
-          // Your heavy computation logic here
-          // For demonstration, just returning the data
-          return data;
-        }
-      `,
-      ],
-      { type: 'application/javascript' }
-    );
+  // createWebWorker() {
+  //   // createWorker(): void {
+  //   const workerBlob = new Blob(
+  //     [
+  //       `
+  //       onmessage = function(e) {
+  //         const data = e.data;
+  //         // Perform heavy computation
+  //         const result = performHeavyComputation(data);
+  //         postMessage(result);
+  //       };
 
-    this.webWorker = new Worker(URL.createObjectURL(workerBlob));
-    // }
-  }
+  //       function performHeavyComputation(data) {
+  //         // Your heavy computation logic here
+  //         // For demonstration, just returning the data
+  //         return data;
+  //       }
+  //     `,
+  //     ],
+  //     { type: 'application/javascript' }
+  //   );
+
+  //   this.webWorker = new Worker(URL.createObjectURL(workerBlob));
+  //   // }
+  // }
 
   private onProjectEvent = (data: Project) => {
     console.log('onProject');
@@ -441,35 +436,41 @@ export class CanvasComponent implements OnInit {
         this.canvasService.projectId &&
         this.projectResFromServer &&
         this.socketService.socket?.connected) ||
-      (this.canvasService.projectId &&
-        window.location.pathname.includes('demo')) ||
+      (this.canvasService.projectId && this.isDemoFile) ||
       !this.canvasService.projectId
     );
   }
 
+  isReadyToConnectToSocket(project: Project) {
+    const user = this.authService.auth.currentUser;
+    if (
+      !user ||
+      !user.email ||
+      !this.canvasService.projectId ||
+      this.isDemoFile
+    ) {
+      return false;
+    }
+    return user.uid === project.user || project.members.includes(user.uid);
+  }
+  get isDemoFile() {
+    return this.window.location.pathname.includes('demo');
+  }
   ngOnInit(): void {
     this.canvasService.projectId = this.route.snapshot.paramMap.get('id');
     if (this.canvasService.projectId) {
       this.dbService
         .getProjectsByIds(this.canvasService.projectId)
         .then((data) => {
-          if (
-            (this.authService.auth.currentUser?.uid === data[0].user ||
-              data[0].members.includes(
-                this.authService.auth.currentUser!.uid
-              )) &&
-            this.canvasService.projectId &&
-            !this.window.location.pathname.includes('demo') &&
-            this.authService.auth.currentUser?.email
-          ) {
+          if (this.isReadyToConnectToSocket(data[0])) {
             this.socketService.connect(
-              this.canvasService.projectId,
-              this.authService.auth.currentUser.email,
+              this.canvasService.projectId!,
+              this.authService.auth.currentUser!.email!,
               {
                 onProject: this.onProjectEvent,
               }
             );
-          } else if (this.window.location.pathname.includes('demo')) {
+          } else if (this.isDemoFile) {
             this.initializeCanvasSetup(data[0]);
           }
         });
@@ -477,15 +478,15 @@ export class CanvasComponent implements OnInit {
       this.initializeCanvasSetup();
     }
 
-    this.createWebWorker();
-    if (this.webWorker) {
-      this.webWorker.onmessage = (event) => {
-        const { type, res } = event.data as {
-          type: 'quadCtrlPointMovement';
-          res?: { x?: number; y?: number };
-        };
-      };
-    }
+    // this.createWebWorker();
+    // if (this.webWorker) {
+    //   this.webWorker.onmessage = (event) => {
+    //     const { type, res } = event.data as {
+    //       type: 'quadCtrlPointMovement';
+    //       res?: { x?: number; y?: number };
+    //     };
+    //   };
+    // }
   }
 
   onQuadraticCurveControlPointMoving(
@@ -1021,7 +1022,8 @@ export class CanvasComponent implements OnInit {
   }
 
   ngOnDestroy() {
-    if (this.canvasService.projectId) {
+    if (this.isDemoFile) return;
+    if (this.canvasService.projectId && !this.isDemoFile) {
       this.canvasService.export('json', (json) => {
         if (typeof json === 'string') {
           json = JSON.stringify(JSON.parse(json).objects);
