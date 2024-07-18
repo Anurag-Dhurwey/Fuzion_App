@@ -170,7 +170,7 @@
       (mousedown)="layerService.setObjToMove(obj._id, group_id, $index)"
       style="width: 60%; cursor: default; user-select: none"
       (click)="layerService.onLeftClick($event, obj, group_id)"
-      >{{ obj.name }}</span
+      >{{ obj.name ||' '}}</span
     >
     }
     <span style="width: 25%">

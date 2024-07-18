@@ -70,6 +70,7 @@ export class ImportImageComponent {
               top: 200,crossOrigin:'anonymous'
             }) as fabric.Image & { type: 'image'; _id: string };
             imgInstance._id = v4();
+            imgInstance.name = 'image';
             // this.canvasService.updateObjects(imgInstance, 'push');
             this.imageObject = imgInstance;
             this.uploadStatus = { status: 'success', message: 'Success' };
@@ -93,6 +94,8 @@ export class ImportImageComponent {
             fabric.Image?.fromURL(reader.result, (imgObj) => {
               // const object = imgObj as Fab_Image;
               (imgObj as Fab_Image)._id = v4();
+              (imgObj as Fab_Image).name = 'image';
+
               this.imageObject = imgObj as Fab_Image;
               // this.canvasService.updateObjects(object, 'push');
             });
@@ -115,6 +118,7 @@ export class ImportImageComponent {
         top: 200,
       }) as Fab_Image;
       imgInstance._id = v4();
+      imgInstance.name = 'image';
       // this.canvasService.updateObjects(imgInstance, 'push');
       this.imageObject = imgInstance;
     };

@@ -578,6 +578,8 @@ export class CanvasComponent implements OnInit {
     }
   }
 
+  // hoveringObj:fabric.Rect|null=null
+
   onMouseDown(event: fabric.IEvent<MouseEvent>): void {
     if (!this.canvasService.canvas) return;
     if (!this.canvasService.isMobile() && this.canvasService.role == 'pan') {
@@ -691,6 +693,14 @@ export class CanvasComponent implements OnInit {
     }
   }
   onMouseMove(event: fabric.IEvent<MouseEvent>): void {
+    // if (event.target) {
+    //   const { top, left, width, height } = event.target;
+    //   if (!top || !left || !width || !height) return;
+    //   this.canvasService.HoveringObjSet({ top, left, width, height });
+    // }else{
+    //   this.canvasService.hoveringObjClear()
+    // }
+
     if (
       this.canvasService.projectId &&
       this.authService.auth.currentUser &&

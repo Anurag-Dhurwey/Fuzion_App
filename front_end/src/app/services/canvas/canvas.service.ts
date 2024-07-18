@@ -55,7 +55,7 @@ export class CanvasService {
   quadraticCurveControlPoints: QuadraticCurveControlPoint[] = [];
 
   totalChanges = new Set<string>();
-
+  hoveringObj: fabric.Rect | null = null;
   recentStates: {
     event_selectable: PreviousCustomizationState[];
   } = {
@@ -91,8 +91,8 @@ export class CanvasService {
   };
 
   constructor(
-    private socketService: SocketService // private authService: AuthService
-    ,private http: HttpClient
+    private socketService: SocketService, // private authService: AuthService
+    private http: HttpClient
   ) {
     this.history.undoStack.add('[]');
   }
@@ -116,6 +116,39 @@ export class CanvasService {
     return this._viewport_refs;
   }
 
+  HoveringObjSet({
+    top,
+    left,
+    width,
+    height,
+  }: {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  }) {
+    if (this.hoveringObj) {
+      this.hoveringObjClear();
+      // return
+    }
+    this.hoveringObj = new fabric.Rect({
+      top,
+      left,
+      width,
+      height,
+      stroke: 'aqua',
+      strokeWidth: 2,
+      excludeFromExport: true,
+      fill:''
+    });
+    // this.hoveringObj.set({excludeFromExport:true})
+    this.canvas?.add(this.hoveringObj);
+  }
+  hoveringObjClear() {
+    if (!this.hoveringObj) return;
+    this.canvas?.remove(this.hoveringObj);
+    this.hoveringObj = null;
+  }
   public saveStateInHistory() {
     this.history.redoStack.clear(); // Clear redo stack on new action
     this.export(
@@ -787,6 +820,7 @@ export class CanvasService {
         } else {
           const newGroup = new fabric.Group([], {
             _id: v4(),
+            name: 'file-imported',
             top: objects[0].top,
             left: objects[0].left,
           } as IGroupOptions) as Fab_Group;
