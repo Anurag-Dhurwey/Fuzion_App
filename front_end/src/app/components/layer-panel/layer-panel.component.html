@@ -210,7 +210,8 @@
   [style]="{
     backgroundColor: canvasService.idsOfSelectedObj.includes(obj._id)
       ? 'rgb(162, 160, 100)'
-      : 'rgb(162, 160, 160)'
+      : 'rgb(162, 160, 160)',
+      border:canvasService.hoveringObjsBoundingBox?._id==obj._id ?'2px solid rgb(0, 106, 255)':''
   }"
   (contextmenu)="layerService.onContextClickAtLayer($event, obj)"
   (mousemove)="layerService.setPositionToMove(group_id, $index)"

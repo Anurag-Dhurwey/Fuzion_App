@@ -13,6 +13,7 @@ import {
   Fab_Path,
   QuadraticCurveControlPoint,
   FabObjectsPropertiesOnly,
+  Fab_Rect,
 } from '../../../types/app.types';
 import { v4 } from 'uuid';
 import { ActiveSelection, IGroupOptions } from 'fabric/fabric-impl';
@@ -55,7 +56,7 @@ export class CanvasService {
   quadraticCurveControlPoints: QuadraticCurveControlPoint[] = [];
 
   totalChanges = new Set<string>();
-  hoveringObj: fabric.Rect | null = null;
+  hoveringObjsBoundingBox: Fab_Rect | null = null;
   recentStates: {
     event_selectable: PreviousCustomizationState[];
   } = {
@@ -116,22 +117,16 @@ export class CanvasService {
     return this._viewport_refs;
   }
 
-  HoveringObjSet({
-    top,
-    left,
-    width,
-    height,
-  }: {
-    top: number;
-    left: number;
-    width: number;
-    height: number;
-  }) {
-    if (this.hoveringObj) {
-      this.hoveringObjClear();
+  add_hoveringObjsBoundingBox(obj: Fab_Objects) {
+    if (this.hoveringObjsBoundingBox) {
+      if (this.hoveringObjsBoundingBox._id == obj._id) {
+        return;
+      }
+      this.clear_hoveringObjsBoundingBox();
       // return
     }
-    this.hoveringObj = new fabric.Rect({
+    const { top, left, width, height } = obj.getBoundingRect(true);
+    this.hoveringObjsBoundingBox = new fabric.Rect({
       top,
       left,
       width,
@@ -139,15 +134,18 @@ export class CanvasService {
       stroke: 'aqua',
       strokeWidth: 2,
       excludeFromExport: true,
-      fill:''
-    });
-    // this.hoveringObj.set({excludeFromExport:true})
-    this.canvas?.add(this.hoveringObj);
+      fill: '',
+      selectable: false,
+      evented: false,
+      _id:obj._id
+    } as any) as Fab_Rect;
+    // this.hoveringObjsBoundingBox._id = obj._id;
+    this.canvas?.add(this.hoveringObjsBoundingBox);
   }
-  hoveringObjClear() {
-    if (!this.hoveringObj) return;
-    this.canvas?.remove(this.hoveringObj);
-    this.hoveringObj = null;
+  clear_hoveringObjsBoundingBox() {
+    if (!this.hoveringObjsBoundingBox) return;
+    this.canvas?.remove(this.hoveringObjsBoundingBox);
+    this.hoveringObjsBoundingBox = null;
   }
   public saveStateInHistory() {
     this.history.redoStack.clear(); // Clear redo stack on new action

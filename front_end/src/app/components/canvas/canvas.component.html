@@ -119,6 +119,11 @@
   }
 
   <section
+    (click)="
+      $event.stopPropagation();
+      canvasService.canvas?.discardActiveObject();
+      canvasService.canvas?.renderAll()
+    "
     (wheel)="zoomBoard($event)"
     (touchstart)="onTouchStart($event)"
     (touchmove)="onTouchMove($event)"
@@ -168,7 +173,7 @@
         arrow_forward_ios
       </button>
       }@else { } @if(is_goodToGo&& canvasService.layout.visibility.tool_panel){
-      <app-tool-bar />
+      <app-tool-bar (click)="$event.stopPropagation()" />
       }
       <button
         class="material-symbols-outlined"
@@ -198,7 +203,9 @@
       </button>
       }
     </div>
-    <canvas id="canvas"></canvas>
+    <span (click)="$event.stopPropagation()">
+      <canvas id="canvas"></canvas>
+    </span>
   </section>
   @if(is_goodToGo&& canvasService.layout.visibility.property_panel){
   <div

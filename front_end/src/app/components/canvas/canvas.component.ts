@@ -178,7 +178,11 @@ export class CanvasComponent implements OnInit {
       document.addEventListener('mouseup', this.stopResizePanel);
     }
   }
-
+  test(e: MouseEvent) {
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+    console.log('running test');
+  }
   async saveObjectsToDb() {
     if (!this.canvasService.totalChanges.size) return;
     if (this.socketService.socket?.connected && this.canvasService.projectId) {
@@ -337,11 +341,15 @@ export class CanvasComponent implements OnInit {
       this.onMouseMove(event)
     );
     this.canvasService.canvas.on('mouse:up', (event) => this.onMouseUp(event));
+    this.canvasService.canvas.on('mouse:out', () => {
+      this.canvasService.clear_hoveringObjsBoundingBox();
+    });
 
     this.canvasService.canvas.on('path:created', (event) =>
       this.onPathCreated(event as unknown as { path: fabric.Path })
     );
     this.canvasService.canvas?.on('selection:created', (event) => {
+      this.canvasService.clear_hoveringObjsBoundingBox();
       // console.log(event.selected[0].lo);
       // if (!event.selected) return;
       // event.selected.forEach((obj: any) => {
@@ -352,6 +360,7 @@ export class CanvasComponent implements OnInit {
       // });
     });
     this.canvasService.canvas?.on('selection:updated', (event) => {
+      this.canvasService.clear_hoveringObjsBoundingBox();
       if (
         this.canvasService.editingPath &&
         (!event.selected ||
@@ -371,6 +380,7 @@ export class CanvasComponent implements OnInit {
       // (e.target as ActiveSelection).
     });
     this.canvasService.canvas?.on('selection:cleared', (e) => {
+      this.canvasService.clear_hoveringObjsBoundingBox();
       if (this.canvasService.editingPath) {
         this.canvasService.removeQuadraticCurveControlPoints();
       }
@@ -427,6 +437,7 @@ export class CanvasComponent implements OnInit {
     });
     // this.canvasService.addGrid()
     project && this.canvasService.enliveProject(project, () => {}, true);
+
   }
 
   get is_goodToGo() {
@@ -693,13 +704,17 @@ export class CanvasComponent implements OnInit {
     }
   }
   onMouseMove(event: fabric.IEvent<MouseEvent>): void {
-    // if (event.target) {
-    //   const { top, left, width, height } = event.target;
-    //   if (!top || !left || !width || !height) return;
-    //   this.canvasService.HoveringObjSet({ top, left, width, height });
-    // }else{
-    //   this.canvasService.hoveringObjClear()
-    // }
+    if (event.target) {
+      if (this.canvasService.isSelected((event.target as Fab_Objects)._id)) {
+        this.canvasService.clear_hoveringObjsBoundingBox();
+        return;
+      }
+      this.canvasService.add_hoveringObjsBoundingBox(
+        event.target as Fab_Objects
+      );
+    } else {
+      this.canvasService.clear_hoveringObjsBoundingBox();
+    }
 
     if (
       this.canvasService.projectId &&

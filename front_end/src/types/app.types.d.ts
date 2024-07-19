@@ -22,7 +22,7 @@ export type Fab_Group = fabric.Group & {
 export type Fab_Objects = (
   | Fab_Path
   | (fabric.Line & { type: 'line' })
-  | (fabric.Rect & { type: 'rect' })
+  |Fab_Rect
   | (fabric.Circle & { type: 'circle' })
   // | (fabric.Image & { type: 'image' })
   | Fab_Image
@@ -31,6 +31,7 @@ export type Fab_Objects = (
 ) & {
   _id: string;
 };
+export type Fab_Rect= (fabric.Rect & { type: 'rect'; _id:string })
 export type Fab_Image = fabric.Image & { type: 'image'; _id: string };
 export type Fab_IText = fabric.IText & { type: 'i-text'; _id: string };
 export type Fab_Path = fabric.Path & {
