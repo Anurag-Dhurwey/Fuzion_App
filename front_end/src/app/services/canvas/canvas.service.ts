@@ -118,6 +118,10 @@ export class CanvasService {
   }
 
   add_hoveringObjsBoundingBox(obj: Fab_Objects) {
+    if (this.currentDrawingObject) {
+      this.clear_hoveringObjsBoundingBox();
+      return;
+    }
     if (this.hoveringObjsBoundingBox) {
       if (this.hoveringObjsBoundingBox._id == obj._id) {
         return;
@@ -137,7 +141,7 @@ export class CanvasService {
       fill: '',
       selectable: false,
       evented: false,
-      _id:obj._id
+      _id: obj._id,
     } as any) as Fab_Rect;
     // this.hoveringObjsBoundingBox._id = obj._id;
     this.canvas?.add(this.hoveringObjsBoundingBox);
@@ -317,6 +321,22 @@ export class CanvasService {
   absolutePoint(x: number, y: number, matrix: any[]) {
     return fabric.util.transformPoint({ x, y } as fabric.Point, matrix);
   }
+
+  // customizeControls(obj: Fab_Objects) {
+  //   (obj as fabric.Object).set({
+  //     cornerStyle: 'circle',
+  //     transparentCorners: false,
+  //     padding: 4,
+  //     rotatingPointOffset: 10,
+  //     cornerSize: 10,
+  //   });
+
+  //   if (obj.type == 'group') {
+  //     obj._objects.forEach((ob) => {
+  //       this.customizeControls(ob as Fab_Objects);
+  //     });
+  //   }
+  // }
 
   addQuadraticCurveControlPoints(path?: Fab_Path) {
     if (
@@ -728,6 +748,9 @@ export class CanvasService {
       (createdObjs: Fab_Objects[]) => {
         cb(createdObjs);
         if (replace) {
+          // createdObjs.forEach((ob) => {
+          //   this.customizeControls(ob);
+          // });
           this.mountProject({ ...project, objects: createdObjs });
           this.reRender();
           return;
@@ -786,9 +809,13 @@ export class CanvasService {
         cb(createdObjs);
         if (!method) return;
         if (method == 'reset') {
+          // createdObjs.forEach((item) => {
+          //   this.customizeControls(item);
+          // });
           this.updateObjects(createdObjs, method, false);
         } else {
           createdObjs.forEach((item) => {
+            // this.customizeControls(item);
             this.updateObjects(item, method, false);
           });
         }
@@ -812,6 +839,7 @@ export class CanvasService {
           });
         }
         changeId(objects);
+        // this.customizeControls(objects);
 
         if (objects.length === 1 && objects[0].type === 'group') {
           this._objects = [objects[0], ...this.objects];
@@ -979,7 +1007,7 @@ export class CanvasService {
           this.canvas?.add(this._objects[0]);
         }
         if (item.type === 'path') {
-          this.reRender();
+          // this.reRender();
         }
       });
     } else if (method === 'delete') {
@@ -1220,14 +1248,14 @@ export class CanvasService {
     method: UpdateObjectsMethods
   ) {
     fabric.loadSVGFromString(data.toSVG(), (str) => {
-      const newPath = str[0] as Fab_Objects;
+      const obj = str[0] as Fab_Objects;
       for (const key in propertiesToInclude) {
-        newPath[key as keyof Fab_Objects] =
+        obj[key as keyof Fab_Objects] =
           propertiesToInclude[key as keyof PropertiesToInclude];
       }
       // newPath._id = uuidv4();
-
-      this.updateObjects(newPath, method);
+      // this.customizeControls(obj);
+      this.updateObjects(obj, method);
       this.currentDrawingObject = undefined;
     });
   }

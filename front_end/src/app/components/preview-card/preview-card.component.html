@@ -3,15 +3,7 @@
     color: white;
   }
 </style>
-<div
-  style="
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    position: relative;
-  "
-   [routerLink]="admin_controls ? '/canvas/' + id : '/canvas/demo/' + id"
->
+<div style="width: 100%; height: 100%; overflow-y: auto; position: relative">
   @if(admin_controls){
   <span
     style="
@@ -52,15 +44,18 @@
   }
 
   <!-- @if(_imageToPreview | async; as image){ -->
-
+  <div
+    style="width: 100%; height: 100%; cursor: pointer"
+    [routerLink]="admin_controls ? '/canvas/' + id : '/canvas/demo/' + id"
+  >
     <img
-      [src]='src'
+      [src]="src"
       style="object-fit: contain; cursor: pointer"
       width="250px"
       height="150px"
       alt="imageToPreview"
-     
     />
+  </div>
   <!-- } -->
   <span
     style="

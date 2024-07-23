@@ -73,6 +73,7 @@ export class ImportImageComponent {
             imgInstance.name = 'image';
             // this.canvasService.updateObjects(imgInstance, 'push');
             this.imageObject = imgInstance;
+            // this.canvasService.customizeControls(this.imageObject)
             this.uploadStatus = { status: 'success', message: 'Success' };
           };
           this.uploadStatus = { status: 'uploading', message: 'uploading' };
@@ -97,6 +98,7 @@ export class ImportImageComponent {
               (imgObj as Fab_Image).name = 'image';
 
               this.imageObject = imgObj as Fab_Image;
+              // this.canvasService.customizeControls(this.imageObject)
               // this.canvasService.updateObjects(object, 'push');
             });
         };
@@ -121,6 +123,7 @@ export class ImportImageComponent {
       imgInstance.name = 'image';
       // this.canvasService.updateObjects(imgInstance, 'push');
       this.imageObject = imgInstance;
+      // this.canvasService.customizeControls(this.imageObject)
     };
     img.src = link;
   }

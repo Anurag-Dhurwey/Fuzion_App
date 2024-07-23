@@ -34,6 +34,7 @@ import { ImportImageComponent } from '../import-image/import-image.component';
 // import { ColorPickerComponent } from '../color-picker/color-picker.component';
 // import Color from 'color';
 import { User } from 'firebase/auth';
+import { ActiveSelection } from 'fabric/fabric-impl';
 // import { ActiveSelection } from 'fabric/fabric-impl';
 
 @Component({
@@ -350,14 +351,15 @@ export class CanvasComponent implements OnInit {
     );
     this.canvasService.canvas?.on('selection:created', (event) => {
       this.canvasService.clear_hoveringObjsBoundingBox();
-      // console.log(event.selected[0].lo);
-      // if (!event.selected) return;
-      // event.selected.forEach((obj: any) => {
-      //   // console.log(obj.calcTransformMatrix())
-      //   if (!this.canvasService.isSelected(obj._id)) {
-      //     this.canvasService.selectedObj.push(obj);
-      //   }
-      // });
+      this.canvasService.canvas?._activeObject.set({
+        cornerStyle: 'circle',
+        transparentCorners: false,
+        padding: 4,
+        rotatingPointOffset: 10,
+        cornerSize: 10,
+      });
+      this.canvasService.canvas?.requestRenderAll();
+     
     });
     this.canvasService.canvas?.on('selection:updated', (event) => {
       this.canvasService.clear_hoveringObjsBoundingBox();
@@ -368,11 +370,13 @@ export class CanvasComponent implements OnInit {
       ) {
         this.canvasService.removeQuadraticCurveControlPoints();
       }
-      // if (!event.selected) return;
-      // if (!event.e.ctrlKey) this.canvasService.selectedObj = [];
-      // event.selected.forEach((obj: any) => {
-      //   this.canvasService.selectedObj.push(obj);
-      // });
+      this.canvasService.canvas?._activeObject.set({
+        cornerStyle: 'circle',
+        transparentCorners: false,
+        padding: 4,
+        rotatingPointOffset: 10,
+        cornerSize: 10,
+      });
     });
     this.canvasService.canvas?.on('before:selection:cleared', (e) => {
       // this.canvasService.selectedObj = [];
@@ -401,6 +405,8 @@ export class CanvasComponent implements OnInit {
         );
       }
       this.canvasService.socketEvents.object_modified('replace', true);
+      this.canvasService.hoveringObjsBoundingBox &&
+        this.canvasService.clear_hoveringObjsBoundingBox();
     });
 
     this.canvasService.canvas.on('object:resizing', () => {
@@ -437,7 +443,6 @@ export class CanvasComponent implements OnInit {
     });
     // this.canvasService.addGrid()
     project && this.canvasService.enliveProject(project, () => {}, true);
-
   }
 
   get is_goodToGo() {
@@ -610,6 +615,7 @@ export class CanvasComponent implements OnInit {
         if (obj) {
           obj._id = uuidv4();
           obj.name = obj.type;
+          // this.canvasService.customizeControls(obj);
           this.canvasService.updateObjects(
             obj,
             'push',
@@ -664,6 +670,7 @@ export class CanvasComponent implements OnInit {
           obj._id = uuidv4();
           obj.name = obj.type;
           obj.pathType = 'quadratic_curve';
+          // this.canvasService.customizeControls(obj);
           this.canvasService.currentDrawingObject = obj;
           this.canvasService.updateObjects(
             obj,
@@ -682,6 +689,7 @@ export class CanvasComponent implements OnInit {
       if (obj) {
         obj._id = uuidv4();
         obj.name = obj.type;
+        // this.canvasService.customizeControls(obj);
         this.canvasService.updateObjects(
           obj,
           'push',
@@ -704,7 +712,11 @@ export class CanvasComponent implements OnInit {
     }
   }
   onMouseMove(event: fabric.IEvent<MouseEvent>): void {
-    if (event.target) {
+    if (
+      event.target &&
+      !(event.target as QuadraticCurveControlPoint).ctrlOf &&
+      event.target.type != 'activeSelection'
+    ) {
       if (this.canvasService.isSelected((event.target as Fab_Objects)._id)) {
         this.canvasService.clear_hoveringObjsBoundingBox();
         return;
@@ -902,6 +914,7 @@ export class CanvasComponent implements OnInit {
     path._id = uuidv4();
     path.name = path.type;
     path.pathType = 'free_hand';
+    // this.canvasService.customizeControls(path);
     this.canvasService.updateObjects(path);
   }
 

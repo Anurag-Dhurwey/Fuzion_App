@@ -9,10 +9,12 @@ import { DbService } from '../../services/db/db.service';
 import { AuthService } from '../../services/auth/auth.service';
 import { CanvasService } from '../../services/canvas/canvas.service';
 import { PreviewCardComponent } from '../preview-card/preview-card.component';
+import { SideSectionComponent } from '../side-section/side-section.component';
+import { BaseLayoutComponent } from '../wrapper/base-layout/base-layout.component';
 @Component({
   selector: 'app-welcome',
   standalone: true,
-  imports: [RouterOutlet, RouterLinkActive, RouterLink, PreviewCardComponent],
+  imports: [RouterOutlet, RouterLinkActive, RouterLink, PreviewCardComponent,SideSectionComponent,BaseLayoutComponent],
   templateUrl: './welcome.component.html',
   styleUrl: './welcome.component.css',
 })
@@ -23,6 +25,11 @@ export class WelcomeComponent implements OnInit {
     public canvasService: CanvasService,
     public dbService: DbService
   ) {}
+
+  sideSectionData = [
+    { icon: 'dashboard', route: '/dashboard' },
+    { icon: 'account_circle', route: '/user-profile' },
+  ];
 
   async ngOnInit() {
     try {

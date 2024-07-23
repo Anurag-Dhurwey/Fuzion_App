@@ -1,0 +1,80 @@
+<style>
+  .menubar {
+    background: linear-gradient(45deg, #367ab9 0%, #749595 100%);
+    width: 100%;
+    height: 100%;
+    position: sticky;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .menubar button {
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: larger;
+  }
+
+  .menubar .top {
+    height: 50px !important;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: linear-gradient(45deg, #4fa1c9 0%, #3e870d 100%);
+    border-radius: 0px 0px 10px 10px;
+  }
+  .menubar .top #icon {
+    font-size: 25px !important;
+    background: none;
+    outline: none;
+    border: none;
+  }
+  .content {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+  @media (min-width: 1000px) {
+    .menubar .top {
+      height: 75px !important;
+    }
+    .menubar .top #icon {
+      font-size: 50px !important;
+    }
+  }
+</style>
+
+<div class="menubar">
+  <div class="top">
+    @if (authService.auth.currentUser) { @for(nav of navs; track $index){
+    <button
+      id="icon"
+      class="material-symbols-outlined"
+      [routerLink]="nav.route"
+    >
+      {{ nav.icon }}
+    </button>
+    } }@else {
+
+    <button
+      routerLink="/canvas"
+      style="
+        font-weight: bold;
+        width: 100%;
+        border: none;
+        outline: none;
+        height: 100%;
+        background: linear-gradient(30deg, #4fc7c9 0%, #6609c3 100%);
+      "
+    >
+      Try without Sign-In
+    </button>
+    }
+  </div>
+  <div class="content">
+    <ng-content></ng-content>
+  </div>
+</div>

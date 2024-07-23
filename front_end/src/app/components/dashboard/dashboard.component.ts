@@ -11,6 +11,9 @@ import { DbService } from '../../services/db/db.service';
 import { PreviewCardComponent } from '../preview-card/preview-card.component';
 import { FrameSelectionPanelComponent } from '../frame-selection-panel/frame-selection-panel.component';
 import { CanvasService } from '../../services/canvas/canvas.service';
+import { SideSectionComponent } from '../side-section/side-section.component';
+import { BaseLayoutComponent } from '../wrapper/base-layout/base-layout.component';
+import { CommonService } from '../../services/common/common.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -21,19 +24,27 @@ import { CanvasService } from '../../services/canvas/canvas.service';
     RouterLink,
     PreviewCardComponent,
     FrameSelectionPanelComponent,
+    SideSectionComponent,
+    BaseLayoutComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
 export class DashboardComponent implements OnInit {
   creatingNewProject: boolean = false;
-  projectType: 'promotional' | 'my' = 'my';
+
   constructor(
     public authService: AuthService,
     private router: Router,
     public dbService: DbService,
-    public canvasService: CanvasService
+    public canvasService: CanvasService,
+    public commonService: CommonService
   ) {}
+
+  sideSectionData = [
+    { icon: 'home', route: '/welcome' },
+    { icon: 'account_circle', route: '/user-profile' },
+  ];
 
   get myProject() {
     if (this.projectType == 'my') {
@@ -47,10 +58,10 @@ export class DashboardComponent implements OnInit {
 
   async ngOnInit() {
     if (!this.dbService.projects.length) {
-       await this.dbService.getProjects();
+      await this.dbService.getProjects();
     }
   }
- 
+
   async signOut() {
     try {
       await this.authService.signOutUser();
@@ -66,8 +77,13 @@ export class DashboardComponent implements OnInit {
     this.router.navigate([`/canvas/${id}`]);
   }
 
+  onCancelFrameSelection() {
+    this.creatingNewProject = false;
+  }
 
-
+  get projectType() {
+    return this.commonService.dashboard_page.projectType;
+  }
 }
 
 type file = { type: 'file'; data: any };

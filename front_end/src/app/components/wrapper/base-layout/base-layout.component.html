@@ -1,0 +1,51 @@
+<style>
+  .dashboard {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    position: relative;
+  }
+  .side_section {
+    width: 100vw;
+    height: 11vh;
+    min-width: 150px;
+    min-height: 50px;
+    position: relative;
+  }
+  .main_section {
+    width: 100vw;
+    height: 89vh;
+    min-height: 100px;
+    background-color: gray;
+    gap: 5px;
+    overflow-y: auto;
+    padding-bottom: 5px;
+  }
+
+  @media (min-width: 1000px) {
+    .dashboard {
+      flex-direction: row;
+    }
+    .side_section {
+      width: 20vw;
+      min-height: 100vh;
+    }
+    .main_section {
+      width: 80vw;
+      height: calc(100vh - 5px);
+    }
+    #icon {
+      font-size: 50px !important;
+    }
+  }
+</style>
+
+<main class="dashboard">
+  <aside class="side_section">
+    <ng-content select="#side_section"></ng-content>
+  </aside>
+  <section class="main_section">
+    <ng-content select="#main_section"></ng-content>
+  </section>
+</main>
